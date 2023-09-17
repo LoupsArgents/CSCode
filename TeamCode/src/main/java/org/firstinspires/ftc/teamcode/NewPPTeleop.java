@@ -60,16 +60,19 @@ public class NewPPTeleop extends LinearOpMode {
     ServoImplEx turret;
     ServoImplEx poleGuide;
     ServoImplEx v4b;
+    ServoImplEx wrist;
 
-    double armDownPos = 0.5;
-    double armUpPos = 0.5;
-    double clawOpenPos = 0.5;
-    double clawClosePos = 0.5;
-    double turretPos = 0.5;
-    double poleGuideDownPos = 0.5;
-    double poleGuideScoringPos = 0.5;
-    double v4bDownPos = 0.5;
-    double v4bUpPos = 0.5;
+    double armDownPos = 0.2; //0.2 actually works
+    double armUpPos = 0.8; //no clue-- servo is too weak
+    double clawOpenPos = 0.45; //claw is being super weird-- won't move at all
+    double clawClosePos = 0.55; //.
+    double turretPos = 0.525; //actually good!
+    double poleGuideDownPos = 0.3; //0.5 was too close to scoring pos
+    double poleGuideScoringPos = 0.55; //0.5 was a tiny bit too low
+    double v4bDownPos = 0.55; //0.5 was wrong in some way
+    double v4bUpPos = 0.45;
+    double wristDownPos = 0.5;
+    double wristUpPos = 0.5;
 
 
     public void runOpMode() {
@@ -85,6 +88,7 @@ public class NewPPTeleop extends LinearOpMode {
         turret = hardwareMap.get(ServoImplEx.class, "turret");
         poleGuide = hardwareMap.get(ServoImplEx.class, "poleGuide");
         v4b = hardwareMap.get(ServoImplEx.class, "v4b");
+        wrist = hardwareMap.get(ServoImplEx.class, "wrist");
 
         motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -98,12 +102,23 @@ public class NewPPTeleop extends LinearOpMode {
         v4b.setPosition(v4bDownPos);
         turret.setPosition(turretPos);
         poleGuide.setPosition(poleGuideDownPos);
-
+        wrist.setPosition(wristDownPos);
+        double currentPos = 0;
+        Servo servoToUse = claw;
 
         while (opModeIsActive()) {
-
-
-
+            telemetry.addData("currentPos", currentPos);
+            telemetry.update();
+            if (gamepad1.a) {currentPos = 0.0;}
+            if (gamepad1.b) {currentPos = 0.1;}
+            if (gamepad1.x) {currentPos = 0.3;}
+            if (gamepad1.y) {currentPos = 0.4;}
+            if (gamepad1.dpad_down) {currentPos = 0.5;}
+            if (gamepad1.dpad_left) {currentPos = 0.6;}
+            if (gamepad1.dpad_up) {currentPos = 0.7;}
+            if (gamepad1.dpad_right) {currentPos = 0.9;}
+            if (gamepad1.start) {currentPos = 1;}
+            claw.setPosition(currentPos);
 
         }
     }
