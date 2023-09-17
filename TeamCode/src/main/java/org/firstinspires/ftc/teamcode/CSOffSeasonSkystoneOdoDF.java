@@ -20,40 +20,43 @@ public class CSOffSeasonSkystoneOdoDF extends LinearOpMode {
     DcMotor motorFL;
     DcMotor motorBR;
     DcMotor motorBL;
-    DcMotor strafeOdometry;
+    DcMotor strafeOdo;
     int strafeInitialTicks;
-    DcMotor forwardBackOdometry;
-    int forwardBackInitialTicks;
+    DcMotor forwardOdo;
+    int forwardInitialTicks;
     double previousHeading;
     double processedHeading;
-
+    //strafe pod is in port 0, forward/back pod is in port 3
     IMU imu;
     public void runOpMode(){
         initializeHardware();
         waitForStart();
         goStraight(.2, 7, 0.0);
+        goBackward(.2, 7, 0.0);
+        strafeRight(.3, 5, 5, 0.0);
+        strafeLeft(.3, 5, 5, 0.0);
         while(opModeIsActive()){
-     //       telemetry.addData("Ticks", forwardBackOdometry.getCurrentPosition() - forwardBackInitialTicks);
-     //       telemetry.addData("Inches", getInchesTraveled(forwardBackOdometry, forwardBackInitialTicks));
-     //       telemetry.update();
+            telemetry.addData("Ticks", strafeOdo.getCurrentPosition() - strafeInitialTicks);
+            telemetry.addData("Inches", getInchesTraveled(strafeOdo, strafeInitialTicks));
+            telemetry.update();
         }
     }
     public void goStraight(double power, double inches, double idealHeading){
         double multiplier;
         //double processedInches = -1 * inches;
-        telemetry.addData("RawPos", forwardBackOdometry.getCurrentPosition());
-        double forwardBackStart = getInchesTraveled(forwardBackOdometry, 0);
+        telemetry.addData("RawPos", forwardOdo.getCurrentPosition());
+        double forwardBackStart = getInchesTraveled(forwardOdo, 0);
         telemetry.addData("Start", forwardBackStart);
         //The variable above gives the position, in inches, that the encoder was in at the start of the function.
-        double forwardBackPos = getInchesTraveled(forwardBackOdometry, forwardBackStart);
+        double forwardBackPos = getInchesTraveled(forwardOdo, forwardBackStart);
         telemetry.addData("FirstPos", forwardBackPos);
         motorFR.setPower(power);
         motorFL.setPower(power);
         motorBR.setPower(power);
         motorBL.setPower(power);
         double targetheading = idealHeading;
-        RobotLog.aa("GoStraight", "goal heading is " + Double.toString(targetheading));
-        while(forwardBackPos > -1 * inches && opModeIsActive()){
+        RobotLog.aa("GoStraight", "goal heading is " + targetheading);
+        while(forwardBackPos < inches && opModeIsActive()){
             telemetry.addData("Position", forwardBackPos);
             double heading = newGetHeading();
             if(heading-targetheading>=0){ //to the left
@@ -69,12 +72,168 @@ public class CSOffSeasonSkystoneOdoDF extends LinearOpMode {
                 motorFL.setPower(power);
                 motorBL.setPower(power);
             }
-            forwardBackPos = getInchesTraveled(forwardBackOdometry, forwardBackStart);
+            forwardBackPos = getInchesTraveled(forwardOdo, forwardBackStart);
         }
         stopMotors();
-        telemetry.addData("Inches", getInchesTraveled(forwardBackOdometry, forwardBackInitialTicks));
+        telemetry.addData("Inches", getInchesTraveled(forwardOdo, forwardInitialTicks));
         telemetry.update();
     }
+    public void goBackward(double power, double inches, double idealHeading){
+        double multiplier;
+        double forwardBackStart = getInchesTraveled(forwardOdo, 0);
+        telemetry.addData("Start", forwardBackStart);
+        //The variable above gives the position, in inches, that the encoder was in at the start of the function.
+        double forwardBackPos = getInchesTraveled(forwardOdo, forwardBackStart);
+        telemetry.addData("FirstPos", forwardBackPos);
+        motorFR.setPower(-power);
+        motorFL.setPower(-power);
+        motorBR.setPower(-power);
+        motorBL.setPower(-power);
+        double targetheading = idealHeading;
+        RobotLog.aa("GoBackward", "goal heading is " + targetheading);
+        while(forwardBackPos > -1 * inches && opModeIsActive()){
+            double heading = newGetHeading();
+            if(heading-targetheading>=0){ //to the left
+                multiplier = .1*(heading-targetheading)+1;
+                motorFL.setPower(-power);
+                motorBL.setPower(-power);
+                motorFR.setPower(-power*multiplier);
+                motorBR.setPower(-power*multiplier);
+            }else if(heading-targetheading<0){
+                multiplier = -.1*(heading-targetheading)+1;
+                motorFR.setPower(-power);
+                motorBR.setPower(-power);
+                motorFL.setPower(-power*multiplier);
+                motorBL.setPower(-power*multiplier);
+            }
+            forwardBackPos = getInchesTraveled(forwardOdo, forwardBackStart);
+        }
+        stopMotors();
+    }
+    //going to the right is positive ticks, so going to the left will be negative
+    public void strafeRight(double power, double inches, double timelimit, double idealHeading){
+        long startthing = System.currentTimeMillis();
+        long current = System.currentTimeMillis();
+        double multiplier;
+        double strafeStart = getInchesTraveled(strafeOdo, 0);
+        double strafePos = getInchesTraveled(strafeOdo, strafeStart);
+        motorFR.setPower(-power);
+        motorFL.setPower(power);
+        motorBR.setPower(power);
+        motorBL.setPower(-power);
+        double targetheading = idealHeading;
+        RobotLog.aa("StrafeRight", "goal heading is " + targetheading);
+        while(strafePos < inches && current-startthing < 1000*timelimit && opModeIsActive()){
+            double heading = newGetHeading();
+            if(heading-targetheading>=0){
+                multiplier = .1*(heading-targetheading)+1;
+                motorFL.setPower(power*multiplier);
+                motorBL.setPower(-power);
+                motorFR.setPower(-power*multiplier);
+                motorBR.setPower(power);
+            }else if(heading-targetheading<0){
+                multiplier = -.1*(heading-targetheading)+1;
+                motorFR.setPower(-power);
+                motorBR.setPower(power*multiplier);
+                motorFL.setPower(power);
+                motorBL.setPower(-power*multiplier);
+            }
+            strafePos = getInchesTraveled(strafeOdo, strafeStart);
+            current = System.currentTimeMillis();
+        }
+        stopMotors();
+    }
+    public void strafeLeft(double power, double inches, double timelimit, double idealHeading){
+        long startthing = System.currentTimeMillis();
+        long current = System.currentTimeMillis();
+        double multiplier;
+        double strafeStart = getInchesTraveled(strafeOdo, 0);
+        double strafePos = getInchesTraveled(strafeOdo, strafeStart);
+        motorFR.setPower(power);
+        motorFL.setPower(-power);
+        motorBR.setPower(-power);
+        motorBL.setPower(power);
+        double targetheading = idealHeading;
+        RobotLog.aa("StrafeLeft", "goal heading is " + Double.toString(targetheading));
+        while(strafePos > -1 * inches && current - startthing < 1000*timelimit && opModeIsActive()){
+            double heading = newGetHeading();
+            if(heading-targetheading>=0){
+                multiplier = .1*(heading-targetheading)+1;
+                motorFL.setPower(-power);
+                motorBL.setPower(power*multiplier);
+                motorFR.setPower(power);
+                motorBR.setPower(-power*multiplier);
+            }else if(heading-targetheading<0){
+                multiplier = -.1*(heading-targetheading)+1;
+                motorFR.setPower(power*multiplier);
+                motorBR.setPower(-power);
+                motorFL.setPower(-power*multiplier);
+                motorBL.setPower(power);
+            }
+            strafePos = getInchesTraveled(strafeOdo, strafeStart);
+            current = System.currentTimeMillis();
+        }
+        stopMotors();
+    }
+    //below: versions of movement functions that will maintain your current heading
+    public void goStraight(double power, double inches){
+        goStraight(power, inches, newGetHeading());
+    }
+    public void goBackward(double power, double inches){
+        goBackward(power, inches, newGetHeading());
+    }
+    public void strafeRight(double power, double inches, double timeLimit){
+        strafeRight(power, inches, timeLimit, newGetHeading());
+    }
+    public void strafeLeft(double power, double inches, double timeLimit) {
+        strafeLeft(power, inches, timeLimit, newGetHeading());
+    }
+    public void gyroTurn(double power, double degrees){ //right is negative
+        if(opModeIsActive()){
+            double gyroinitial = newGetHeading();
+            if(degrees>0){ //turn left
+                while(newGetHeading() - gyroinitial < degrees && opModeIsActive()){
+                    motorFR.setPower(power);
+                    motorBL.setPower(-power);
+                    motorFL.setPower(-power);
+                    motorBR.setPower(power);
+                    telemetry.addData("Heading", newGetHeading());
+                    telemetry.update();
+                }
+                stopMotors();
+            }
+            else{//turn right
+                while(newGetHeading() - gyroinitial > degrees && opModeIsActive()){
+                    motorFR.setPower(-power);
+                    motorBL.setPower(power);
+                    motorFL.setPower(power);
+                    motorBR.setPower(-power);
+                    telemetry.addData("Heading", newGetHeading());
+                    telemetry.update();
+                }
+                stopMotors();
+            }
+        }
+    }
+    public void absoluteHeading(double power, double degrees){
+        //As you can see, this only works if you also have the newGetHeading() and gyroTurn() functions.
+        //gyroTurn() is where the loop is - where it would lock people out - so you might need
+        //to copy all three functions and make changes to gyroTurn().
+        //newGetHeading() should probably not cause any problems, though.
+        double current = newGetHeading(); //Set the current heading to what the heading is, accounting for
+        //the whole -179 -> 180 flip
+        double processedCurrent = current % 360.0;//The processed version of the current heading
+        //(This just removes extra rotations)
+        telemetry.addData("how many to turn",Double.toString(degrees-processedCurrent));
+        RobotLog.aa("Degrees", Double.toString(degrees));
+        RobotLog.aa("ProcessedCurrent", Double.toString(processedCurrent));
+        RobotLog.aa("AbsoluteHeadingShouldTurn", Double.toString(degrees-processedCurrent));
+        telemetry.addData("power", power); //We probably don't need any of these telemetry things
+        telemetry.update(); //But here they are
+        gyroTurn(power,degrees-processedCurrent); //This is where the actual turning bit happens.
+        //It uses gyroTurn(), which you'll probably have to adapt for teleop use.
+    }
+
     public void stopMotors(){
         motorFR.setPower(0);
         motorFL.setPower(0);
@@ -129,10 +288,10 @@ public class CSOffSeasonSkystoneOdoDF extends LinearOpMode {
         motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        strafeOdometry = hardwareMap.get(DcMotor.class, "strafeOdometry");
-        strafeInitialTicks = strafeOdometry.getCurrentPosition();
-        forwardBackOdometry = hardwareMap.get(DcMotor.class, "forwardBackOdometry");
-        forwardBackInitialTicks = forwardBackOdometry.getCurrentPosition();
+        strafeOdo = hardwareMap.get(DcMotor.class, "motor0");
+        strafeInitialTicks = strafeOdo.getCurrentPosition();
+        forwardOdo = hardwareMap.get(DcMotor.class, "motor3");
+        forwardInitialTicks = forwardOdo.getCurrentPosition();
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.RIGHT;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
