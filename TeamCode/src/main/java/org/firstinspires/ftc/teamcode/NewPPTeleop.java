@@ -94,6 +94,8 @@ public class NewPPTeleop extends LinearOpMode {
         motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorFL.setDirection(DcMotorEx.Direction.REVERSE);
+        motorBL.setDirection(DcMotorEx.Direction.REVERSE);
 
         waitForStart();
 
@@ -109,16 +111,33 @@ public class NewPPTeleop extends LinearOpMode {
         while (opModeIsActive()) {
             telemetry.addData("currentPos", currentPos);
             telemetry.update();
-            if (gamepad1.a) {currentPos = 0.1;}
-            if (gamepad1.b) {currentPos = 0.2;}
-            if (gamepad1.x) {currentPos = 0.3;}
-            if (gamepad1.y) {currentPos = 0.4;}
-            if (gamepad1.dpad_down) {currentPos = 0.5;}
-            if (gamepad1.dpad_left) {currentPos = 0.6;}
-            if (gamepad1.dpad_up) {currentPos = 0.7;}
-            if (gamepad1.dpad_right) {currentPos = 0.8;}
-            if (gamepad1.start) {currentPos = 0.9;}
-            claw.setPosition(currentPos);
+            /*if (gamepad2.a) {currentPos = 0.1;}
+            if (gamepad2.b) {currentPos = 0.2;}
+            if (gamepad2.x) {currentPos = 0.3;}
+            if (gamepad2.y) {currentPos = 0.4;}
+            if (gamepad2.dpad_down) {currentPos = 0.5;}
+            if (gamepad2.dpad_left) {currentPos = 0.6;}
+            if (gamepad2.dpad_up) {currentPos = 0.7;}
+            if (gamepad2.dpad_right) {currentPos = 0.8;}
+            if (gamepad2.start) {currentPos = 0.9;}
+            claw.setPosition(currentPos);*/
+            double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
+            double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
+            double rx = gamepad1.right_stick_x;
+
+            // Denominator is the largest motor power (absolute value) or 1
+            // This ensures all the powers maintain the same ratio,
+            // but only if at least one is out of the range [-1, 1]
+            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+            double frontLeftPower = (y + x + rx) / denominator;
+            double backLeftPower = (y - x + rx) / denominator;
+            double frontRightPower = (y - x - rx) / denominator;
+            double backRightPower = (y + x - rx) / denominator;
+
+            motorFL.setPower(frontLeftPower);
+            motorBL.setPower(backLeftPower);
+            motorFR.setPower(frontRightPower);
+            motorBR.setPower(backRightPower);
 
         }
     }
