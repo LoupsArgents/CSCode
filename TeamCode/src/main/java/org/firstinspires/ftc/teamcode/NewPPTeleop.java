@@ -64,8 +64,8 @@ public class NewPPTeleop extends LinearOpMode {
 
     double armDownPos = 0.2; //0.2 actually works
     double armUpPos = 0.8; //no clue-- servo is too weak
-    double clawOpenPos = 0.45; //claw is being super weird-- won't move at all
-    double clawClosePos = 0.55; //same problem with the claw
+    double clawOpenPos = 0.55; //claw is being super weird-- won't move at all
+    double clawClosePos = 0.3; //same problem with the claw
     double turretPos = 0.525; //actually good!
     double poleGuideDownPos = 0.3; //good
     double poleGuideScoringPos = 0.55; //decent
@@ -121,6 +121,11 @@ public class NewPPTeleop extends LinearOpMode {
             if (gamepad2.dpad_right) {currentPos = 0.8;}
             if (gamepad2.start) {currentPos = 0.9;}
             claw.setPosition(currentPos);*/
+            if (gamepad1.left_trigger > 0.05) {
+                claw.setPosition(clawOpenPos);
+            } else if (gamepad1.right_trigger > 0.05) {
+                claw.setPosition(clawClosePos);
+            }
             double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
             double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
             double rx = gamepad1.right_stick_x;
@@ -138,6 +143,14 @@ public class NewPPTeleop extends LinearOpMode {
             motorBL.setPower(backLeftPower);
             motorFR.setPower(frontRightPower);
             motorBR.setPower(backRightPower);
+            if (gamepad1.dpad_up) {
+                v4b.setPosition(1);
+                arm.setPosition(0.5);
+            } else if (gamepad1.dpad_down) {
+                v4b.setPosition(v4bDownPos);
+                arm.setPosition(armDownPos);
+            }
+
 
         }
     }
