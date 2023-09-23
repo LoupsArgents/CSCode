@@ -36,6 +36,7 @@ public class PixelRecognition extends LinearOpMode {
         WebcamName webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
         //TfodProcessor myTfodProcessor = TfodProcessor.easyCreateWithDefaults();
         TeamPropProcessor teamPropProcessor = new TeamPropProcessor();
+        teamPropProcessor.setAlliance(1);
         portal = VisionPortal.easyCreateWithDefaults(webcam, teamPropProcessor);
         portal.resumeStreaming();
         waitForStart();
@@ -48,6 +49,7 @@ public class PixelRecognition extends LinearOpMode {
         double leftVal;
         double rightVal;
         double centerVal;
+        int alliance; //1 is red, -1 is blue
         @Override
         public void init(int width, int height, CameraCalibration calibration) {
 
@@ -60,8 +62,15 @@ public class PixelRecognition extends LinearOpMode {
             if (mat.empty()) {
                 return frame;
             }
-            Scalar lowHSV = new Scalar(160, 70, 70);
-            Scalar highHSV = new Scalar(180, 255, 255);
+            Scalar lowHSV;
+            Scalar highHSV;
+            if(alliance == 1) {
+                lowHSV = new Scalar(160, 70, 70);
+                highHSV = new Scalar(180, 255, 255);
+            }else{
+                lowHSV = new Scalar(100, 70, 70);
+                highHSV = new Scalar(120, 255, 255);
+            }
             Mat thresh = new Mat();
             // Get a black and white image of red objects
             Core.inRange(mat, lowHSV, highHSV, thresh);
@@ -100,6 +109,9 @@ public class PixelRecognition extends LinearOpMode {
             }else{
                 return "Center";
             }
+        }
+        public void setAlliance(int a){ //0 is not-black HSV filter just for fun use on the board
+            alliance = a;
         }
     }
 }
