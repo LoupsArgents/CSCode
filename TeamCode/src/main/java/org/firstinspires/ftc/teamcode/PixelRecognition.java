@@ -13,17 +13,26 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.Blinker;
 import com.qualcomm.robotcore.hardware.DcMotor;
+
+import org.firstinspires.ftc.vision.VisionProcessor;
+import org.opencv.core.*;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.vision.tfod.TfodProcessor;
+
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import java.util.List;
 import java.util.Locale;
+@TeleOp
 public class PixelRecognition extends LinearOpMode {
     public void runOpMode(){
         VisionPortal portal;
         WebcamName webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
+        TfodProcessor myTfodProcessor = TfodProcessor.easyCreateWithDefaults();
+        portal = new VisionPortal.Builder().setCamera(webcam).setCameraResolution(new Size(640,480)).build();
+        waitForStart();
 
     }
 
