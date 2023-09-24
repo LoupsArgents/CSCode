@@ -55,24 +55,25 @@ public class NewPPTeleop extends LinearOpMode {
     DcMotorEx forwardOdo;
     DcMotorEx strafeOdo;
     DcMotorEx liftEncoder;
-    ServoImplEx arm;
+    DcMotorEx arm;
     ServoImplEx claw;
     ServoImplEx turret;
     ServoImplEx poleGuide;
     ServoImplEx v4b;
     ServoImplEx wrist;
 
-    double armDownPos = 0.2; //0.2 actually works
+    double armDownPos = 0; //0.2 actually works
     double armUpPos = 0.8; //no clue-- servo is too weak
-    double clawOpenPos = 0.55; //claw is being super weird-- won't move at all
-    double clawClosePos = 0.3; //same problem with the claw
+    double clawOpenPos = 0.9; //claw is being super weird-- won't move at all
+    double clawClosePos = 0.6; //same problem with the claw
     double turretPos = 0.525; //actually good!
     double poleGuideDownPos = 0.3; //good
     double poleGuideScoringPos = 0.55; //decent
     double v4bDownPos = 0.55; //correct
     double v4bUpPos = 0.45; //who knows
     double wristDownPos = 0.225; //good
-    double wristUpPos = 0.5; //no way to know w/o arm flipping
+    double wristUpPos = 0.87; //no way to know w/o arm flipping
+    int armTarget = 0;
 
 
     public void runOpMode() {
@@ -83,7 +84,7 @@ public class NewPPTeleop extends LinearOpMode {
         motorBR = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
         liftEncoder = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
         motorBL = hardwareMap.get(DcMotorEx.class, "motorBL");
-        arm = hardwareMap.get(ServoImplEx.class, "arm");
+        arm = hardwareMap.get(DcMotorEx.class, "arm");
         claw = hardwareMap.get(ServoImplEx.class, "claw");
         turret = hardwareMap.get(ServoImplEx.class, "turret");
         poleGuide = hardwareMap.get(ServoImplEx.class, "poleGuide");
@@ -96,20 +97,24 @@ public class NewPPTeleop extends LinearOpMode {
         motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFL.setDirection(DcMotorEx.Direction.REVERSE);
         motorBL.setDirection(DcMotorEx.Direction.REVERSE);
+        //arm.setTargetPosition(0);
+        //arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         waitForStart();
 
-        arm.setPosition(armDownPos);
         claw.setPosition(clawOpenPos);
+        wrist.setPosition(wristDownPos);
         v4b.setPosition(v4bDownPos);
         turret.setPosition(turretPos);
         poleGuide.setPosition(poleGuideDownPos);
         wrist.setPosition(wristDownPos);
         double currentPos = 0.5;
         //Servo servoToUse = claw;
-
+        int armInitial = arm.getCurrentPosition();
         while (opModeIsActive()) {
-            telemetry.addData("currentPos", currentPos);
+            int armCurrent = arm.getCurrentPosition();
+            telemetry.addData("currentArmPos", armCurrent);
+            telemetry.addData("TargetArmPos", armTarget);
             telemetry.update();
             /*if (gamepad2.a) {currentPos = 0.1;}
             if (gamepad2.b) {currentPos = 0.2;}
@@ -125,6 +130,26 @@ public class NewPPTeleop extends LinearOpMode {
                 claw.setPosition(clawOpenPos);
             } else if (gamepad1.right_trigger > 0.05) {
                 claw.setPosition(clawClosePos);
+            }
+            if (gamepad1.dpad_up) {
+                v4b.setPosition(v4bUpPos);
+                wrist.setPosition(wristUpPos);
+                armTarget = -1390;
+                arm.setTargetPosition(armTarget);
+                arm.setPower(-0.5);
+            }
+            else if (gamepad1.dpad_down) {
+                v4b.setPosition(v4bDownPos);
+                wrist.setPosition(wristDownPos);
+                armTarget = -100;
+                arm.setTargetPosition(armTarget);
+                arm.setPower(0.5);
+            }
+            if (gamepad1.a) {
+                v4b.setPosition(v4bDownPos);
+            }
+            else if (gamepad1.b) {
+                v4b.setPosition(v4bUpPos);
             }
             double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
             double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
@@ -143,13 +168,6 @@ public class NewPPTeleop extends LinearOpMode {
             motorBL.setPower(backLeftPower);
             motorFR.setPower(frontRightPower);
             motorBR.setPower(backRightPower);
-            if (gamepad1.dpad_up) {
-                v4b.setPosition(1);
-                arm.setPosition(0.5);
-            } else if (gamepad1.dpad_down) {
-                v4b.setPosition(v4bDownPos);
-                arm.setPosition(armDownPos);
-            }
 
 
         }
