@@ -62,18 +62,19 @@ public class NewPPTeleop extends LinearOpMode {
     ServoImplEx v4b;
     ServoImplEx wrist;
 
-    double armDownPos = 0; //0.2 actually works
-    double armUpPos = 0.8; //no clue-- servo is too weak
+    int armDownPos = 0; //was -100
+    int armUpPos = -700; //was -1390
     double clawOpenPos = 0.9; //claw is being super weird-- won't move at all
     double clawClosePos = 0.6; //same problem with the claw
     double turretPos = 0.525; //actually good!
     double poleGuideDownPos = 0.3; //good
     double poleGuideScoringPos = 0.55; //decent
-    double v4bDownPos = 0.55; //correct
-    double v4bUpPos = 0.45; //who knows
+    double v4bDownPos = .5; //correct - used to be 0.55
+    double v4bUpPos = 0.5; //0.2 for back delivery, 0.45 should be parallel to ground
     double wristDownPos = 0.225; //good
     double wristUpPos = 0.87; //no way to know w/o arm flipping
     int armTarget = 0;
+    boolean poleGuideUse = true;
 
 
     public void runOpMode() {
@@ -97,11 +98,11 @@ public class NewPPTeleop extends LinearOpMode {
         motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFL.setDirection(DcMotorEx.Direction.REVERSE);
         motorBL.setDirection(DcMotorEx.Direction.REVERSE);
-        //arm.setTargetPosition(0);
-        //arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        arm.setTargetPosition(0);
+        arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         waitForStart();
-
+        arm.setTargetPosition(armDownPos);
         claw.setPosition(clawOpenPos);
         wrist.setPosition(wristDownPos);
         v4b.setPosition(v4bDownPos);
@@ -131,19 +132,38 @@ public class NewPPTeleop extends LinearOpMode {
             } else if (gamepad1.right_trigger > 0.05) {
                 claw.setPosition(clawClosePos);
             }
-            if (gamepad1.dpad_up) {
+            if (gamepad1.dpad_right || gamepad1.dpad_left) {
                 v4b.setPosition(v4bUpPos);
-                wrist.setPosition(wristUpPos);
-                armTarget = -1390;
+                //wrist.setPosition(wristUpPos);
+                armTarget = armUpPos; //was -1390
                 arm.setTargetPosition(armTarget);
                 arm.setPower(-0.5);
             }
             else if (gamepad1.dpad_down) {
                 v4b.setPosition(v4bDownPos);
                 wrist.setPosition(wristDownPos);
-                armTarget = -100;
+                armTarget = armDownPos; //was -100
                 arm.setTargetPosition(armTarget);
                 arm.setPower(0.5);
+                if (poleGuideUse) {
+                    poleGuide.setPosition(poleGuideDownPos);
+                }
+            }
+            else if (gamepad1.dpad_up) {
+                v4b.setPosition(v4bUpPos);
+                wrist.setPosition(wristUpPos);
+                armTarget = -1390;
+                arm.setTargetPosition(armTarget);
+                arm.setPower(-0.5);
+                if (poleGuideUse) {
+                    poleGuide.setPosition(poleGuideScoringPos);
+                }
+            }
+            if (gamepad1.start && poleGuideUse == false) {
+                poleGuideUse = true;
+            }
+            if (gamepad1.start && poleGuideUse == true) {
+                poleGuideUse = false;
             }
             if (gamepad1.a) {
                 v4b.setPosition(v4bDownPos);
