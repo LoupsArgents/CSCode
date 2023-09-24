@@ -58,11 +58,13 @@ public class RI3DTeleop extends LinearOpMode {
     private Servo bucket;
     private Servo arm;
     private DcMotor lift;
-    private double drivePower;
-    private double armDownPos;
-    private double armUpPos;
+    double drivePower;
+    double armDownPos = 0.5;
+    double armUpPos = 0.6;
+    /*
     private double bucketOpenPos;
     private double bucketClosePos;
+     */
     private static double ticksPerRotation;
     static double initial;
     private DcMotor intake;
@@ -80,13 +82,15 @@ public class RI3DTeleop extends LinearOpMode {
         motorBR = hardwareMap.get(DcMotor.class, "motor2");
         motorBL = hardwareMap.get(DcMotor.class, "motor3");
         lift = hardwareMap.get(DcMotor.class, "lift");
+        intake = hardwareMap.get(DcMotor.class, "intake");
+        arm = hardwareMap.get(Servo.class, "arm");
         lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        bucket = hardwareMap.get(Servo.class, "bucket");
+        //bucket = hardwareMap.get(Servo.class, "bucket");
         drivePower = 0.5;
         initial = lift.getCurrentPosition()/ticksPerRotation;
         ticksPerRotation = lift.getMotorType().getTicksPerRev();
@@ -117,16 +121,16 @@ public class RI3DTeleop extends LinearOpMode {
             //all shutoff commands start as false, startup start as true
             intakePower = intake.getPower();
             if (gamepad1.a) {
-                newPower = 0.5;
+                newPower = 0;
             }
             else if (gamepad1.x) {
-                newPower = 0.67;
+                newPower = -0.5;
             }
             else if (gamepad1.y) {
-                newPower = 0.84;
+                newPower = -0.75;
             }
             else if (gamepad1.b) {
-                newPower = 1;
+                newPower = -1;
             }
             intake.setPower(newPower);
             telemetry.addData(Double.toString(newPower), " new power");
@@ -137,20 +141,24 @@ public class RI3DTeleop extends LinearOpMode {
             double y = -gamepad1.left_stick_y; // Remember, this is reversed!
             double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
             double rx = -gamepad1.right_stick_x;
-            if (rx <= 0.05) {
+            if (Math.abs(rx) <= 0.05) {
                 rx = 0;
             }
-            if (gamepad1.right_trigger > 0.05) {
+            /*if (gamepad1.right_trigger > 0.05) {
                 bucket.setPosition(bucketClosePos);
             }
             if (gamepad1.left_trigger > 0.05) {
                 bucket.setPosition(bucketOpenPos);
             }
+             */
             if (gamepad2.dpad_up) {
-                arm.setPosition(armUpPos);
+                arm.setPosition(.9);
+            }
+            else if (gamepad2.dpad_left || gamepad2.dpad_right) {
+                arm.setPosition(.7);
             }
             else if (gamepad2.dpad_down) {
-                arm.setPosition(armDownPos);
+                arm.setPosition(.48);
             }
             motorFL.setDirection(DcMotorSimple.Direction.REVERSE);
             motorBL.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -174,7 +182,7 @@ public class RI3DTeleop extends LinearOpMode {
                 liftPower = (0.5*gamepad2.left_stick_y);
             }
             else{
-                liftPower = (-0.05);
+                liftPower = (0.05);
                 //position = 2;
             }
             lift.setPower(liftPower);
