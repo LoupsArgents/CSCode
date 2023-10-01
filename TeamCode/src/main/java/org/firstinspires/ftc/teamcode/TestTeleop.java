@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.ServoImpl;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetADCCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetADCResponse;
@@ -48,15 +49,29 @@ import com.qualcomm.robotcore.hardware.PwmControl; // for Axon
 
 @TeleOp
 public class TestTeleop extends LinearOpMode {
-    private DcMotorEx testMotor;
+    public AnalogInput ultra;
+    double distance1;
+    double distance2;
+    double vcc = 3.3;
 
     public void runOpMode() {
-        testMotor = hardwareMap.get(DcMotorEx.class, "testMotor");
-        testMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+
+        ultra = hardwareMap.analogInput.get("ultrasonic");
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+
         waitForStart();
 
         while (opModeIsActive()) {
-            testMotor.setPower(gamepad1.left_stick_y);
+            //= [Vobserved / ((Vcc/1024) * 6)] - 300
+            double volt = ultra.getVoltage();
+            //distance1 = (volt / (vcc/1024))*6 - 300; //their equation (seems to be half of the accurate reading???)
+            distance2 = 2*((volt/(vcc/1024)) * 6 - 300); //in cm!!!
+            //distance = ultra.getVoltage();
+            //distance = (0.206866*(Math.sqrt((ultra.getVoltage() + 3659.32)*0.06786))) + -3.11436;
+            telemetry.addData("distance1", distance1);
+            telemetry.addData("distance2", distance2);
+            telemetry.update();
         }
     }
 }
