@@ -61,6 +61,8 @@ public class NewPPTeleop extends LinearOpMode {
     ServoImplEx poleGuide;
     ServoImplEx v4b;
     ServoImplEx wrist;
+    DcMotorEx lift2;
+    DcMotorEx lift3;
 
     int armDownPos = 0; //was -100
     int armUpPos = -700; //was -1390
@@ -69,13 +71,19 @@ public class NewPPTeleop extends LinearOpMode {
     double turretPos = 0.525; //actually good!
     double poleGuideDownPos = 0.3; //good
     double poleGuideScoringPos = 0.55; //decent
-    double v4bDownPos = .5; //correct - used to be 0.55
+    double v4bDownPos = .55; //correct - used to be 0.55
     double v4bUpPos = 0.5; //0.2 for back delivery, 0.45 should be parallel to ground
     double wristDownPos = 0.225; //good
     double wristUpPos = 0.87; //no way to know w/o arm flipping
     int armTarget = 0;
     boolean poleGuideUse = true;
-
+    double liftInitial;
+    double ticksPerRotation;
+    double liftPos;
+    boolean isScoringPos = false;
+    double liftIdealPos = 0;
+    boolean liftHappyPlace = true;
+    boolean isJoysticking = false;
 
     public void runOpMode() {
         motorFR = hardwareMap.get(DcMotorEx.class, "motorFRandForwardOdo");
@@ -91,6 +99,9 @@ public class NewPPTeleop extends LinearOpMode {
         poleGuide = hardwareMap.get(ServoImplEx.class, "poleGuide");
         v4b = hardwareMap.get(ServoImplEx.class, "v4b");
         wrist = hardwareMap.get(ServoImplEx.class, "wrist");
+        lift2 = hardwareMap.get(DcMotorEx.class, "lift2");
+        lift3 = hardwareMap.get(DcMotorEx.class, "lift3");
+
 
         motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -100,6 +111,10 @@ public class NewPPTeleop extends LinearOpMode {
         motorBL.setDirection(DcMotorEx.Direction.REVERSE);
         arm.setTargetPosition(0);
         arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        ticksPerRotation = liftEncoder.getMotorType().getTicksPerRev();
+        liftInitial = liftEncoder.getCurrentPosition()/ticksPerRotation;
+        liftPos = (liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial;
 
         waitForStart();
         arm.setTargetPosition(armDownPos);
@@ -114,8 +129,11 @@ public class NewPPTeleop extends LinearOpMode {
         int armInitial = arm.getCurrentPosition();
         while (opModeIsActive()) {
             int armCurrent = arm.getCurrentPosition();
+            liftPos = (liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial;
             telemetry.addData("currentArmPos", armCurrent);
             telemetry.addData("TargetArmPos", armTarget);
+            telemetry.addData("liftPos", liftPos);
+            telemetry.addData("lift power", -gamepad2.left_stick_y);
             telemetry.update();
             /*if (gamepad2.a) {currentPos = 0.1;}
             if (gamepad2.b) {currentPos = 0.2;}
@@ -138,8 +156,10 @@ public class NewPPTeleop extends LinearOpMode {
                 armTarget = armUpPos; //was -1390
                 arm.setTargetPosition(armTarget);
                 arm.setPower(-0.5);
+                isScoringPos = true;
             }
-            else if (gamepad1.dpad_down) {
+            else if (gamepad1.dpad_down || !isScoringPos) {
+                isScoringPos = false;
                 v4b.setPosition(v4bDownPos);
                 wrist.setPosition(wristDownPos);
                 armTarget = armDownPos; //was -100
@@ -189,7 +209,109 @@ public class NewPPTeleop extends LinearOpMode {
             motorFR.setPower(frontRightPower);
             motorBR.setPower(backRightPower);
 
+            double liftPower = -gamepad2.left_stick_y;
+            /*if (liftPower > 0.05 && liftPos < 0.3) {
+                lift2.setPower(liftPower);
+                lift3.setPower(-liftPower);
+            } else if (liftPower < -0.05 && liftPos > 0) {
+                lift2.setPower(liftPower);
+                lift3.setPower(-liftPower);
+            } else if (liftPos > 0.05) {
+                lift2.setPower(0.3);
+                lift3.setPower(-0.3);
+            }*/ //highest position allowed for lift is 0.3
 
+            double liftError = liftIdealPos - liftPos;
+            double liftTolerance = 0.05;
+            double Kp = 10;
+            if (Math.abs(liftError) < liftTolerance) {
+                liftHappyPlace = true;
+            } else {
+                liftHappyPlace = false;
+            }
+            if (!isJoysticking && !liftHappyPlace) {
+                lift2.setPower(liftError*Kp);
+                lift3.setPower(-liftError*Kp);
+            } else if (isJoysticking == false) { //liftHappyPlace == true
+                if (liftPos > 0.05) {
+                    lift2.setPower(0.3);
+                    lift3.setPower(-0.3);
+                } else if (liftPos > 0.15) {
+                    lift2.setPower(0.4);
+                    lift3.setPower(-0.4);
+                } else if (liftPos > 0.25) {
+                    lift2.setPower(0.5);
+                    lift3.setPower(-0.5);
+                }
+            }
+            if ((liftPower > 0.05 && liftPos < 0.3) || (liftPower < -0.05 && liftPos > 0)) {
+                isJoysticking = true;
+                liftHappyPlace = true;
+                liftIdealPos = liftPos;
+                lift2.setPower(liftPower);
+                lift3.setPower(-liftPower);
+            } else {
+                isJoysticking = false;
+            }
+
+            /*
+            //begin lift position adjustment
+            slidesError = slidesIdealLevel - slidesPos;
+            if (Math.abs(slidesError) < slidesTolerance) {
+                slidesHappyPlace = true;
+            }
+            if (isJoysticking == false && Math.abs(slidesPos - slidesIdealLevel) > slidesTolerance) {
+                slides.setPower(slidesError*Kp);
+            } else if (isJoysticking == false) {
+                //just trying to keep the lift up
+                if (slidesPos > 0 && slidesPos < 0.74){
+                    //So that it doesn't pop back up when it hits the bottom
+                    slides.setPower(0.15);
+                    //drivePower = 0.75;
+                }
+                else if (slidesPos > 0.70){
+                    //at the top, it needs more power to keep it up
+                    slides.setPower(0.2);
+                    //drivePower = 0.4;
+                }
+                else if (slidesPos < 0.01){
+                    slides.setPower(0);
+                    //drivePower = 0.75;
+                }
+            }
+            //change lift position- joystick
+            if (gamepad2.left_stick_y < 0 && Math.abs(gamepad2.left_stick_y) > 0.05 && slidesPos < 0.75){
+                slidesHappyPlace = true;
+                slides.setPower(-1*gamepad2.left_stick_y);
+                isJoysticking = true;
+                slidesIdealLevel = slidesPos;
+            }
+            else if (gamepad2.left_stick_y > 0 && Math.abs(gamepad2.left_stick_y) > 0.05){
+                slidesHappyPlace = true;
+                slides.setPower(-0.6*gamepad2.left_stick_y);
+                isJoysticking = true;
+                slidesIdealLevel = slidesPos;
+            }
+            else if (gamepad2.right_stick_y < 0 && Math.abs(gamepad2.right_stick_y) > 0.05 && slidesPos < 0.75){
+                slidesHappyPlace = true;
+                slides.setPower(-0.5*gamepad2.right_stick_y);
+                isJoysticking = true;
+                slidesIdealLevel = slidesPos;
+            }
+            else if (gamepad2.right_stick_y > 0 && Math.abs(gamepad2.right_stick_y) > 0.05){
+                slidesHappyPlace = true;
+                slides.setPower(-0.3*gamepad2.right_stick_y);
+                isJoysticking = true;
+                slidesIdealLevel = slidesPos;
+            }
+            else if (((gamepad2.left_stick_y < 0.05) || (gamepad2.right_stick_y < 0.05)) && slidesPos > 0.8){
+                slides.setPower(0.2);
+            }
+            if (Math.abs(gamepad2.left_stick_y) < 0.05 && Math.abs(gamepad2.right_stick_y) < 0.05) {
+                isJoysticking = false;
+            }
+
+             */
         }
     }
 }
