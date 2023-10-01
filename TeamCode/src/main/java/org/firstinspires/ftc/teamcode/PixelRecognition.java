@@ -1,34 +1,19 @@
 package org.firstinspires.ftc.teamcode;
-import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
-import org.firstinspires.ftc.vision.VisionPortal;
 
 import android.graphics.Canvas;
-import android.util.Size;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
+
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.vision.VisionPortal;
-import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.robotcore.robot.Robot;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.hardware.Blinker;
-import com.qualcomm.robotcore.hardware.DcMotor;
-
 import org.firstinspires.ftc.vision.VisionProcessor;
-import org.opencv.core.*;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.vision.tfod.TfodProcessor;
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
-
-import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.util.RobotLog;
-
-import java.util.List;
-import java.util.Locale;
 @TeleOp
 public class PixelRecognition extends LinearOpMode {
     public void runOpMode(){
