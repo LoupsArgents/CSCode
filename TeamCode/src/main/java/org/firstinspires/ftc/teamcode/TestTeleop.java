@@ -40,8 +40,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Queue;
+
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.ServoImplEx; // for Axon
 import com.qualcomm.robotcore.hardware.PwmControl; // for Axon
@@ -59,6 +63,7 @@ public class TestTeleop extends LinearOpMode {
         ultra = hardwareMap.analogInput.get("ultrasonic");
         telemetry.addData("Status", "Initialized");
         telemetry.update();
+        ArrayList<Double> movingAvgList = new ArrayList<Double>();
 
         waitForStart();
 
@@ -69,9 +74,24 @@ public class TestTeleop extends LinearOpMode {
             distance2 = 2*((volt/(vcc/1024)) * 6 - 300); //in cm!!!
             //distance = ultra.getVoltage();
             //distance = (0.206866*(Math.sqrt((ultra.getVoltage() + 3659.32)*0.06786))) + -3.11436;
-            telemetry.addData("distance1", distance1);
+            movingAvgList.add(distance2);
+            if (movingAvgList.size() > 5) {
+                movingAvgList.remove(0);
+            }
+            //RobotLog.aa("moving average", Double.toString(getAvg(movingAvgList)));
+            RobotLog.aa("distance", Double.toString(distance2));
+            //telemetry.addData("distance1", distance1);
             telemetry.addData("distance2", distance2);
+            telemetry.addData("movingAvg", getAvg(movingAvgList));
             telemetry.update();
         }
+    }
+    public double getAvg(ArrayList<Double> readings) {
+        double returnAvg = 0;
+        for (int i = 0; i < readings.size(); i++) {
+            returnAvg += readings.get(i);
+        }
+        returnAvg /= readings.size();
+        return returnAvg;
     }
 }
