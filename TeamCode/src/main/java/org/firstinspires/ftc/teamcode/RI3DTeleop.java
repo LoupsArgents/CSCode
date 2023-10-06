@@ -66,9 +66,9 @@ public class RI3DTeleop extends LinearOpMode {
     private double bucketClosePos;
      */
     private static double ticksPerRotation;
-    static double initial;
+    static double liftInitial;
     private DcMotor intake;
-    private double position;
+    private double liftPos;
     private double currentVoltage;
     private double liftPower = 0;
 
@@ -92,16 +92,16 @@ public class RI3DTeleop extends LinearOpMode {
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         //bucket = hardwareMap.get(Servo.class, "bucket");
         drivePower = 0.5;
-        initial = lift.getCurrentPosition()/ticksPerRotation;
+        liftInitial = lift.getCurrentPosition()/ticksPerRotation;
         ticksPerRotation = lift.getMotorType().getTicksPerRev();
-        position = (lift.getCurrentPosition()/ticksPerRotation)-initial;
+        liftPos = (lift.getCurrentPosition()/ticksPerRotation)-liftInitial;
         boolean flipAllowed = true;
         double intakePower = 0;
         double newPower = 0;
 
         telemetry.addData("This program starts at half power. Driver 1, please note", "LT is full power, LB is 3/4 power, RB is half power, RT is 1/4 power");
         telemetry.update();
-        initial = lift.getCurrentPosition()/ticksPerRotation;
+        //initial = lift.getCurrentPosition()/ticksPerRotation;
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
 
@@ -109,12 +109,13 @@ public class RI3DTeleop extends LinearOpMode {
         while (opModeIsActive()) {
             currentVoltage = getBatteryVoltage();
             telemetry.addData("Voltage", Double.toString(currentVoltage));
+            telemetry.addData("liftPos", liftPos);
             telemetry.update();
             //telemetry.addData("Controls 1: ", "LT is full power, LB is 3/4 power, RB is half power, RT is 1/4 power");
             //telemetry.addData("Controls 1 Cont", "a is 0.6 and b is 1 for blue side ducks, x is 0.6 and y is 1 for red side ducks. use the lower powers");
             //telemetry.addData("Controls 2", "LT is open (hold it for a few seconds), claw should auto-close, RT is manual close (if needed)");
             //telemetry.addData("Controls2", "a = ground, x = 1, y = 2, b = 3, and left joystick is manual lift adjustment");
-            position = (lift.getCurrentPosition()/ticksPerRotation)-initial;
+            liftPos = (lift.getCurrentPosition()/ticksPerRotation)-liftInitial;
             //telemetry.addData("liftPos", Double.toString(position));
             //telemetry.addData("gamepad2.left_stick_y", Double.toString(gamepad2.left_stick_y));
             //telemetry.update();

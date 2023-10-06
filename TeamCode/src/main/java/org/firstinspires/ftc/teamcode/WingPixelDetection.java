@@ -1,4 +1,7 @@
 package org.firstinspires.ftc.teamcode;
+import static org.opencv.imgproc.Imgproc.FONT_HERSHEY_SIMPLEX;
+import static org.opencv.imgproc.Imgproc.putText;
+
 import android.graphics.Canvas;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -20,6 +23,7 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Imgproc.*;
 
 import java.util.*;
 
@@ -36,7 +40,11 @@ public class WingPixelDetection extends LinearOpMode{
 
         }
     }
+    public void centerOnClosestStack(){
+
+    }
      class WingPixelProcessor implements VisionProcessor {
+        int minPixelBoxArea = 1500;
         @Override
         public void init(int width, int height, CameraCalibration calibration) {
 
@@ -54,7 +62,7 @@ public class WingPixelDetection extends LinearOpMode{
             Scalar highYellowHSV = new Scalar(27, 255, 255);
             Scalar lowGreenHSV = new Scalar(45,100,50);
             Scalar highGreenHSV = new Scalar(70, 255, 255);
-            Scalar lowWhiteHSV = new Scalar(0,0,150);
+            Scalar lowWhiteHSV = new Scalar(0,0,180); //last was 150
             Scalar highWhiteHSV = new Scalar(180, 20, 255);
             Mat purpleThresh = new Mat();
             Mat yellowThresh = new Mat();
@@ -107,22 +115,31 @@ public class WingPixelDetection extends LinearOpMode{
             for (int i = 0; i < contours.size(); i++) {
                 Scalar color = new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
                 Imgproc.drawContours(masked, contoursPolyList, i, color);
-                telemetry.addData("Rect", boundRect[i]);
-                Imgproc.rectangle(masked, boundRect[i].tl(), boundRect[i].br(), color, 2);
-                Imgproc.circle(masked, centers[i], (int) radius[i][0], color, 2);
+                if(boundRect[i].area() > minPixelBoxArea) {
+                    Imgproc.rectangle(masked, boundRect[i].tl(), boundRect[i].br(), color, 2);
+                    telemetry.addData("Rect", boundRect[i]);
+
+                }
+                //Imgproc.circle(masked, centers[i], (int) radius[i][0], color, 2);
             }
             //give me the bounding box with highest y???
             Rect maxRect = new Rect(0,0,10,10);
             for(Rect r : boundRect){
-                if(r.y > maxRect.y && r.area() > 20){
+                if(r.y > maxRect.y && r.area() > minPixelBoxArea){
                     maxRect = r;
+                    Imgproc.putText(masked, Double.toString(r.area()), new Point(r.x, r.y), FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 0, 0));
                 }
             }
+            Rect r = new Rect(320, 100, 10, 10);
+            Mat regionOfInterest = masked.submat(r);
+            Scalar s = Core.mean(regionOfInterest);
+            telemetry.addData("Color", s);
+            Imgproc.rectangle(masked, r, new Scalar(255, 255, 255));
             RobotLog.aa("Box", maxRect.toString());
             telemetry.addData("BoundingBox", maxRect);
             telemetry.update();
             masked.copyTo(frame);
-            return masked;
+            return frame;
         }
 
          @Override

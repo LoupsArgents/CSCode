@@ -65,7 +65,7 @@ public class NewPPTeleop extends LinearOpMode {
     DcMotorEx lift3;
 
     int armDownPos = 0; //was -100
-    int armUpPos = -700; //was -1390
+    int armUpPos = -600; //was -1390, then -700
     double clawOpenPos = 0.9; //claw is being super weird-- won't move at all
     double clawClosePos = 0.6; //same problem with the claw
     double turretPos = 0.525; //actually good!
