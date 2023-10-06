@@ -68,9 +68,29 @@ public class TestTeleop extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            //= [Vobserved / ((Vcc/1024) * 6)] - 300
+            //= [Vobserved / ((Vcc/1024) * 6)] - 300 is the formula on the maxbotix website
             double volt = ultra.getVoltage();
-            //distance1 = (volt / (vcc/1024))*6 - 300; //their equation (seems to be half of the accurate reading???)
+            distance2 = 2*((volt/(vcc/1024)) * 6 - 300); //in mm???
+            //distance2 = (volt / ((vcc/1024) * 6)) - 300; their formula-- consistently returns negative values :(
+            RobotLog.aa("distance", Double.toString(distance2));
+            telemetry.addData("distance2", distance2);
+            telemetry.update();
+        }
+    }
+
+
+
+    public double getAvg(ArrayList<Double> readings) {
+        double returnAvg = 0;
+        for (int i = 0; i < readings.size(); i++) {
+            returnAvg += readings.get(i);
+        }
+        returnAvg /= readings.size();
+        return returnAvg;
+    }
+    /*
+    * //= [Vobserved / ((Vcc/1024) * 6)] - 300 is the formula on the maxbotix website
+            double volt = ultra.getVoltage();
             distance2 = 2*((volt/(vcc/1024)) * 6 - 300); //in cm!!!
             //distance = ultra.getVoltage();
             //distance = (0.206866*(Math.sqrt((ultra.getVoltage() + 3659.32)*0.06786))) + -3.11436;
@@ -84,14 +104,6 @@ public class TestTeleop extends LinearOpMode {
             telemetry.addData("distance2", distance2);
             telemetry.addData("movingAvg", getAvg(movingAvgList));
             telemetry.update();
-        }
-    }
-    public double getAvg(ArrayList<Double> readings) {
-        double returnAvg = 0;
-        for (int i = 0; i < readings.size(); i++) {
-            returnAvg += readings.get(i);
-        }
-        returnAvg /= readings.size();
-        return returnAvg;
-    }
+    * */
+
 }
