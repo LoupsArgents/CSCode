@@ -46,7 +46,6 @@ public class DeadWheelsSample extends LinearOpMode {
     private MotorEx motorFLenc, motorFRenc, motorBLenc, motorBRenc;
     private Encoder leftOdometer, rightOdometer, centerOdometer;
     private HolonomicOdometry odometry;
-    private Pose2d startPose = new Pose2d();
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -83,7 +82,7 @@ public class DeadWheelsSample extends LinearOpMode {
                 TRACKWIDTH, CENTER_WHEEL_OFFSET
         );
 
-        odometry.updatePose(new Pose2d());
+        odometry.updatePose(new Pose2d()); //could probably give it a different starting position to make it use field-related coordinates
 
         waitForStart();
 
