@@ -1,11 +1,9 @@
 package org.firstinspires.ftc.teamcode;
+
 import static org.opencv.imgproc.Imgproc.FONT_HERSHEY_SIMPLEX;
-import static org.opencv.imgproc.Imgproc.putText;
 
 import android.graphics.Canvas;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -23,28 +21,86 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.imgproc.Imgproc.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 @TeleOp
-public class WingPixelDetection extends LinearOpMode{
+public class WingPixelDetection extends OldPPBotBasicDF {
     public void runOpMode(){
         VisionPortal portal;
+        initializeHardware();
         WebcamName webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
         WingPixelDetection.WingPixelProcessor p = new WingPixelDetection.WingPixelProcessor();
         portal = VisionPortal.easyCreateWithDefaults(webcam, p);
         portal.resumeStreaming();
         waitForStart();
+        centerOnClosestStack(p);
+        centerOnClosestStack(p);
         while(opModeIsActive()){
 
         }
     }
-    public void centerOnClosestStack(){
+    public void centerOnClosestStack(WingPixelDetection.WingPixelProcessor processor){
+        double power = .27;
+        double initialHeading = newGetHeading();
+        double currentHeading = initialHeading;
+        //this is a left/right strafe based on the position of the pixel
+        //and using the gyro to keep heading consistent
+        //closest precedent is phase 1/3 of old cone radar
+        Point pixelPos = processor.getClosestPixelPos();
+        double multiplier = 1;
+        while(Math.abs(pixelPos.x - 320) > 10 && opModeIsActive()){
+            //pixelPos.x is a 0-640 scale
+            //if > 320, it's to the right and we need to go right
+            //if < 320, it's to the left and we need to go left
+            //option: the sort of continuous sensor input we do in cone radar
+            //not sure how this deals with motion blur - it may not work or we may need
+            //to go very slow.
+            //other option: do math based on the y-value, camera angle, etc. (trig?) to figure out
+            //how far right/left we think we need to go, execute that, and then maybe (if needed)
+            //do the same thing again.
+            currentHeading = newGetHeading();
+            pixelPos = processor.getClosestPixelPos();
+
+            if(pixelPos.x > 320){ //go right
+                if(currentHeading - initialHeading >= 0){
+                    multiplier = .1*(currentHeading-initialHeading)+1;
+                    motorFL.setPower(power*multiplier*multiplierFL);
+                    motorBL.setPower(-power*multiplierBL);
+                    motorFR.setPower(-power*multiplier*multiplierFR);
+                    motorBR.setPower(power*multiplierBR);
+                }else{
+                    multiplier = -.1*(currentHeading-initialHeading)+1;
+                    motorFR.setPower(-power*multiplierFR);
+                    motorBR.setPower(power*multiplier*multiplierBR);
+                    motorFL.setPower(power*multiplierFL);
+                    motorBL.setPower(-power*multiplier*multiplierBL);
+                }
+            }else{ //go left
+                if(currentHeading > initialHeading){
+                    multiplier = .1*(currentHeading-initialHeading)+1;
+                    motorFL.setPower(-power*multiplierFL);
+                    motorBL.setPower(power*multiplier*multiplierBL);
+                    motorFR.setPower(power*multiplierFR);
+                    motorBR.setPower(-power*multiplier*multiplierBR);
+                }else{
+                    multiplier = -.1*(currentHeading-initialHeading)+1;
+                    motorFR.setPower(power*multiplier*multiplierFR);
+                    motorBR.setPower(-power*multiplierBR);
+                    motorFL.setPower(-power*multiplier*multiplierFL);
+                    motorBL.setPower(power*multiplierBL);
+                }
+            }
+        }
+        stopMotors();
 
     }
      class WingPixelProcessor implements VisionProcessor {
         int minPixelBoxArea = 1500;
+        Point closestPixelPos = new Point(400, 400);
+        Rect closestPixelRect;
         @Override
         public void init(int width, int height, CameraCalibration calibration) {
 
@@ -136,6 +192,8 @@ public class WingPixelDetection extends LinearOpMode{
             telemetry.addData("Color", s);
             Imgproc.rectangle(masked, r, new Scalar(255, 255, 255));
             RobotLog.aa("Box", maxRect.toString());
+            closestPixelPos = new Point(maxRect.x, maxRect.y);
+            closestPixelRect = maxRect;
             telemetry.addData("BoundingBox", maxRect);
             telemetry.update();
             masked.copyTo(frame);
@@ -145,6 +203,14 @@ public class WingPixelDetection extends LinearOpMode{
          @Override
          public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {
 
+         }
+         public Point getClosestPixelPos(){
+            //x and y represent the top left corner.
+             //so add half width to the x
+            return new Point(closestPixelPos.x + (closestPixelRect.width/2), closestPixelPos.y);
+        }
+         public Rect getClosestPixelRect(){
+            return this.closestPixelRect;
          }
      }
 }
