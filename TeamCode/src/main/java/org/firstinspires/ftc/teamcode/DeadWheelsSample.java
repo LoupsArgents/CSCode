@@ -73,7 +73,7 @@ public class DeadWheelsSample extends LinearOpMode {
         rightOdometer = motorFRenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE); //said front right
         centerOdometer = motorFLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE); //said back left
 
-        rightOdometer.setDirection(Motor.Direction.REVERSE);
+        //rightOdometer.setDirection(Motor.Direction.REVERSE);
 
         odometry = new HolonomicOdometry(
                 leftOdometer::getDistance,
