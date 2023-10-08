@@ -35,7 +35,7 @@ public class DeadWheelsSample extends LinearOpMode {
     // This is to correct for the error that might occur when turning.
     // A negative offset means the odometer is closer to the back,
     // while a positive offset means it is closer to the front.
-    public static final double CENTER_WHEEL_OFFSET = -15.0887026; //used to be -2.1
+    public static final double CENTER_WHEEL_OFFSET = -11.321628; //used to be -2.1
 
     public static final double WHEEL_DIAMETER = 3.5; //used to say 2.0
     // if needed, one can add a gearing term here
@@ -91,6 +91,9 @@ public class DeadWheelsSample extends LinearOpMode {
 
             odometry.updatePose(); // update the position
             telemetry.addData("pos", odometry.getPose());
+            telemetry.addData("leftOdometerEncoder", motorBL.getCurrentPosition());
+            telemetry.addData("rightOdometerEncoder", motorFR.getCurrentPosition());
+            telemetry.addData("centerOdometerEncoder", motorFL.getCurrentPosition());
             telemetry.update();
 
             //mecanum drive for testing
