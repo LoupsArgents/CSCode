@@ -59,6 +59,7 @@ public class DeadWheelsSample extends LinearOpMode {
         motorBR = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
         motorBL = hardwareMap.get(DcMotorEx.class, "motorBLandBackwardOdo");
 
+        //motorFRenc.setDirection(Motor.Direction.REVERSE);
         motorFL.setDirection(DcMotorEx.Direction.REVERSE);
         motorBL.setDirection(DcMotorEx.Direction.REVERSE);
         motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -73,7 +74,7 @@ public class DeadWheelsSample extends LinearOpMode {
         rightOdometer = motorFRenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE); //said front right
         centerOdometer = motorFLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE); //said back left
 
-        //rightOdometer.setDirection(Motor.Direction.REVERSE);
+        rightOdometer.setDirection(Motor.Direction.REVERSE);
 
         odometry = new HolonomicOdometry(
                 leftOdometer::getDistance,
