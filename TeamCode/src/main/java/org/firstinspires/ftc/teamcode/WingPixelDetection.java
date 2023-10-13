@@ -37,12 +37,51 @@ public class WingPixelDetection extends OldPPBotBasicDF {
         portal.resumeStreaming();
         waitForStart();
         centerOnClosestStack(p);
-        centerOnClosestStack(p);
         while(opModeIsActive()){
 
         }
     }
-    public void centerOnClosestStack(WingPixelDetection.WingPixelProcessor processor){
+    public void centerOnClosestStack(WingPixelProcessor processor){
+        double power = .35;
+        Point pixelPos = processor.getClosestPixelPos();
+        double multiplier;
+        while(opModeIsActive() && (/*Math.abs(pixelPos.x-320) > 10 ||*/ pixelPos.y < 300)) {
+            RobotLog.aa("DistanceFromCenter", String.valueOf(Math.abs(pixelPos.x - 320)));
+            motorBL.setPower(power * multiplierBL);
+            motorBR.setPower(power * multiplierBR);
+            motorFL.setPower(power * multiplierFL);
+            motorFR.setPower(power * multiplierFR);
+            double proportionalConstant = -.01; // used to be -.5, then -.3, then -.03; Desmos said -0.00344828
+            pixelPos = processor.getClosestPixelPos();
+            if(Math.abs(pixelPos.x - 320) < 10){
+                motorBL.setPower(power * multiplierBL);
+                motorBR.setPower(power * multiplierBR);
+                motorFL.setPower(power * multiplierFL);
+                motorFR.setPower(power * multiplierFR);
+                continue;
+            }else if(pixelPos.x < 320){ //go left (reduce FR, BL)
+                multiplier = 1 + (Math.abs(320 - pixelPos.x) * proportionalConstant);
+                telemetry.addData("multiplier", Double.toString(multiplier));
+                telemetry.update();
+                RobotLog.aa("Going", "left");
+                motorFR.setPower(power * multiplierFR); //all used to be negative for pole radar, positive for cone radar
+                motorBL.setPower(power * multiplierBL); //multipliers were on fr and bl for pole radar
+                motorFL.setPower(power * multiplierFL * multiplier);
+                motorBR.setPower(power * multiplierBR * multiplier);
+            }else if(pixelPos.x > 320){ //go right (reduce FL, BR)
+                multiplier = 1 + (Math.abs(320 - pixelPos.x) * proportionalConstant);
+                telemetry.addData("multiplier", Double.toString(multiplier));
+                telemetry.update();
+                RobotLog.aa("Going", "right");
+                motorFL.setPower(power * multiplierFL);
+                motorBR.setPower(power * multiplierBR);
+                motorFR.setPower(power * multiplierFR * multiplier);
+                motorBL.setPower(power * multiplierBL * multiplier);
+            }
+        }
+        stopMotors();
+        }
+    public void strafeCenterOnClosestStack(WingPixelDetection.WingPixelProcessor processor){
         double power = .27;
         double initialHeading = newGetHeading();
         double currentHeading = initialHeading;
@@ -108,16 +147,17 @@ public class WingPixelDetection extends OldPPBotBasicDF {
         @Override
         public Object processFrame(Mat frame, long captureTimeNanos){
             Mat mat = new Mat();
+            Mat original = frame;
             Imgproc.cvtColor(frame, mat, Imgproc.COLOR_RGB2HSV);
             if (mat.empty()) {
                 return frame;
             }
             Scalar lowPurpleHSV = new Scalar(117, 40, 20); //purple pixels
             Scalar highPurpleHSV = new Scalar(150, 255, 255); //120-150 should do for hue for starters
-            Scalar lowYellowHSV = new Scalar(15, 100, 80);
-            Scalar highYellowHSV = new Scalar(27, 255, 255);
-            Scalar lowGreenHSV = new Scalar(45,100,50);
-            Scalar highGreenHSV = new Scalar(70, 255, 255);
+            Scalar lowYellowHSV = new Scalar(14, 80, 20); //last was 80 (excluded brown but really that's not necessary), second-to-last was 100
+            Scalar highYellowHSV = new Scalar(28, 255, 255);
+            Scalar lowGreenHSV = new Scalar(45,100,25); //changing the low brightness/value threshold to try to get it to stop separating close pixels into multiple boxes
+            Scalar highGreenHSV = new Scalar(75, 255, 255);
             Scalar lowWhiteHSV = new Scalar(0,0,180); //last was 150
             Scalar highWhiteHSV = new Scalar(180, 20, 255);
             Mat purpleThresh = new Mat();
@@ -137,7 +177,7 @@ public class WingPixelDetection extends OldPPBotBasicDF {
             //color the white portion of thresh in with color
             //output into masked
             Mat thing = new Mat(480, 640, CvType.CV_8UC3, new Scalar(140, 70, 200)); //purple was 140 70 200
-            Core.bitwise_and(thing, thing, masked, testOutput);
+            Core.bitwise_and(original, original, masked, testOutput);
             //Scalar average = Core.mean(masked, thresh);
             Mat scaledMask = new Mat();
             //scale the average saturation to 150
@@ -145,7 +185,7 @@ public class WingPixelDetection extends OldPPBotBasicDF {
             testOutput.copyTo(frame);
             Mat cannyOutput = new Mat();
             int threshold = 170;
-            Imgproc.blur(masked, masked, new Size(5, 5));
+            Imgproc.blur(masked, masked, new Size(6, 6)); //was 5, 5
             Imgproc.Canny(masked, cannyOutput, threshold, threshold * 2);
             Imgproc.blur(cannyOutput, cannyOutput, new Size(5, 5));
             List<MatOfPoint> contours = new ArrayList<>();
