@@ -49,8 +49,8 @@ public class ClawTestCS extends LinearOpMode {
     private Servo claw;
     private Servo arm;
     double drivePower;
-    double armDownPos = 0.57;
-    double armUpPos = 0.8;
+    double armDownPos = 0.45;
+    double armUpPos = 0.85;
     double clawClosePos = 0.3;
     double clawOpenPos = 0.45;
     public void runOpMode() {
@@ -71,6 +71,8 @@ public class ClawTestCS extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
+            arm.setPosition(armDownPos);
+            claw.setPosition(clawOpenPos);
             drivePower = 1;
             double y = -gamepad1.left_stick_y; // Remember, this is reversed!
             double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
