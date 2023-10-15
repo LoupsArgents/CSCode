@@ -91,7 +91,7 @@ public class DeadWheelFunctions extends LinearOpMode {
         timer.reset();
 
         while (opModeIsActive() && !isStopRequested()) {
-            goodPose = placeAndHeading(30, 30, 90, 0.5, 1, 1);
+            goodPose = placeAndHeading(30, 30, 90, 0.65, 1, 1);
             odometry.updatePose(); // update the position
             telemetry.addData("pos", odometry.getPose());
             telemetry.addData("leftOdometerEncoder", motorBL.getCurrentPosition());
@@ -287,14 +287,16 @@ public class DeadWheelFunctions extends LinearOpMode {
             motorFL.setPower(0);
             return true;
         } else {
-            double flPower = powerMult * 1;
-            if (flPower < 0.2) {flPower = 0.2;}
-            double brPower = powerMult * 1;
-            if (brPower < 0.2) {brPower = 0.2;}
-            double blPower = powerMult * 1;
-            if (blPower < 0.2) {blPower = 0.2;}
-            double frPower = powerMult * 1;
-            if (frPower < 0.2) {frPower = 0.2;}
+            double sign = (Math.abs(headingpow[4]))/headingpow[4];
+            double flPower = powerMult * (xypow[0] * (1 + 0.2*sign));
+            if (Math.abs(flPower) < 0.3) {flPower = (Math.abs(flPower)/flPower) * 0.3;}
+            double brPower = powerMult * (xypow[1] * (1 + 0.2*sign));
+            if (Math.abs(brPower) < 0.3) {brPower = (Math.abs(brPower)/brPower) * 0.3;}
+            double blPower = powerMult * (xypow[2] * (1 + 0.2*sign));
+            if (Math.abs(blPower) < 0.3) {blPower = (Math.abs(blPower)/blPower) * 0.3;}
+            double frPower = powerMult * (xypow[3] * (1 + 0.2*sign));
+            if (Math.abs(frPower) < 0.3) {frPower = (Math.abs(frPower)/frPower) * 0.3;}
+
             motorFL.setPower(flPower);
             motorBR.setPower(brPower);
             motorBL.setPower(blPower);
