@@ -91,6 +91,8 @@ public class DeadWheelFunctions extends LinearOpMode {
     public boolean travelByNewPos(double x, double y, double powerMult, double tolerance) { //returns true if it's at the position.
         double currentX = -odometry.getPose().getY();
         double currentY = odometry.getPose().getX();
+        double diagonalError = Math.sqrt(Math.pow((currentX - x), 2) + Math.pow((currentX - x), 2));
+        double propConstant = 0.7;
         double angle = getAngleToTravel(currentX, currentY, x, y);
         double BLFRPower;
         double BRFLPower;
@@ -114,10 +116,10 @@ public class DeadWheelFunctions extends LinearOpMode {
             telemetry.addData("angle", angle);
             telemetry.update();*/
 
-            motorFL.setPower(BRFLPower * powerMult);
-            motorBR.setPower(BRFLPower * powerMult);
-            motorBL.setPower(BLFRPower * powerMult);
-            motorFR.setPower(BLFRPower * powerMult);
+            motorFL.setPower(BRFLPower * powerMult * diagonalError * propConstant);
+            motorBR.setPower(BRFLPower * powerMult * diagonalError * propConstant);
+            motorBL.setPower(BLFRPower * powerMult * diagonalError * propConstant);
+            motorFR.setPower(BLFRPower * powerMult * diagonalError * propConstant);
             return false;
         } else {
             motorFL.setPower(0);
