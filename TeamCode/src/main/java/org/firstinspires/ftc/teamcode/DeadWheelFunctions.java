@@ -68,17 +68,15 @@ public class DeadWheelFunctions extends LinearOpMode {
 
         while (opModeIsActive() && !isStopRequested()) {
 
-
-            goodPos = travelByNewPos(1, 1, 0.5, 0.1);
+            goodPos = travelByNewPos(10, -10, 0.5, 1);
             odometry.updatePose(); // update the position
-            telemetry.addData("pos", odometry.getPose());
+            /*telemetry.addData("pos", odometry.getPose());
             telemetry.addData("leftOdometerEncoder", motorBL.getCurrentPosition());
             telemetry.addData("rightOdometerEncoder", motorFR.getCurrentPosition());
-            telemetry.addData("centerOdometerEncoder", motorFL.getCurrentPosition());
-            telemetry.addData("goodPos", goodPos);
-            telemetry.update();
+            telemetry.addData("centerOdometerEncoder", motorFL.getCurrentPosition());*/
+            //telemetry.addData("goodPos", goodPos);
 
-
+            //telemetry.update();
 
         }
     }
@@ -103,23 +101,28 @@ public class DeadWheelFunctions extends LinearOpMode {
                 BLFRPower = -1;
                 BRFLPower = (angle - (1.5 * Math.PI)) * 4 / (Math.PI) - 1;
             }
-            motorFL.setPower(BRFLPower * powerMult);
+            telemetry.addData("BRFL", BRFLPower);
+            telemetry.addData("BLFR", BLFRPower);
+            telemetry.addData("angle", angle);
+            telemetry.update();
+
+            /*motorFL.setPower(BRFLPower * powerMult);
             motorBR.setPower(BRFLPower * powerMult);
             motorBL.setPower(BLFRPower * powerMult);
-            motorFR.setPower(BLFRPower * powerMult);
+            motorFR.setPower(BLFRPower * powerMult);*/
             return false;
         } else {
-            motorFL.setPower(0);
+            /*motorFL.setPower(0);
             motorBR.setPower(0);
             motorBL.setPower(0);
-            motorFR.setPower(0);
+            motorFR.setPower(0);*/
             return true;
         }
     }
     /*public boolean travelByAmount(double xToTravel, double yToTravel) { //returns true if it's at the position
         return true;
     }*/
-    public double getAngleToTravel(double currentX, double currentY, double endX, double endY) { //returns angle from 0 to 2pi
+    public double getAngleToTravel(double currentX, double currentY, double endX, double endY) { //returns angle from 0 to 2pi. works well
         double x = endX - currentX;
         double y = endY - currentY;
         double angle = Math.atan(y/x); //range of this is -pi/2 to pi/2
