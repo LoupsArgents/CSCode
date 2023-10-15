@@ -7,13 +7,17 @@ import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.arcrobotics.ftclib.hardware.motors.Motor.Encoder;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @TeleOp
 //@Disabled
@@ -28,9 +32,19 @@ public class DeadWheelFunctions extends LinearOpMode {
     private MotorEx motorFLenc, motorFRenc, motorBLenc, motorBRenc;
     private Encoder leftOdometer, rightOdometer, centerOdometer;
     private HolonomicOdometry odometry;
+    private IMU imu;
+    double previousHeading = 0;
+    double processedHeading = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
+        imu = hardwareMap.get(IMU.class, "imu");
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
+        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
+        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+        imu.initialize(new IMU.Parameters(orientationOnRobot));
+        imu.resetYaw();
+
         ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         double currentTime = timer.milliseconds();
         double oldTime;
@@ -67,7 +81,11 @@ public class DeadWheelFunctions extends LinearOpMode {
 
         odometry.updatePose(new Pose2d()); //could probably give it a different starting position to make it use field-related coordinates
 
-        boolean goodPos = false;
+        //boolean goodPos = false;
+        boolean goodHeading = false;
+
+        previousHeading = newGetHeading();
+        processedHeading = previousHeading;
 
         waitForStart();
 
@@ -75,13 +93,14 @@ public class DeadWheelFunctions extends LinearOpMode {
 
         while (opModeIsActive() && !isStopRequested()) {
             oldTime = currentTime;
-            goodPos = travelByNewPos(30, 30, 0.5, 1);
+            //goodPos = travelByNewPos(30, 30, 0.75, 1);
+            goodHeading = absoluteHeading(90, 0.75, 1);
             odometry.updatePose(); // update the position
             telemetry.addData("pos", odometry.getPose());
             telemetry.addData("leftOdometerEncoder", motorBL.getCurrentPosition());
             telemetry.addData("rightOdometerEncoder", motorFR.getCurrentPosition());
             telemetry.addData("centerOdometerEncoder", motorFL.getCurrentPosition());
-            telemetry.addData("goodPos", goodPos);
+            telemetry.addData("goodHeading", goodHeading);
             currentTime = timer.milliseconds();
             telemetry.addData("loop time in ms", currentTime - oldTime);
             telemetry.update();
@@ -92,7 +111,14 @@ public class DeadWheelFunctions extends LinearOpMode {
         double currentX = -odometry.getPose().getY();
         double currentY = odometry.getPose().getX();
         double diagonalError = Math.sqrt(Math.pow((currentX - x), 2) + Math.pow((currentX - x), 2));
-        double propConstant = 0.7;
+        double constant;
+        if (diagonalError > 10) {
+            constant = 1;
+        } else {
+            constant = diagonalError * 0.05;
+        }
+        if (constant < 0.3) {constant = 0.3;}
+
         double angle = getAngleToTravel(currentX, currentY, x, y);
         double BLFRPower;
         double BRFLPower;
@@ -116,10 +142,10 @@ public class DeadWheelFunctions extends LinearOpMode {
             telemetry.addData("angle", angle);
             telemetry.update();*/
 
-            motorFL.setPower(BRFLPower * powerMult * diagonalError * propConstant);
-            motorBR.setPower(BRFLPower * powerMult * diagonalError * propConstant);
-            motorBL.setPower(BLFRPower * powerMult * diagonalError * propConstant);
-            motorFR.setPower(BLFRPower * powerMult * diagonalError * propConstant);
+            motorFL.setPower(BRFLPower * powerMult * constant);
+            motorBR.setPower(BRFLPower * powerMult * constant);
+            motorBL.setPower(BLFRPower * powerMult * constant);
+            motorFR.setPower(BLFRPower * powerMult * constant);
             return false;
         } else {
             motorFL.setPower(0);
@@ -129,9 +155,6 @@ public class DeadWheelFunctions extends LinearOpMode {
             return true;
         }
     }
-    /*public boolean travelByAmount(double xToTravel, double yToTravel) { //returns true if it's at the position
-        return true;
-    }*/
     public double getAngleToTravel(double currentX, double currentY, double endX, double endY) { //returns angle from 0 to 2pi. works well
         double x = endX - currentX;
         double y = endY - currentY;
@@ -144,5 +167,39 @@ public class DeadWheelFunctions extends LinearOpMode {
         }
         return angle;
     }
+    public double newGetHeading(){
+        double currentHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+        double headingChange = currentHeading - previousHeading;
+        if(headingChange < -180){
+            headingChange += 360;
+        }else if(headingChange > 180){
+            headingChange -= 360;
+        }
+        processedHeading += headingChange;
+        previousHeading = currentHeading;
+        return processedHeading;
+    }
+    public boolean absoluteHeading(double idealHeading, double powerMult, double tolerance) { //returns true if it's at the position
+        processedHeading = newGetHeading();
+        double error = Math.abs(processedHeading % 360 - idealHeading);
+        double sign = error/(processedHeading % 360 - idealHeading);
+        if (error < tolerance) {
+            return true;
+        } else {
+            double constant;
+            if (error > 45) {
+                constant = powerMult;
+            } else {
+                constant = error/45 * powerMult;
+            }
+            if (constant < 0.17) {constant = 0.17;}
+            motorFL.setPower(constant * sign);
+            motorBL.setPower(constant * sign);
+            motorFR.setPower(constant * sign * -1);
+            motorBR.setPower(constant * sign * -1);
+            return false;
+        }
+    }
+
 
 }
