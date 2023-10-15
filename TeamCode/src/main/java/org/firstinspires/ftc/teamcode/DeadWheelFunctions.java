@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp
 //@Disabled
@@ -30,6 +31,10 @@ public class DeadWheelFunctions extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
+        ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+        double currentTime = timer.milliseconds();
+        double oldTime;
+
         motorFLenc = new MotorEx(hardwareMap, "motorFLandStrafeOdo");
         motorFRenc = new MotorEx(hardwareMap, "motorFRandForwardOdo"); //also has right odometer
         motorBLenc = new MotorEx(hardwareMap, "motorBLandBackwardOdo");
@@ -66,23 +71,26 @@ public class DeadWheelFunctions extends LinearOpMode {
 
         waitForStart();
 
-        while (opModeIsActive() && !isStopRequested()) {
+        timer.reset();
 
-            goodPos = travelByNewPos(10, -10, 0.5, 1);
+        while (opModeIsActive() && !isStopRequested()) {
+            oldTime = currentTime;
+            goodPos = travelByNewPos(10, 10, 0.5, 1);
             odometry.updatePose(); // update the position
-            /*telemetry.addData("pos", odometry.getPose());
+            telemetry.addData("pos", odometry.getPose());
             telemetry.addData("leftOdometerEncoder", motorBL.getCurrentPosition());
             telemetry.addData("rightOdometerEncoder", motorFR.getCurrentPosition());
-            telemetry.addData("centerOdometerEncoder", motorFL.getCurrentPosition());*/
-            //telemetry.addData("goodPos", goodPos);
-
-            //telemetry.update();
+            telemetry.addData("centerOdometerEncoder", motorFL.getCurrentPosition());
+            telemetry.addData("goodPos", goodPos);
+            currentTime = timer.milliseconds();
+            telemetry.addData("loop time in ms", currentTime - oldTime);
+            telemetry.update();
 
         }
     }
     public boolean travelByNewPos(double x, double y, double powerMult, double tolerance) { //returns true if it's at the position.
-        double currentX = odometry.getPose().getX();
-        double currentY = odometry.getPose().getY();
+        double currentX = -odometry.getPose().getY();
+        double currentY = odometry.getPose().getX();
         double angle = getAngleToTravel(currentX, currentY, x, y);
         double BLFRPower;
         double BRFLPower;
@@ -101,21 +109,21 @@ public class DeadWheelFunctions extends LinearOpMode {
                 BLFRPower = -1;
                 BRFLPower = (angle - (1.5 * Math.PI)) * 4 / (Math.PI) - 1;
             }
-            telemetry.addData("BRFL", BRFLPower);
+            /*telemetry.addData("BRFL", BRFLPower);
             telemetry.addData("BLFR", BLFRPower);
             telemetry.addData("angle", angle);
-            telemetry.update();
+            telemetry.update();*/
 
-            /*motorFL.setPower(BRFLPower * powerMult);
+            motorFL.setPower(BRFLPower * powerMult);
             motorBR.setPower(BRFLPower * powerMult);
             motorBL.setPower(BLFRPower * powerMult);
-            motorFR.setPower(BLFRPower * powerMult);*/
+            motorFR.setPower(BLFRPower * powerMult);
             return false;
         } else {
-            /*motorFL.setPower(0);
+            motorFL.setPower(0);
             motorBR.setPower(0);
             motorBL.setPower(0);
-            motorFR.setPower(0);*/
+            motorFR.setPower(0);
             return true;
         }
     }
