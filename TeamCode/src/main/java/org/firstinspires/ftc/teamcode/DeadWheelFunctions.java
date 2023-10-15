@@ -91,7 +91,6 @@ public class DeadWheelFunctions extends LinearOpMode {
         timer.reset();
 
         while (opModeIsActive() && !isStopRequested()) {
-            oldTime = currentTime;
             goodPose = placeAndHeading(30, 30, 90, 0.5, 1, 1);
             odometry.updatePose(); // update the position
             telemetry.addData("pos", odometry.getPose());
@@ -99,8 +98,7 @@ public class DeadWheelFunctions extends LinearOpMode {
             telemetry.addData("rightOdometerEncoder", motorFR.getCurrentPosition());
             telemetry.addData("centerOdometerEncoder", motorFL.getCurrentPosition());
             telemetry.addData("goodPose", goodPose);
-            currentTime = timer.milliseconds();
-            telemetry.addData("loop time in ms", currentTime - oldTime);
+
             telemetry.update();
 
         }
@@ -289,13 +287,13 @@ public class DeadWheelFunctions extends LinearOpMode {
             motorFL.setPower(0);
             return true;
         } else {
-            double flPower = powerMult * (((xypow[0] * xypow[5]/20) + (headingpow[0] * headingpow[5]/360))/(xypow[5]/20 + headingpow[5]/360));
+            double flPower = powerMult * 1;
             if (flPower < 0.2) {flPower = 0.2;}
-            double brPower = powerMult * (((xypow[1] * xypow[5]/20) + (headingpow[1] * headingpow[5]/360))/(xypow[5]/20 + headingpow[5]/360));
+            double brPower = powerMult * 1;
             if (brPower < 0.2) {brPower = 0.2;}
-            double blPower = powerMult * (((xypow[2] * xypow[5]/20) + (headingpow[2] * headingpow[5]/360))/(xypow[5]/20 + headingpow[5]/360));
+            double blPower = powerMult * 1;
             if (blPower < 0.2) {blPower = 0.2;}
-            double frPower = powerMult * (((xypow[3] * xypow[5]/20) + (headingpow[3] * headingpow[5]/360))/(xypow[5]/20 + headingpow[5]/360));
+            double frPower = powerMult * 1;
             if (frPower < 0.2) {frPower = 0.2;}
             motorFL.setPower(flPower);
             motorBR.setPower(brPower);
