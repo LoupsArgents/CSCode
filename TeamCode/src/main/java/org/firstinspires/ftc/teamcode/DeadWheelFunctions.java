@@ -184,6 +184,10 @@ public class DeadWheelFunctions extends LinearOpMode {
         double error = Math.abs(processedHeading % 360 - idealHeading);
         double sign = error/(processedHeading % 360 - idealHeading);
         if (error < tolerance) {
+            motorBL.setPower(0);
+            motorFL.setPower(0);
+            motorBR.setPower(0);
+            motorFR.setPower(0);
             return true;
         } else {
             double constant;
@@ -192,7 +196,7 @@ public class DeadWheelFunctions extends LinearOpMode {
             } else {
                 constant = error/45 * powerMult;
             }
-            if (constant < 0.17) {constant = 0.17;}
+            if (constant < 0.125) {constant = 0.125;}
             motorFL.setPower(constant * sign);
             motorBL.setPower(constant * sign);
             motorFR.setPower(constant * sign * -1);
