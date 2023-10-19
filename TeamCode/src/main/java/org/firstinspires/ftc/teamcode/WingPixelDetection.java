@@ -32,7 +32,7 @@ public class WingPixelDetection extends OldPPBotBasicDF {
         VisionPortal portal;
         initializeHardware();
         WebcamName webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
-        WingPixelDetection.WingPixelProcessor p = new WingPixelDetection.WingPixelProcessor();
+        WingPixelProcessor p = new WingPixelProcessor();
         portal = VisionPortal.easyCreateWithDefaults(webcam, p);
         portal.resumeStreaming();
         waitForStart();
@@ -41,9 +41,12 @@ public class WingPixelDetection extends OldPPBotBasicDF {
 
         }
     }
-    public void centerOnClosestStack(WingPixelProcessor processor){
+    public void centerOnClosestStack(WingPixelProcessor processor){ //current - diagonal movement
         double power = .35;
         Point pixelPos = processor.getClosestPixelPos();
+        //^^^ this is the input of CV on this algorithm - telling us whether we're left/right of center and how much
+        //which is why (see getClosestPixelPos() method below) it's important that these
+        //coordinates include the left/right center of the detected object
         double multiplier;
         while(opModeIsActive() && (/*Math.abs(pixelPos.x-320) > 10 ||*/ pixelPos.y < 300)) {
             RobotLog.aa("DistanceFromCenter", String.valueOf(Math.abs(pixelPos.x - 320)));
@@ -80,8 +83,8 @@ public class WingPixelDetection extends OldPPBotBasicDF {
             }
         }
         stopMotors();
-        }
-    public void strafeCenterOnClosestStack(WingPixelDetection.WingPixelProcessor processor){
+    }
+    public void strafeCenterOnClosestStack(WingPixelDetection.WingPixelProcessor processor){ //an earlier stepping-stone version
         double power = .27;
         double initialHeading = newGetHeading();
         double currentHeading = initialHeading;
@@ -154,9 +157,9 @@ public class WingPixelDetection extends OldPPBotBasicDF {
             }
             Scalar lowPurpleHSV = new Scalar(117, 40, 20); //purple pixels
             Scalar highPurpleHSV = new Scalar(150, 255, 255); //120-150 should do for hue for starters
-            Scalar lowYellowHSV = new Scalar(14, 80, 20); //last was 80 (excluded brown but really that's not necessary), second-to-last was 100
+            Scalar lowYellowHSV = new Scalar(14, 40, 80); //before, last was 80 (excluded brown but really that's not necessary) then 20, second-to-last was 100 then 80
             Scalar highYellowHSV = new Scalar(28, 255, 255);
-            Scalar lowGreenHSV = new Scalar(45,100,25); //changing the low brightness/value threshold to try to get it to stop separating close pixels into multiple boxes
+            Scalar lowGreenHSV = new Scalar(45,100,25); //the green filter is somehow perfect and has no problems. I wish all the other ones were like that.
             Scalar highGreenHSV = new Scalar(75, 255, 255);
             Scalar lowWhiteHSV = new Scalar(0,0,180); //last was 150
             Scalar highWhiteHSV = new Scalar(180, 20, 255);
@@ -164,7 +167,7 @@ public class WingPixelDetection extends OldPPBotBasicDF {
             Mat yellowThresh = new Mat();
             Mat greenThresh = new Mat();
             Mat whiteThresh = new Mat();
-            // Get a black and white image of (color) objects
+            // Get a black and white image of objects that are purple, yellow, green, or white
             Core.inRange(mat, lowPurpleHSV, highPurpleHSV, purpleThresh);
             Core.inRange(mat, lowYellowHSV, highYellowHSV, yellowThresh);
             Core.inRange(mat, lowGreenHSV, highGreenHSV, greenThresh);
@@ -172,11 +175,12 @@ public class WingPixelDetection extends OldPPBotBasicDF {
             Mat testOutput = new Mat();
             Core.bitwise_or(purpleThresh, yellowThresh, testOutput);
             Core.bitwise_or(testOutput, greenThresh, testOutput);
-            Core.bitwise_or(testOutput, whiteThresh, testOutput);
+            Core.bitwise_or(testOutput, whiteThresh, testOutput); //combine the black and white images into one black and white image of things that are game elements
+            //well, it also includes things that are close in color to game elements, but that's not an issue.
             Mat masked = new Mat();
-            //color the white portion of thresh in with color
+            //color the white portion of thresh in with color from original image
             //output into masked
-            Mat thing = new Mat(480, 640, CvType.CV_8UC3, new Scalar(140, 70, 200)); //purple was 140 70 200
+            //Mat thing = new Mat(480, 640, CvType.CV_8UC3, new Scalar(140, 70, 200)); //purple was 140 70 200
             Core.bitwise_and(original, original, masked, testOutput);
             //Scalar average = Core.mean(masked, thresh);
             Mat scaledMask = new Mat();
@@ -186,11 +190,11 @@ public class WingPixelDetection extends OldPPBotBasicDF {
             Mat cannyOutput = new Mat();
             int threshold = 170;
             Imgproc.blur(masked, masked, new Size(6, 6)); //was 5, 5
-            Imgproc.Canny(masked, cannyOutput, threshold, threshold * 2);
+            Imgproc.Canny(masked, cannyOutput, threshold, threshold * 2); //edge detection wizardry copied from OpenCV tutorials - works great.
             Imgproc.blur(cannyOutput, cannyOutput, new Size(5, 5));
             List<MatOfPoint> contours = new ArrayList<>();
             Mat hierarchy = new Mat();
-            Imgproc.findContours(cannyOutput, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+            Imgproc.findContours(cannyOutput, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE); //contour wizardry copied from OpenCV tutorials
             MatOfPoint2f[] contoursPoly  = new MatOfPoint2f[contours.size()];
             Rect[] boundRect = new Rect[contours.size()];
             Point[] centers = new Point[contours.size()];
@@ -198,6 +202,7 @@ public class WingPixelDetection extends OldPPBotBasicDF {
             for (int i = 0; i < contours.size(); i++) {
                 contoursPoly[i] = new MatOfPoint2f();
                 Imgproc.approxPolyDP(new MatOfPoint2f(contours.get(i).toArray()), contoursPoly[i], 3, true);
+                //bounding box wizardry copied from OpenCV tutorials
                 boundRect[i] = Imgproc.boundingRect(new MatOfPoint(contoursPoly[i].toArray()));
                 centers[i] = new Point();
                 Imgproc.minEnclosingCircle(contoursPoly[i], centers[i], radius[i]);
@@ -212,6 +217,7 @@ public class WingPixelDetection extends OldPPBotBasicDF {
                 Scalar color = new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
                 Imgproc.drawContours(masked, contoursPolyList, i, color);
                 if(boundRect[i].area() > minPixelBoxArea) {
+                    //draw all bounding rectangles that pass the minimum notability threshold onto the image
                     Imgproc.rectangle(masked, boundRect[i].tl(), boundRect[i].br(), color, 2);
                     telemetry.addData("Rect", boundRect[i]);
 
@@ -222,17 +228,19 @@ public class WingPixelDetection extends OldPPBotBasicDF {
             Rect maxRect = new Rect(0,0,10,10);
             for(Rect r : boundRect){
                 if(r.y > maxRect.y && r.area() > minPixelBoxArea){
+                    //find the closest notable bounding box
                     maxRect = r;
                     Imgproc.putText(masked, Double.toString(r.area()), new Point(r.x, r.y), FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 0, 0));
                 }
             }
-            Rect r = new Rect(320, 100, 10, 10);
-            Mat regionOfInterest = masked.submat(r);
-            Scalar s = Core.mean(regionOfInterest);
-            telemetry.addData("Color", s);
-            Imgproc.rectangle(masked, r, new Scalar(255, 255, 255));
+            //Rect r = new Rect(320, 100, 10, 10);
+            //Mat regionOfInterest = masked.submat(r);
+            //Scalar s = Core.mean(regionOfInterest);
+            //telemetry.addData("Color", s);
+            //Imgproc.rectangle(masked, r, new Scalar(255, 255, 255));
+            //^earlier code for finding average color over a small box to calibrate filters
             RobotLog.aa("Box", maxRect.toString());
-            closestPixelPos = new Point(maxRect.x, maxRect.y);
+            closestPixelPos = new Point(maxRect.x, maxRect.y); //this is what actually informs our algorithm - see function below for a bit more processing
             closestPixelRect = maxRect;
             telemetry.addData("BoundingBox", maxRect);
             telemetry.update();
@@ -242,11 +250,13 @@ public class WingPixelDetection extends OldPPBotBasicDF {
 
          @Override
          public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {
-
+            //we just have to override this so it doesn't get mad
          }
          public Point getClosestPixelPos(){
-            //x and y represent the top left corner.
-             //so add half width to the x
+            //what we're doing here is actually getting the center of the top edge of the bounding box
+             //y is only important relatively, so making it the top edge doesn't hurt anything as long as we're consistent (which we are)
+             //x, however (as you can see in centerOnClosestStack above) needs to represent the center of the pixel
+             //
             return new Point(closestPixelPos.x + (closestPixelRect.width/2), closestPixelPos.y);
         }
          public Rect getClosestPixelRect(){
