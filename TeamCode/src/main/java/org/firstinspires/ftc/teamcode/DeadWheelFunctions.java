@@ -97,6 +97,7 @@ public class DeadWheelFunctions extends LinearOpMode {
         while (opModeIsActive() && !isStopRequested()) {
             //oldTime = currentTime;
             goodPose = placeAndHeading(10, 10, 90, 0.5, 1, 1);
+
             odometry.updatePose(); // update the position
             /*telemetry.addData("pos", odometry.getPose());
             telemetry.addData("leftOdometerEncoder", motorBL.getCurrentPosition());
@@ -106,6 +107,9 @@ public class DeadWheelFunctions extends LinearOpMode {
             //currentTime = timer.milliseconds();
             //telemetry.addData("loop time in ms", currentTime - oldTime);
             //telemetry.update();
+            telemetry.addData("goodPose", goodPose);
+
+            telemetry.update();
 
         }
     }
