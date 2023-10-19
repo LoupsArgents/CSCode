@@ -85,23 +85,27 @@ public class DeadWheelFunctions extends LinearOpMode {
 
         previousHeading = newGetHeading();
         processedHeading = previousHeading;
+        telemetry.addData("status", "initialized");
+        telemetry.addData("x", -odometry.getPose().getY());
+        telemetry.addData("y", odometry.getPose().getX());
+        telemetry.update();
 
         waitForStart();
 
         timer.reset();
 
         while (opModeIsActive() && !isStopRequested()) {
-            oldTime = currentTime;
-            goodPose = placeAndHeading(30, 30, 90, 0.5, 1, 1);
+            //oldTime = currentTime;
+            goodPose = placeAndHeading(10, 10, 90, 0.5, 1, 1);
             odometry.updatePose(); // update the position
-            telemetry.addData("pos", odometry.getPose());
+            /*telemetry.addData("pos", odometry.getPose());
             telemetry.addData("leftOdometerEncoder", motorBL.getCurrentPosition());
             telemetry.addData("rightOdometerEncoder", motorFR.getCurrentPosition());
             telemetry.addData("centerOdometerEncoder", motorFL.getCurrentPosition());
-            telemetry.addData("goodPose", goodPose);
-            currentTime = timer.milliseconds();
-            telemetry.addData("loop time in ms", currentTime - oldTime);
-            telemetry.update();
+            telemetry.addData("goodPose", goodPose);*/
+            //currentTime = timer.milliseconds();
+            //telemetry.addData("loop time in ms", currentTime - oldTime);
+            //telemetry.update();
 
         }
     }
@@ -279,30 +283,72 @@ public class DeadWheelFunctions extends LinearOpMode {
         }
     }
     public boolean placeAndHeading(double x, double y, double idealHeading, double powerMult, double cmTol, double degTol) {
-        //powersXY returns [powerFL, powerBR, powerBL, powerFR, diagonalError]
-        double[] xypow = powersXY(x, y, powerMult, cmTol);
-        double[] headingpow = powersHeading(idealHeading, powerMult, degTol);
-        if (xypow[4] < cmTol && headingpow[4] < degTol) {
+        processedHeading = newGetHeading();
+        double rxConst = 6;
+        double moveConst = 1;
+        double currentX = -odometry.getPose().getY();
+        double currentY = odometry.getPose().getX();
+        telemetry.addData("currentX, currentY", currentX + ", " + currentY);
+        double xDifference = currentX - x;
+        double yDifference = currentY - y;
+        double l = Math.sqrt(xDifference*xDifference + yDifference*yDifference); // diagonal error
+        double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        //x = fake joystick left up/down (not field-centric???)
+        double joyX = xDifference / l;
+        telemetry.addData("joyX", joyX);
+        //y = fake joystick left left/right (strafe)
+        double joyY = yDifference / l;
+        telemetry.addData("joyY", joyY);
+        if (l < cmTol) {
+            joyX = 0;
+            joyY = 0;
+        }
+        if (l < 5) {
+            moveConst = l/5;
+            joyX *= moveConst;
+            joyY *= moveConst;
+        }
+        //rx = fake joystick right left/right aka turning
+        double rx = 0;
+        double rotError = Math.abs(processedHeading % 360 - idealHeading);
+        if (l < cmTol && rotError < degTol) {
+            //if we actually don't need to do anything
             motorFR.setPower(0);
+            motorFL.setPower(0);
             motorBR.setPower(0);
             motorBL.setPower(0);
-            motorFL.setPower(0);
             return true;
-        } else {
-            double flPower = powerMult * (((xypow[0] * xypow[5]/20) + (headingpow[0] * headingpow[5]/360))/(xypow[5]/20 + headingpow[5]/360));
-            if (flPower < 0.2) {flPower = 0.2;}
-            double brPower = powerMult * (((xypow[1] * xypow[5]/20) + (headingpow[1] * headingpow[5]/360))/(xypow[5]/20 + headingpow[5]/360));
-            if (brPower < 0.2) {brPower = 0.2;}
-            double blPower = powerMult * (((xypow[2] * xypow[5]/20) + (headingpow[2] * headingpow[5]/360))/(xypow[5]/20 + headingpow[5]/360));
-            if (blPower < 0.2) {blPower = 0.2;}
-            double frPower = powerMult * (((xypow[3] * xypow[5]/20) + (headingpow[3] * headingpow[5]/360))/(xypow[5]/20 + headingpow[5]/360));
-            if (frPower < 0.2) {frPower = 0.2;}
-            motorFL.setPower(flPower);
-            motorBR.setPower(brPower);
-            motorBL.setPower(blPower);
-            motorFR.setPower(frPower);
-            return false;
         }
+        double sign = rotError/(processedHeading % 360 - idealHeading);
+        if (rotError > 45) {rxConst = 90;}
+        if (rotError < degTol) {
+            rx = 0;
+        } else if (sign == -1) {
+            //turning left
+            rx = -1 * (rxConst * 180) * rotError;
+        } else if (sign == 1) {
+            //turning right
+            rx = (rxConst/180) * rotError;
+        }
+        if (rx < -1) {rx = -1;}
+        if (rx > 1) {rx = 1;}
+        telemetry.addData("rX", rx);
+
+        double rotX = joyX * Math.cos(-botHeading) - joyY * Math.sin(-botHeading);
+        double rotY = joyX * Math.sin(-botHeading) + joyY * Math.cos(-botHeading);
+
+        double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
+        double frontLeftPower = (rotY + rotX + rx) / denominator;
+        double backLeftPower = (rotY - rotX + rx) / denominator;
+        double frontRightPower = (rotY - rotX - rx) / denominator;
+        double backRightPower = (rotY + rotX - rx) / denominator;
+
+        motorFL.setPower(powerMult * frontLeftPower);
+        motorBL.setPower(powerMult * backLeftPower);
+        motorFR.setPower(powerMult * frontRightPower);
+        motorBR.setPower(powerMult * backRightPower);
+        telemetry.update();
+        return false;
     }
 
 
