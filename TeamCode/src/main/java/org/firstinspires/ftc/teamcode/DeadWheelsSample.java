@@ -169,9 +169,9 @@ public class DeadWheelsSample extends LinearOpMode {
         /*Rotation2d tempR = Rotation2d.fromDegrees(0);
                 Pose2d tempPose = new Pose2d(0, 0, tempR);
                 odometry.updatePose(tempPose);*/
-        motorFLenc = new MotorEx(hardwareMap, "motorFLandStrafeOdo");
-        motorFRenc = new MotorEx(hardwareMap, "motorFRandForwardOdo"); //also has right odometer
-        motorBLenc = new MotorEx(hardwareMap, "motorBLandBackwardOdo");
+        //motorFLenc = new MotorEx(hardwareMap, "motorFLandStrafeOdo");
+        //motorFRenc = new MotorEx(hardwareMap, "motorFRandForwardOdo"); //also has right odometer
+        //motorBLenc = new MotorEx(hardwareMap, "motorBLandBackwardOdo");
         motorBLenc.encoder.reset();
         motorFRenc.encoder.reset();
         motorFLenc.encoder.reset();
