@@ -23,9 +23,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 //@Disabled
 public class DeadWheelFunctions extends LinearOpMode {
 
-    public static final double TRACKWIDTH = 28.6; //said 14.7
-    public static final double CENTER_WHEEL_OFFSET = -11.321628; //used to be -2.1
-    public static final double WHEEL_DIAMETER = 3.5; //used to say 2.0
+    public static final double TRACKWIDTH = 28.6; //probably needs to get tuned
+    public static final double CENTER_WHEEL_OFFSET = -11.321628; //probably needs to get tuned
+    public static final double WHEEL_DIAMETER = 3.5;
     public static final double TICKS_PER_REV = 8192;
     public static final double DISTANCE_PER_PULSE = Math.PI * WHEEL_DIAMETER / TICKS_PER_REV;
     private DcMotorEx motorFL, motorFR, motorBL, motorBR;
