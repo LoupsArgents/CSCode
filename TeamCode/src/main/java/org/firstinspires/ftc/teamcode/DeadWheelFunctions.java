@@ -90,30 +90,46 @@ public class DeadWheelFunctions extends LinearOpMode {
         telemetry.addData("y", odometry.getPose().getX());
         telemetry.update();
 
+        double initialX = -odometry.getPose().getY();
+        double initialY = odometry.getPose().getX();
+
         waitForStart();
 
         timer.reset();
 
+        double tiles = 0.0;
+        double tileLength = 59.69;
+        boolean temp;
+
         while (opModeIsActive() && !isStopRequested()) {
-            //oldTime = currentTime;
-            goodPose = placeAndHeading(10, 10, 90, 0.5, 1, 1);
-
-            odometry.updatePose(); // update the position
-            /*telemetry.addData("pos", odometry.getPose());
-            telemetry.addData("leftOdometerEncoder", motorBL.getCurrentPosition());
-            telemetry.addData("rightOdometerEncoder", motorFR.getCurrentPosition());
-            telemetry.addData("centerOdometerEncoder", motorFL.getCurrentPosition());
-            telemetry.addData("goodPose", goodPose);*/
-            //currentTime = timer.milliseconds();
-            //telemetry.addData("loop time in ms", currentTime - oldTime);
-            //telemetry.update();
-            telemetry.addData("goodPose", goodPose);
-
+            odometry.updatePose();
+            if (gamepad1.a) {
+                tiles = 1.0;
+            } else if (gamepad1.b) {
+                tiles = 2.0;
+            } else if (gamepad1.x) {
+                tiles = 3.0;
+            } else if (gamepad1.y) {
+                tiles = 4.0;
+            }
+            temp = placeAndHeading(0, tileLength * tiles, 0, 0.4, 1, 0.5);
+            telemetry.addData("X", -odometry.getPose().getY());
+            telemetry.addData("Y", odometry.getPose().getX());
             telemetry.update();
 
         }
     }
+    /*public void moveCm(double x, double y, double powerMult, double tolerance) {
+        double startX = -odometry.getPose().getY();
+        double startY = odometry.getPose().getX();
+        boolean done = false;
+        while (!done && opModeIsActive()) {
+            done = travelByNewPos(startX + x, startY + y, powerMult, tolerance);
+        }
+        return;
+    }*/
     public boolean travelByNewPos(double x, double y, double powerMult, double tolerance) { //returns true if it's at the position.
+        odometry.updatePose();
         double currentX = -odometry.getPose().getY();
         double currentY = odometry.getPose().getX();
         double diagonalError = Math.sqrt(Math.pow((currentX - x), 2) + Math.pow((currentX - x), 2));
@@ -287,22 +303,23 @@ public class DeadWheelFunctions extends LinearOpMode {
         }
     }
     public boolean placeAndHeading(double x, double y, double idealHeading, double powerMult, double cmTol, double degTol) {
+        odometry.updatePose();
         processedHeading = newGetHeading();
         double rxConst = 6;
         double moveConst = 1;
         double currentX = -odometry.getPose().getY();
         double currentY = odometry.getPose().getX();
-        telemetry.addData("currentX, currentY", currentX + ", " + currentY);
+        //telemetry.addData("currentX, currentY", currentX + ", " + currentY);
         double xDifference = currentX - x;
         double yDifference = currentY - y;
         double l = Math.sqrt(xDifference*xDifference + yDifference*yDifference); // diagonal error
         double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-        //x = fake joystick left up/down (not field-centric???)
-        double joyX = xDifference / l;
-        telemetry.addData("joyX", joyX);
-        //y = fake joystick left left/right (strafe)
-        double joyY = yDifference / l;
-        telemetry.addData("joyY", joyY);
+        //x = fake joystick left left/right (strafe)
+        double joyX = -1 * xDifference / l;
+        //telemetry.addData("joyX", joyX);
+        //y = fake joystick left up/down (move)
+        double joyY = -1 * yDifference / l;
+        //telemetry.addData("joyY", joyY);
         if (l < cmTol) {
             joyX = 0;
             joyY = 0;
@@ -336,7 +353,7 @@ public class DeadWheelFunctions extends LinearOpMode {
         }
         if (rx < -1) {rx = -1;}
         if (rx > 1) {rx = 1;}
-        telemetry.addData("rX", rx);
+        //telemetry.addData("rX", rx);
 
         double rotX = joyX * Math.cos(-botHeading) - joyY * Math.sin(-botHeading);
         double rotY = joyX * Math.sin(-botHeading) + joyY * Math.cos(-botHeading);
@@ -351,7 +368,7 @@ public class DeadWheelFunctions extends LinearOpMode {
         motorBL.setPower(powerMult * backLeftPower);
         motorFR.setPower(powerMult * frontRightPower);
         motorBR.setPower(powerMult * backRightPower);
-        telemetry.update();
+        //telemetry.update();
         return false;
     }
 
