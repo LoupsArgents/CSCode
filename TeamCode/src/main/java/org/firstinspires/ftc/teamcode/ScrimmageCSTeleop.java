@@ -77,11 +77,12 @@ public class ScrimmageCSTeleop extends LinearOpMode {
     double wristDownPos = 0.20; //was 0.225 (tilted too far left), 0.21 still too far left
     //double wristUpPos = 0.87; //no way to know w/o arm flipping
     int armTarget = 0;
-    boolean poleGuideUse = true;
     boolean isScoringPos = false;
 
     double previousHeading = 0;
     double processedHeading = 0;
+    boolean poleCanChange = true;
+    boolean poleIsUp = false;
 
 
     public void runOpMode() {
@@ -164,8 +165,17 @@ public class ScrimmageCSTeleop extends LinearOpMode {
             double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
             double rx = gamepad1.right_stick_x;
 
-            if (gamepad1.back) {
-                poleGuide.setPosition(poleGuideScoringPos);
+            if (gamepad1.back && poleCanChange) {
+                poleCanChange = false;
+                if (poleIsUp) {
+                    poleIsUp = false;
+                    poleGuide.setPosition(poleGuideDownPos);
+                } else {
+                    poleIsUp = true;
+                    poleGuide.setPosition(poleGuideScoringPos);
+                }
+            } else if (!gamepad1.back) {
+                poleCanChange = true;
             }
 
             if (gamepad1.a) {
