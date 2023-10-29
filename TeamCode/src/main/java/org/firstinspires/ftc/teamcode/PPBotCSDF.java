@@ -16,7 +16,7 @@ import org.firstinspires.ftc.vision.VisionPortal;
 
 import java.util.List;
 @Autonomous
-public class PPBotCSDF extends PixelRecognition {
+public class PPBotCSDF extends TeamPropRecognition {
     Blinker control_Hub;
 
     //strafe pod is in port 0, forward/back pod is in port 3
@@ -37,17 +37,18 @@ public class PPBotCSDF extends PixelRecognition {
     ServoImplEx wrist;
     VisionPortal portal;
     TeamPropProcessor processor;
-    double armDownPos = 0; //0.2 actually works
-    double armUpPos = 0.8; //no clue-- servo is too weak
+    int armDownPos = 0; //was -100
+    int armUpPos = -600; //was -1390, then -700
+    int armSpikeMarkPos = -100;
     double clawOpenPos = 0.9; //claw is being super weird-- won't move at all
     double clawClosePos = 0.6; //same problem with the claw
     double turretPos = 0.525; //actually good!
     double poleGuideDownPos = 0.3; //good
-    double poleGuideScoringPos = 0.55; //decent
-    double v4bDownPos = .53; //correct - used to be 0.55
-    double v4bUpPos = 0.45; //who knows
-    double wristDownPos = 0.225; //good
-    double wristUpPos = 0.87; //no way to know w/o arm flipping
+    double poleGuideScoringPos = 0.6; //decent
+    double v4bDownPos = .55; //correct - used to be 0.55
+    double v4bUpPos = 0.5; //0.2 for back delivery, 0.45 should be parallel to ground
+    double wristDownPos = 0.20; //was 0.225 (tilted too far left), 0.21 still too far left
+    //double wristUpPos = 0.87; //no way to know w/o arm flipping
     int armTarget = 0;
     int strafeInitialTicks;
     int forwardInitialTicks;
@@ -340,7 +341,7 @@ public class PPBotCSDF extends PixelRecognition {
         strafeOdo = hardwareMap.get(DcMotorEx.class, "motorFLandStrafeOdo");
         motorBR = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
         liftEncoder = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
-        motorBL = hardwareMap.get(DcMotorEx.class, "motorBL");
+        motorBL = hardwareMap.get(DcMotorEx.class, "motorBLandBackwardOdo");
         arm = hardwareMap.get(DcMotorEx.class, "arm");
         claw = hardwareMap.get(ServoImplEx.class, "claw");
         turret = hardwareMap.get(ServoImplEx.class, "turret");
@@ -355,6 +356,7 @@ public class PPBotCSDF extends PixelRecognition {
         motorBL.setDirection(DcMotorEx.Direction.REVERSE);
         strafeInitialTicks = strafeOdo.getCurrentPosition();
         forwardInitialTicks = forwardOdo.getCurrentPosition();
+        arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.LEFT;

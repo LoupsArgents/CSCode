@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.opencv.core.Core.flip;
+
 import android.graphics.Canvas;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -15,7 +17,7 @@ import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 @TeleOp
-public class PixelRecognition extends LinearOpMode {
+public class TeamPropRecognition extends LinearOpMode {
     public void runOpMode(){
         VisionPortal portal;
         WebcamName webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
@@ -47,6 +49,7 @@ public class PixelRecognition extends LinearOpMode {
             if (mat.empty()) {
                 return frame;
             }
+            Core.flip(mat, mat, -1);
             Scalar lowHSV;
             Scalar highHSV;
             if(alliance == 1) {
