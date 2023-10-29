@@ -3,16 +3,22 @@ package org.firstinspires.ftc.teamcode;
 
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.geometry.Pose2d;
+import com.arcrobotics.ftclib.geometry.Rotation2d;
+import com.arcrobotics.ftclib.geometry.Translation2d;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.arcrobotics.ftclib.hardware.motors.Motor.Encoder;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.IMU;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 /**
  * This sample shows how to use dead wheels with external encoders
@@ -46,9 +52,19 @@ public class DeadWheelsSample extends LinearOpMode {
     private MotorEx motorFLenc, motorFRenc, motorBLenc, motorBRenc;
     private Encoder leftOdometer, rightOdometer, centerOdometer;
     private HolonomicOdometry odometry;
+    private IMU imu;
+    double previousHeading = 0;
+    double processedHeading = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
+        imu = hardwareMap.get(IMU.class, "imu");
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
+        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
+        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+        imu.initialize(new IMU.Parameters(orientationOnRobot));
+        imu.resetYaw();
+
         motorFLenc = new MotorEx(hardwareMap, "motorFLandStrafeOdo");
         motorFRenc = new MotorEx(hardwareMap, "motorFRandForwardOdo"); //also has right odometer
         motorBLenc = new MotorEx(hardwareMap, "motorBLandBackwardOdo");
@@ -91,6 +107,18 @@ public class DeadWheelsSample extends LinearOpMode {
             // control loop
 
             odometry.updatePose(); // update the position
+
+            /*Translation2d tempTR = odometry.getPose().getTranslation();
+            Rotation2d tempR = Rotation2d.fromDegrees(newGetHeading()%360);
+            Pose2d tempPose = new Pose2d(odometry.getPose().getTranslation(), tempR);
+            odometry.updatePose(tempPose);*/
+            if (gamepad1.start) {
+                resetAllPos();
+            }
+            if (gamepad1.back) {
+                onlyResetHeading();
+            }
+
             telemetry.addData("pos", odometry.getPose());
             telemetry.addData("leftOdometerEncoder", motorBL.getCurrentPosition());
             telemetry.addData("rightOdometerEncoder", motorFR.getCurrentPosition());
@@ -117,6 +145,57 @@ public class DeadWheelsSample extends LinearOpMode {
             motorBR.setPower(backRightPower);
 
         }
+    }
+    public void onlyResetHeading() {
+        Translation2d tempTR = odometry.getPose().getTranslation();
+        motorFLenc = new MotorEx(hardwareMap, "motorFLandStrafeOdo");
+        motorFRenc = new MotorEx(hardwareMap, "motorFRandForwardOdo"); //also has right odometer
+        motorBLenc = new MotorEx(hardwareMap, "motorBLandBackwardOdo");
+        motorBLenc.encoder.reset();
+        motorFRenc.encoder.reset();
+        motorFLenc.encoder.reset();
+        leftOdometer = motorBLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+        rightOdometer = motorFRenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+        centerOdometer = motorFLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+        odometry = new HolonomicOdometry(
+                leftOdometer::getDistance,
+                rightOdometer::getDistance,
+                centerOdometer::getDistance,
+                TRACKWIDTH, CENTER_WHEEL_OFFSET
+        );
+        odometry.updatePose(new Pose2d(tempTR, Rotation2d.fromDegrees(0)));
+    }
+    public void resetAllPos() {
+        /*Rotation2d tempR = Rotation2d.fromDegrees(0);
+                Pose2d tempPose = new Pose2d(0, 0, tempR);
+                odometry.updatePose(tempPose);*/
+        //motorFLenc = new MotorEx(hardwareMap, "motorFLandStrafeOdo");
+        //motorFRenc = new MotorEx(hardwareMap, "motorFRandForwardOdo"); //also has right odometer
+        //motorBLenc = new MotorEx(hardwareMap, "motorBLandBackwardOdo");
+        motorBLenc.encoder.reset();
+        motorFRenc.encoder.reset();
+        motorFLenc.encoder.reset();
+        leftOdometer = motorBLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE); //said front left
+        rightOdometer = motorFRenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE); //said front right
+        centerOdometer = motorFLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE); //said back left
+        odometry = new HolonomicOdometry(
+                leftOdometer::getDistance,
+                rightOdometer::getDistance,
+                centerOdometer::getDistance,
+                TRACKWIDTH, CENTER_WHEEL_OFFSET
+        );
+    }
+    public double newGetHeading(){
+        double currentHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+        double headingChange = currentHeading - previousHeading;
+        if(headingChange < -180){
+            headingChange += 360;
+        }else if(headingChange > 180){
+            headingChange -= 360;
+        }
+        processedHeading += headingChange;
+        previousHeading = currentHeading;
+        return processedHeading;
     }
 
 }
