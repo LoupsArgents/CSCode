@@ -83,6 +83,8 @@ public class ScrimmageCSTeleop extends LinearOpMode {
     double processedHeading = 0;
     boolean poleCanChange = true;
     boolean poleIsUp = false;
+    boolean armCanChange = true;
+    boolean armIsUp = false;
 
 
     public void runOpMode() {
@@ -140,7 +142,7 @@ public class ScrimmageCSTeleop extends LinearOpMode {
             } else if (gamepad1.right_trigger > 0.05) {
                 claw.setPosition(clawClosePos);
             }
-            if (gamepad1.dpad_right || gamepad1.dpad_left) {
+            /*if (gamepad1.dpad_right || gamepad1.dpad_left) {
                 v4b.setPosition(v4bUpPos);
                 //wrist.setPosition(wristUpPos);
                 armTarget = armUpPos; //was -1390
@@ -160,6 +162,28 @@ public class ScrimmageCSTeleop extends LinearOpMode {
                 armTarget = armDownPos; //was -100
                 arm.setTargetPosition(armTarget);
                 arm.setPower(0.5);
+            }*/
+            if (gamepad1.left_bumper && armCanChange) {
+                if (armIsUp) {
+                   isScoringPos = false;
+                   v4b.setPosition(v4bDownPos);
+                   wrist.setPosition(wristDownPos);
+                   armTarget = armDownPos;
+                   arm.setTargetPosition(armTarget);
+                   arm.setPower(0.5);
+                   armIsUp = false;
+                   armCanChange = false;
+                } else {
+                    v4b.setPosition(v4bUpPos);
+                    armTarget = armTestPos;
+                    arm.setTargetPosition(armTestPos);
+                    arm.setPower(-0.5);
+                    isScoringPos = true;
+                    armIsUp = true;
+                    armCanChange = false;
+                }
+            } else if (!gamepad1.left_bumper) {
+                armCanChange = true;
             }
             double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
             double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
