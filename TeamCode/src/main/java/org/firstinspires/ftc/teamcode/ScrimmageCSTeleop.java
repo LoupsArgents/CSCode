@@ -64,16 +64,16 @@ public class ScrimmageCSTeleop extends LinearOpMode {
     ServoImplEx wrist;
     private IMU imu;
 
-    int armDownPos = 0; //was -100
+    int armDownPos = 200; //was -100, then 0
     int armUpPos = -600; //was -1390, then -700
-    int armTestPos = -700;
+    int armTestPos = -475; //was -700
     double clawOpenPos = 0.9; //claw is being super weird-- won't move at all
     double clawClosePos = 0.6; //same problem with the claw
     double turretPos = 0.525; //actually good!
     double poleGuideDownPos = 0.3; //good
     double poleGuideScoringPos = 0.6; //decent
     double v4bDownPos = .55; //correct - used to be 0.55
-    double v4bUpPos = 0.5; //0.2 for back delivery, 0.45 should be parallel to ground
+    double v4bUpPos = 0.45; //0.2 for back delivery, 0.45 should be parallel to ground, was 0.5
     double wristDownPos = 0.20; //was 0.225 (tilted too far left), 0.21 still too far left
     //double wristUpPos = 0.87; //no way to know w/o arm flipping
     int armTarget = 0;
@@ -114,8 +114,8 @@ public class ScrimmageCSTeleop extends LinearOpMode {
         motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFL.setDirection(DcMotorEx.Direction.REVERSE);
         motorBL.setDirection(DcMotorEx.Direction.REVERSE);
-        arm.setTargetPosition(0);
         arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        arm.setTargetPosition(0);
 
         previousHeading = newGetHeading();
         processedHeading = previousHeading;
