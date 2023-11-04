@@ -4,6 +4,7 @@ import static org.opencv.imgproc.Imgproc.FONT_HERSHEY_SIMPLEX;
 
 import android.graphics.Canvas;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -26,7 +27,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-@TeleOp
+@Disabled
+/*
+*
+* As of 11/4/23 this is not the most updated thing for pixels in the wing - copied important stuff to PPBotCSDF
+* So the actually-working version of centerOnClosestStack lives in PPBotCSDF
+* This is not used by anything anymore
+*
+*/
 public class WingPixelDetection extends OldPPBotBasicDF {
     public void runOpMode(){
         VisionPortal portal;
@@ -41,7 +49,9 @@ public class WingPixelDetection extends OldPPBotBasicDF {
 
         }
     }
-    public void centerOnClosestStack(WingPixelProcessor processor){ //current - diagonal movement
+    public void centerOnClosestStack(WingPixelProcessor processor){
+        //OLD VERSION OLD VERSION OLD VERSION
+        //see note at top of file - current version lives in PPBotCSDF
         double power = .35;
         Point pixelPos = processor.getClosestPixelPos();
         //^^^ this is the input of CV on this algorithm - telling us whether we're left/right of center and how much
@@ -159,9 +169,10 @@ public class WingPixelDetection extends OldPPBotBasicDF {
             Scalar highPurpleHSV = new Scalar(150, 255, 255); //120-150 should do for hue for starters
             Scalar lowYellowHSV = new Scalar(14, 40, 80); //before, last was 80 (excluded brown but really that's not necessary) then 20, second-to-last was 100 then 80
             Scalar highYellowHSV = new Scalar(28, 255, 255);
-            Scalar lowGreenHSV = new Scalar(45,100,25); //the green filter is somehow perfect and has no problems. I wish all the other ones were like that.
+            Scalar lowGreenHSV = new Scalar(45,100,50); //last was 25; trying to stop from seeing tiles
+            //archived comment: the green filter is somehow perfect and has no problems. I wish all the other ones were like that.
             Scalar highGreenHSV = new Scalar(75, 255, 255);
-            Scalar lowWhiteHSV = new Scalar(0,0,180); //last was 150
+            Scalar lowWhiteHSV = new Scalar(0,0,180); //last was 180, updated 11/4/23 for PP offseason bot - new camera angle affects some things
             Scalar highWhiteHSV = new Scalar(180, 20, 255);
             Mat purpleThresh = new Mat();
             Mat yellowThresh = new Mat();

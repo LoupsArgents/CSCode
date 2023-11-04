@@ -4,6 +4,7 @@ import static org.opencv.core.Core.flip;
 
 import android.graphics.Canvas;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -16,7 +17,14 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
-@TeleOp
+@Disabled
+/*
+*
+* This is no longer the most updated thing used for the team prop
+* As of 11/4/23, I've copied the class to PPBotCSDF (since that needs both this and WingPixelProcessor)
+* So yeah, don't change this - change it there
+*
+*/
 public class TeamPropRecognition extends LinearOpMode {
     public void runOpMode(){
         VisionPortal portal;
