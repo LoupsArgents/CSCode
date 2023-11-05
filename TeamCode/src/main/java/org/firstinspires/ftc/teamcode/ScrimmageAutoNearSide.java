@@ -2,7 +2,9 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 @Autonomous
-public class ScrimmageAutoFarSide extends PPBotCSDF {
+public class ScrimmageAutoNearSide extends PPBotCSDF {
+    //centered lineup: right edge of driverail is on the left edge of the third tab (including the little half-tab on the very edge) from the right of the tile
+    //so there are 2 indents to the right of it
     public void runOpMode(){
         initializeHardware();
         processor.setAlliance(1);
@@ -36,17 +38,23 @@ public class ScrimmageAutoFarSide extends PPBotCSDF {
             absoluteHeading(.3, 45);
             sleep(200);
             openClaw();
+            sleep(500);
         }else if(result.equals("Center")){
-            goStraight(.3, 5, 0.0);
+            goStraight(.3, 6, 0.0);
             sleep(200);
-            goBackward(.3, 1, 0.0);
+            goBackward(.3, 2, 0.0);
             sleep(200);
             openClaw();
+            sleep(500);
+            goBackward(.3, 4, 0.0);
         }else if(result.equals("Right")){
             absoluteHeading(.3, -45);
             sleep(200);
             openClaw();
+            sleep(500);
         }
-        sleep(500);
+        absoluteHeading(.3, -180.0);
+        absoluteHeading(.25, -180.0);
+        strafeLeft(.35, 4, 5, -180.0);
     }
 }

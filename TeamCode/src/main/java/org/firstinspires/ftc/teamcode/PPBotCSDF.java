@@ -58,15 +58,17 @@ public class PPBotCSDF extends LinearOpMode {
     ServoImplEx wrist;
     VisionPortal portal;
     EverythingProcessor processor;
-    int armDownPos = 0; //was -100
+    int armDownPos = 200; //was -100, then 0
     int armUpPos = -600; //was -1390, then -700
-    int armSpikeMarkPos = -100;
+    int armSlightlyOffGroundPos;
+    int armSpikeMarkPos = 0; //was -100
     double clawOpenPos = 0.9; //claw is being super weird-- won't move at all
     double clawClosePos = 0.6; //same problem with the claw
     double turretPos = 0.525; //actually good!
     double poleGuideDownPos = 0.3; //good
     double poleGuideScoringPos = 0.6; //decent
     double v4bDownPos = .55; //correct - used to be 0.55
+    double v4bSlightlyUpPos = .56;
     double v4bUpPos = 0.5; //0.2 for back delivery, 0.45 should be parallel to ground
     double wristDownPos = 0.20; //was 0.225 (tilted too far left), 0.21 still too far left
     //double wristUpPos = 0.87; //no way to know w/o arm flipping
@@ -79,6 +81,7 @@ public class PPBotCSDF extends LinearOpMode {
     double multiplierBL = 1.0;
     double multiplierFL = 1.0;
     double multiplierBR = 1.0;
+    int armInitial;
     public void runOpMode(){
         initializeHardware();
         openClaw();
@@ -132,7 +135,7 @@ public class PPBotCSDF extends LinearOpMode {
         double forwardBackStart = getInchesTraveled(forwardOdo, 0); //second used to be 0 but IDK why
         telemetry.addData("Start", forwardBackStart);
         //The variable above gives the position, in inches, that the encoder was in at the start of the function.
-        double forwardBackPos = getInchesTraveled(forwardOdo, forwardBackStart);
+        double forwardBackPos = getInchesTraveledFromIn(forwardOdo, forwardBackStart);
         telemetry.addData("FirstPos", forwardBackPos);
         motorFR.setPower(-power);
         motorFL.setPower(-power);
@@ -156,10 +159,10 @@ public class PPBotCSDF extends LinearOpMode {
                 motorFL.setPower(-power*multiplier);
                 motorBL.setPower(-power*multiplier);
             }
-            forwardBackPos = getInchesTraveled(forwardOdo, forwardBackStart);
+            forwardBackPos = getInchesTraveledFromIn(forwardOdo, forwardBackStart);
         }
         stopMotors();
-        telemetry.addData("Inches", getInchesTraveled(forwardOdo, forwardInitialTicks));
+        telemetry.addData("Inches", getInchesTraveled(forwardOdo, 0));
         telemetry.update();
     }
     public void goBackward(double power, double inches, double idealHeading){
@@ -167,8 +170,8 @@ public class PPBotCSDF extends LinearOpMode {
         double forwardBackStart = getInchesTraveled(forwardOdo, 0); //second was 0 but IDK why
         telemetry.addData("Start", forwardBackStart);
         //The variable above gives the position, in inches, that the encoder was in at the start of the function.
-        double forwardBackPos = getInchesTraveled(forwardOdo, forwardBackStart);
-        telemetry.addData("FirstPos", forwardBackPos);
+        double forwardBackPos = getInchesTraveledFromIn(forwardOdo, forwardBackStart);
+        RobotLog.aa("FirstPos", String.valueOf(forwardBackPos));
         motorFR.setPower(power);
         motorFL.setPower(power);
         motorBR.setPower(power);
@@ -190,17 +193,24 @@ public class PPBotCSDF extends LinearOpMode {
                 motorFL.setPower(power);
                 motorBL.setPower(power);
             }
-            forwardBackPos = getInchesTraveled(forwardOdo, forwardBackStart);
+            forwardBackPos = getInchesTraveledFromIn(forwardOdo, forwardBackStart);
         }
         stopMotors();
     }
     //going to the right is positive ticks, so going to the left will be negative
     public void strafeRight(double power, double inches, double timelimit, double idealHeading){
+        /*double multiplier;
+        telemetry.addData("RawPos", forwardOdo.getCurrentPosition());
+        double forwardBackStart = getInchesTraveled(forwardOdo, 0); //second used to be 0 but IDK why
+        telemetry.addData("Start", forwardBackStart);
+        double forwardBackPos = getInchesTraveled(forwardOdo, forwardBackStart);
+        * */
         long startthing = System.currentTimeMillis();
         long current = System.currentTimeMillis();
         double multiplier;
         double strafeStart = getInchesTraveled(strafeOdo, 0); //second was 0 but IDK why
-        double strafePos = getInchesTraveled(strafeOdo, strafeStart);
+        double strafePos = getInchesTraveledFromIn(strafeOdo, strafeStart);
+        RobotLog.aa("Position", String.valueOf(strafePos));
         motorFR.setPower(power);
         motorFL.setPower(-power);
         motorBR.setPower(-power);
@@ -208,6 +218,7 @@ public class PPBotCSDF extends LinearOpMode {
         double targetheading = idealHeading;
         RobotLog.aa("StrafeRight", "goal heading is " + targetheading);
         while(strafePos < inches && current-startthing < 1000*timelimit && opModeIsActive()){
+            RobotLog.aa("Position", String.valueOf(strafePos));
             double heading = newGetHeading();
             if(heading-targetheading>=0){
                 multiplier = .1*(heading-targetheading)+1;
@@ -222,7 +233,7 @@ public class PPBotCSDF extends LinearOpMode {
                 motorFL.setPower(-power*multiplier);
                 motorBL.setPower(power);
             }
-            strafePos = getInchesTraveled(strafeOdo, strafeStart);
+            strafePos = getInchesTraveledFromIn(strafeOdo, strafeStart);
             current = System.currentTimeMillis();
         }
         stopMotors();
@@ -232,14 +243,17 @@ public class PPBotCSDF extends LinearOpMode {
         long current = System.currentTimeMillis();
         double multiplier;
         double strafeStart = getInchesTraveled(strafeOdo, 0); //second was 0 but IDK why
-        double strafePos = getInchesTraveled(strafeOdo, strafeStart);
+        RobotLog.aa("Start", String.valueOf(strafeStart));
+        double strafePos = getInchesTraveledFromIn(strafeOdo, strafeStart);
+        RobotLog.aa("Position", String.valueOf(strafePos));
         motorFR.setPower(-power);
         motorFL.setPower(power);
         motorBR.setPower(power);
         motorBL.setPower(-power);
         double targetheading = idealHeading;
-        RobotLog.aa("StrafeLeft", "goal heading is " + Double.toString(targetheading));
-        while(strafePos > -1 * inches && current - startthing < 1000*timelimit && opModeIsActive()){
+        RobotLog.aa("StrafeLeft", "goal heading is " + targetheading);
+        while(strafePos > -inches && current - startthing < 1000*timelimit && opModeIsActive()){
+            RobotLog.aa("Position", String.valueOf(strafePos));
             double heading = newGetHeading();
             if(heading-targetheading>=0){
                 multiplier = .1*(heading-targetheading)+1;
@@ -254,7 +268,7 @@ public class PPBotCSDF extends LinearOpMode {
                 motorFL.setPower(power);
                 motorBL.setPower(-power*multiplier);
             }
-            strafePos = getInchesTraveled(strafeOdo, strafeStart);
+            strafePos = getInchesTraveledFromIn(strafeOdo, strafeStart);
             current = System.currentTimeMillis();
         }
         stopMotors();
@@ -349,8 +363,10 @@ public class PPBotCSDF extends LinearOpMode {
         //1892 ticks in an inch means we show position / 1892 and we're good to go.
         return (double)(encoder.getCurrentPosition() - encoderInitial) / 1892.0;
     }
-    public double getInchesTraveled(DcMotor encoder, double encoderInitial){ //the version that takes encoderInitial in inches
-        return ((double)(encoder.getCurrentPosition()) / 1892.0) - encoderInitial;
+    public double getInchesTraveledFromIn(DcMotor encoder, double encoderInitial){ //the version that takes encoderInitial in inches
+        return ((double)((double)encoder.getCurrentPosition()) / 1892.0) - encoderInitial;
+        //current amount moved in inches minus the first thing it was in inches
+        //so why, exactly, is this not 0 when we start a strafe?
     }
     public double newGetHeading(){
         double currentHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
@@ -388,6 +404,11 @@ public class PPBotCSDF extends LinearOpMode {
         motorBL.setDirection(DcMotorEx.Direction.REVERSE);
         strafeInitialTicks = strafeOdo.getCurrentPosition();
         forwardInitialTicks = forwardOdo.getCurrentPosition();
+        armInitial = arm.getCurrentPosition();
+        armDownPos = armInitial;
+        armUpPos = armInitial-800;
+        armSlightlyOffGroundPos = armInitial - 150;
+        armSpikeMarkPos = armInitial - 250; //used to be -100, then -200
         arm.setTargetPosition(armDownPos); //see, driver hub? I'M DOING WHAT YOU WANT
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
