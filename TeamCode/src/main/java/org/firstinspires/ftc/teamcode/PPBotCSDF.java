@@ -497,7 +497,7 @@ public class PPBotCSDF extends LinearOpMode {
         closeClaw();
     }
     //for the strafing version see the (now out of date) WingPixelDetection.java file
-    class EverythingProcessor implements VisionProcessor {
+    static class EverythingProcessor implements VisionProcessor { //I had to make it static to make teleop work, and that has errors for all the telemetry statements so I commented them out
         double leftVal;
         double rightVal;
         double centerVal;
@@ -561,7 +561,7 @@ public class PPBotCSDF extends LinearOpMode {
             // telemetry.addData("Left", leftVal);
             //telemetry.addData("Center", centerVal);
             //telemetry.addData("Right", rightVal);
-            telemetry.update();
+            //telemetry.update();
             return left;
             //frame.release();
         }
@@ -658,7 +658,7 @@ public class PPBotCSDF extends LinearOpMode {
                 Scalar color = new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
                 if(r.area() > minPixelBoxArea){
                     Imgproc.rectangle(masked, r.tl(), r.br(), color, 2);
-                    telemetry.addData("Rect", r);
+                    //telemetry.addData("Rect", r);
                 }
                 if(r.y > maxRect.y && r.area() > minPixelBoxArea){
                     //find the closest notable bounding box
@@ -675,8 +675,8 @@ public class PPBotCSDF extends LinearOpMode {
             //RobotLog.aa("Box", maxRect.toString());
             closestPixelPos = new Point(maxRect.x, maxRect.y); //this is what actually informs our algorithm - see function below for a bit more processing
             closestPixelRect = maxRect;
-            telemetry.addData("BoundingBox", maxRect);
-            telemetry.update();
+            //telemetry.addData("BoundingBox", maxRect);
+            //telemetry.update();
             masked.copyTo(frame); //always change back to masked.copyTo(frame) to see bounding boxes, etc.
             //i have a sinking suspicion that it is, in fact, the yellow filter causing these problems
             //IT IS the yellow filter! i'm sorry for ever doubting you, green filter. you're perfect.
