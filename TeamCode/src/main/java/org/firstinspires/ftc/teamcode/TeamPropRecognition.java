@@ -4,6 +4,7 @@ import static org.opencv.core.Core.flip;
 
 import android.graphics.Canvas;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -17,7 +18,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
-@Disabled
+@Autonomous
 /*
 *
 * This is no longer the most updated thing used for the team prop
@@ -31,7 +32,7 @@ public class TeamPropRecognition extends LinearOpMode {
         WebcamName webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
         //TfodProcessor myTfodProcessor = TfodProcessor.easyCreateWithDefaults();
         TeamPropProcessor teamPropProcessor = new TeamPropProcessor();
-        teamPropProcessor.setAlliance(1);
+        teamPropProcessor.setAlliance(-1);
         portal = VisionPortal.easyCreateWithDefaults(webcam, teamPropProcessor);
         portal.resumeStreaming();
         waitForStart();
@@ -65,7 +66,7 @@ public class TeamPropRecognition extends LinearOpMode {
                 highHSV = new Scalar(180, 255, 255);
             }else{
                 lowHSV = new Scalar(100, 70, 70);
-                highHSV = new Scalar(120, 255, 255);
+                highHSV = new Scalar(125, 255, 255);
             }
             Mat thresh = new Mat();
             // Get a black and white image of red objects

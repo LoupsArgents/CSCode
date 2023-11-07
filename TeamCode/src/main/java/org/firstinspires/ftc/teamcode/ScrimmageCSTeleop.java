@@ -70,7 +70,7 @@ public class ScrimmageCSTeleop extends LinearOpMode {
     double multiplierBR = 1.0;
     WebcamName webcam;
     VisionPortal portal;
-    PPBotCSDF.EverythingProcessor processor;
+    EverythingProcessor processor;
     DcMotorEx motorFR;
     DcMotorEx motorFL;
     DcMotorEx motorBR;
@@ -150,7 +150,7 @@ public class ScrimmageCSTeleop extends LinearOpMode {
         armUpPos += armInitial;
 
         webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
-        processor = new PPBotCSDF.EverythingProcessor();
+        processor = new EverythingProcessor();
         processor.setMode(1);
         portal = VisionPortal.easyCreateWithDefaults(webcam, processor);
         portal.resumeStreaming();
@@ -354,7 +354,7 @@ public class ScrimmageCSTeleop extends LinearOpMode {
             return false;
         }
     }
-    public boolean centerOnClosestStack(PPBotCSDF.EverythingProcessor processor){ //current - diagonal movement
+    public boolean centerOnClosestStack(EverythingProcessor processor){ //current - diagonal movement
     /*
     * Comments for Robin when they're moving this to teleop:
     * You're going to need to copy over the EverythingProcessor class that lives in this file to your teleop.

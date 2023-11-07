@@ -55,6 +55,8 @@ public class ScrimmageAutoNearSide extends PPBotCSDF {
         }
         absoluteHeading(.3, -180.0);
         absoluteHeading(.25, -180.0);
+        //so why is the thing below nOT HAPPENING???
+        sleep(500); //this had better fix it.
         strafeLeft(.35, 4, 5, -180.0);
     }
 }

@@ -6,7 +6,6 @@ import android.graphics.Canvas;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.vision.VisionProcessor;
@@ -20,11 +19,13 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 @Disabled
 public class EverythingProcessor extends LinearOpMode implements VisionProcessor {
+    String updates = "";
     double leftVal;
     double rightVal;
     double centerVal;
@@ -40,6 +41,7 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
 
     @Override
     public Object processFrame(Mat frame, long captureTimeNanos) {
+        updates = "";
         Core.flip(frame, frame, -1);
         if(setting == 0){
             return doPropProcessing(frame);
@@ -85,10 +87,11 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         leftVal = Core.mean(left).val[0];
         rightVal = Core.mean(right).val[0];
         centerVal = Core.mean(center).val[0];
-        // telemetry.addData("Left", leftVal);
-        //telemetry.addData("Center", centerVal);
-        //telemetry.addData("Right", rightVal);
-        telemetry.update();
+       //  telemetry.addData("Left", leftVal);
+       // telemetry.addData("Center", centerVal);
+       // telemetry.addData("Right", rightVal);
+        updates += ("Left: " + leftVal + "\nCenter: " + centerVal + "\nRight: " + rightVal);
+       // telemetry.update();
         return left;
         //frame.release();
     }
@@ -185,7 +188,8 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
             Scalar color = new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
             if(r.area() > minPixelBoxArea){
                 Imgproc.rectangle(masked, r.tl(), r.br(), color, 2);
-                telemetry.addData("Rect", r);
+                updates += "Rect " + r + "\n";
+               // telemetry.addData("Rect", r);
             }
             if(r.y > maxRect.y && r.area() > minPixelBoxArea){
                 //find the closest notable bounding box
@@ -202,8 +206,9 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         //RobotLog.aa("Box", maxRect.toString());
         closestPixelPos = new Point(maxRect.x, maxRect.y); //this is what actually informs our algorithm - see function below for a bit more processing
         closestPixelRect = maxRect;
-        telemetry.addData("BoundingBox", maxRect);
-        telemetry.update();
+        updates += "BoundingBox: " + maxRect;
+       // telemetry.addData("BoundingBox", maxRect);
+        //telemetry.update();
         masked.copyTo(frame); //always change back to masked.copyTo(frame) to see bounding boxes, etc.
         //i have a sinking suspicion that it is, in fact, the yellow filter causing these problems
         //IT IS the yellow filter! i'm sorry for ever doubting you, green filter. you're perfect.
@@ -224,7 +229,7 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
     public void setMode(int m){
         this.setting = m;
     }
-
+    public String getUpdates(){ return updates; }
     @Override
     public void runOpMode() throws InterruptedException {
 

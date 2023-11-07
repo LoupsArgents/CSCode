@@ -2,21 +2,20 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 @Autonomous
-public class ScrimmageAutoFarSide extends PPBotCSDF {
+public class BasicScrimmageAuto extends PPBotCSDF {
+    String result = "Center";
     public void runOpMode(){
         initializeHardware();
+        processor.setMode(0);
         processor.setAlliance(1);
         closeClaw();
         sleep(500);
         turret.setPosition(turretPos);
         v4b.setPosition(v4bDownPos);
-        String result = "Center";
-        while(opModeInInit()){
-            result = processor.getResult();
-            telemetry.addData("Result", result);
-            telemetry.update();
-        }
         waitForStart();
+        //this^^^ is all the init stuff that needs to get copied into new programs
+    }
+    public void doRun(int alliance){ //1 is red, -1 is blue
         arm.setTargetPosition(armSpikeMarkPos);
         arm.setPower(0.7);
         long startTime = System.currentTimeMillis();
