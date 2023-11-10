@@ -14,7 +14,10 @@ import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.opencv.core.Point;
+import org.tensorflow.lite.task.vision.detector.Detection;
 
 import java.util.List;
 
@@ -41,6 +44,7 @@ public class PPBotCSDF extends LinearOpMode {
     ServoImplEx wrist;
     VisionPortal portal;
     EverythingProcessor processor;
+    AprilTagProcessor ATProcessor;
     int armDownPos = 200; //was -100, then 0
     int armUpPos = -600; //was -1390, then -700
     int armSlightlyOffGroundPos;
@@ -400,8 +404,10 @@ public class PPBotCSDF extends LinearOpMode {
         }*/
         webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
         processor = new EverythingProcessor();
+        ATProcessor = AprilTagProcessor.easyCreateWithDefaults();
         processor.setAlliance(1);
-        portal = VisionPortal.easyCreateWithDefaults(webcam, processor);
+        portal = VisionPortal.easyCreateWithDefaults(webcam, processor, ATProcessor);
+        portal.setProcessorEnabled(ATProcessor, false);
         portal.resumeStreaming();
         arm.setMode(DcMotor.RunMode.RUN_TO_POSITION); //this is down here in the hopes that it will stop driver hub from getting mad
         telemetry.addData("Status", "Initialized");
@@ -474,5 +480,34 @@ public class PPBotCSDF extends LinearOpMode {
         stopMotors();
         closeClaw();
     }
-    //for the strafing version see the (now out of date) WingPixelDetection.java file
+    public double[] getAprilTagDist(String result){
+        //IDs: 1 is blue left, 2 is blue center, 3 is blue right
+        //4 is red left, 5 is red center, 6 is red right
+        List<AprilTagDetection> currentDetections = ATProcessor.getDetections();
+        double xDist = 0.0;
+        double yDist = 0.0;
+        double[] dists = new double[2];
+        for(AprilTagDetection d : currentDetections) {
+            if (result.equals("Center")) {
+                if (d.id == 2 || d.id == 5) {
+                    xDist = d.ftcPose.x;
+                    yDist = d.ftcPose.y;
+                }
+            } else if (result.equals("Left")) {
+                if (d.id == 1 || d.id == 4) {
+                    xDist = d.ftcPose.x;
+                    yDist = d.ftcPose.y;
+                }
+            } else if (result.equals("Right")) {
+                if (d.id == 3 || d.id == 6) {
+                    xDist = d.ftcPose.x;
+                    yDist = d.ftcPose.y;
+                }
+            }
+        }
+        dists[0] = xDist;
+        dists[1] = yDist;
+        return dists;
+    }
+
 }

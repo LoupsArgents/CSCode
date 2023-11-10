@@ -8,8 +8,6 @@ public class RedBasicScrimmageAuto extends BasicScrimmageAuto {
         initializeHardware();
         processor.setMode(0);
         processor.setAlliance(1);
-        closeClaw();
-        sleep(500);
         turret.setPosition(turretPos);
         v4b.setPosition(v4bDownPos);
         waitForStart();

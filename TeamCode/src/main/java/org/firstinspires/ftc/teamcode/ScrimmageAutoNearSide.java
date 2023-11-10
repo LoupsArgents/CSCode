@@ -8,8 +8,7 @@ public class ScrimmageAutoNearSide extends PPBotCSDF {
     public void runOpMode(){
         initializeHardware();
         processor.setAlliance(1);
-        closeClaw();
-        sleep(500);
+
         turret.setPosition(turretPos);
         v4b.setPosition(v4bDownPos);
         String result = "Center";
@@ -19,6 +18,8 @@ public class ScrimmageAutoNearSide extends PPBotCSDF {
             telemetry.update();
         }
         waitForStart();
+        closeClaw();
+        sleep(500);
         arm.setTargetPosition(armSpikeMarkPos);
         arm.setPower(0.7);
         long startTime = System.currentTimeMillis();
@@ -34,11 +35,13 @@ public class ScrimmageAutoNearSide extends PPBotCSDF {
         goStraight(.5, 15, 0.0);
         v4b.setPosition(v4bSlightlyUpPos);
         sleep(200);
+        processor.setMode(1);
         if(result.equals("Left")){
             absoluteHeading(.3, 45);
             sleep(200);
             openClaw();
             sleep(500);
+            absoluteHeading(.3, 0.0);
         }else if(result.equals("Center")){
             goStraight(.3, 6, 0.0);
             sleep(200);
@@ -47,16 +50,34 @@ public class ScrimmageAutoNearSide extends PPBotCSDF {
             openClaw();
             sleep(500);
             goBackward(.3, 4, 0.0);
+            sleep(100);
         }else if(result.equals("Right")){
             absoluteHeading(.3, -45);
             sleep(200);
             openClaw();
             sleep(500);
+            absoluteHeading(.3, 0.0);
+            goBackward(.3, 3, 0.0);
         }
+        strafeRight(.3, 7, 5, 0.0);
+        arm.setTargetPosition(armDownPos);
+        v4b.setPosition(v4bDownPos);
         absoluteHeading(.3, -180.0);
         absoluteHeading(.25, -180.0);
-        //so why is the thing below nOT HAPPENING???
-        sleep(500); //this had better fix it.
-        strafeLeft(.35, 4, 5, -180.0);
+        sleep(100);
+        if(!result.equals("Right")) {
+            goStraight(.3, 6, -180.0);
+        }else{
+            goStraight(.3, 3, -180.0);
+        }
+        centerOnClosestStack(processor);
+        sleep(500);
+        portal.setProcessorEnabled(processor, false);
+        portal.setProcessorEnabled(ATProcessor, true);
+        goBackward(.5, 6, -180.0);
+        absoluteHeading(.3, -90.0);
+        absoluteHeading(.2, -90.0);
+        goStraight(.5, 14, -90.0);
+        strafeLeft(.4, 8, 5, -90.0);
     }
 }

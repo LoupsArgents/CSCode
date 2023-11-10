@@ -16,6 +16,8 @@ public class BasicScrimmageAuto extends PPBotCSDF {
         //this^^^ is all the init stuff that needs to get copied into new programs
     }
     public void doRun(int alliance){ //1 is red, -1 is blue
+        closeClaw();
+        sleep(500);
         arm.setTargetPosition(armSpikeMarkPos);
         arm.setPower(0.7);
         long startTime = System.currentTimeMillis();
