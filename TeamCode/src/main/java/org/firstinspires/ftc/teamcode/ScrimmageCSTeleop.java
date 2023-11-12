@@ -164,13 +164,29 @@ public class ScrimmageCSTeleop extends LinearOpMode {
         poleGuide.setPosition(poleGuideDownPos);
         wrist.setPosition(wristDownPos);
         double currentPos = 0.5;
+        double offset = 0;
+        double lastHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
         //Servo servoToUse = claw;
         int armInitial = arm.getCurrentPosition();
+        boolean hasBeenWeird = false;
         while (opModeIsActive()) {
+            //botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            botHeading = newHeading(imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS), offset);
+            if (imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS) == 0.0 || imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS) == -0.0) {
+                offset = lastHeading;
+                imu.initialize(new IMU.Parameters(orientationOnRobot));
+                imu.resetYaw();
+                hasBeenWeird = true;
+            } else {
+                lastHeading = botHeading;
+            }
             wrist.setPosition(wristDownPos);
             int armCurrent = arm.getCurrentPosition();
-            telemetry.addData("currentArmPos", armCurrent);
-            telemetry.addData("TargetArmPos", armTarget);
+            telemetry.addData("hasBeenWeird", hasBeenWeird);
+            telemetry.addData("botHeading", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
+            telemetry.addData("newHeading", botHeading);
+            telemetry.addData("gamepad1.start", gamepad1.start);
             telemetry.update();
             turret.setPosition(turretPos);
             if (gamepad1.left_trigger > 0.05) {
@@ -178,27 +194,6 @@ public class ScrimmageCSTeleop extends LinearOpMode {
             } else if (gamepad1.right_trigger > 0.05) {
                 claw.setPosition(clawClosePos);
             }
-            /*if (gamepad1.dpad_right || gamepad1.dpad_left) {
-                v4b.setPosition(v4bUpPos);
-                //wrist.setPosition(wristUpPos);
-                armTarget = armUpPos; //was -1390
-                arm.setTargetPosition(armTarget);
-                arm.setPower(-0.5);
-                isScoringPos = true;
-            } else if (gamepad1.dpad_up) {
-                v4b.setPosition(v4bUpPos);
-                armTarget = armTestPos;
-                arm.setTargetPosition(armTestPos);
-                arm.setPower(-0.5);
-                isScoringPos = true;
-            } else if (gamepad1.dpad_down || !isScoringPos) {
-                isScoringPos = false;
-                v4b.setPosition(v4bDownPos);
-                wrist.setPosition(wristDownPos);
-                armTarget = armDownPos; //was -100
-                arm.setTargetPosition(armTarget);
-                arm.setPower(0.5);
-            }*/
             if (gamepad1.left_bumper && armCanChange) {
                 if (armIsUp) {
                    isScoringPos = false;
@@ -238,50 +233,17 @@ public class ScrimmageCSTeleop extends LinearOpMode {
                 poleCanChange = true;
             }
 
-            if (gamepad1.a) {
-                boolean done = false;
-                while (!done) {
-                    done = absoluteHeading(0, 0.65, 1);
-                    if (dpadIsPressed()) { //cancel
-                        done = true;
-                    }
-                }
-            } else if (gamepad1.b) {
-                boolean done = false;
-                while (!done) {
-                    done = absoluteHeading(90, 0.65, 1);
-                    if (dpadIsPressed()) { //cancel
-                        done = true;
-                    }
-                }
-            } else if (gamepad1.x) {
-                boolean done = false;
-                while (!done) {
-                    done = absoluteHeading(270, 0.65, 1);
-                    if (dpadIsPressed()) { //cancel
-                        done = true;
-                    }
-                }
-            } else if (gamepad1.y) {
-                boolean done = false;
-                while (!done) {
-                    done = absoluteHeading(180, 0.65, 1);
-                    if (dpadIsPressed()) { //cancel
-                        done = true;
-                    }
-                }
-            }
-
             // This button choice was made so that it is hard to hit on accident,
             // it can be freely changed based on preference.
             // The equivalent button is start on Xbox-style controllers.
             if (gamepad1.start) {
                 imu.initialize(new IMU.Parameters(orientationOnRobot));
                 imu.resetYaw();
+                offset = 0;
             }
 
             //double botHeading = (imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS) + Math.PI) % (2*Math.PI) - Math.PI;
-            double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            //double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
             // Rotate the movement direction counter to the bot's rotation
             double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
@@ -313,6 +275,15 @@ public class ScrimmageCSTeleop extends LinearOpMode {
                 }
             }
         }
+    }
+    public double newHeading(double reading, double change) {
+        double val = reading - change;
+        if (val > Math.PI) {
+            val -= (2*Math.PI);
+        } else if (val < -Math.PI) {
+            val += (2*Math.PI);
+        }
+        return val;
     }
     public boolean dpadIsPressed() {
         return gamepad1.dpad_up || gamepad1.dpad_down || gamepad1.dpad_right || gamepad1.dpad_left;
