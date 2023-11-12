@@ -48,6 +48,7 @@ public class PPBotCSDF extends LinearOpMode {
     int armDownPos = 200; //was -100, then 0
     int armUpPos = -600; //was -1390, then -700
     int armSlightlyOffGroundPos;
+    int armBackdropDeliveryPos;
     int armSpikeMarkPos = 0; //was -100
     double clawOpenPos = 0.9; //claw is being super weird-- won't move at all
     double clawClosePos = 0.6; //same problem with the claw
@@ -183,6 +184,12 @@ public class PPBotCSDF extends LinearOpMode {
         double multiplier;
         int strafeStartTicks = strafeOdo.getCurrentPosition();
         int strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        int strafeThirdTicks = strafeOdo.getCurrentPosition();
+        RobotLog.aa("Initial", String.valueOf(strafeStartTicks));
+        RobotLog.aa("InitialCurrent", String.valueOf(strafeCurrentTicks));
+        RobotLog.aa("Third", String.valueOf(strafeThirdTicks));
+        RobotLog.aa("InitialDifference", String.valueOf(strafeCurrentTicks - strafeStartTicks));
+        RobotLog.aa("InitialInches", String.valueOf(newInchesTraveled(strafeStartTicks, strafeCurrentTicks)));
         motorFR.setPower(power);
         motorFL.setPower(-power);
         motorBR.setPower(-power);
@@ -387,10 +394,14 @@ public class PPBotCSDF extends LinearOpMode {
         strafeInitialTicks = strafeOdo.getCurrentPosition();
         forwardInitialTicks = forwardOdo.getCurrentPosition();
         armInitial = arm.getCurrentPosition();
+        RobotLog.aa("InitialArmPos", String.valueOf(armInitial));
         armDownPos = armInitial;
         armUpPos = armInitial-800;
         armSlightlyOffGroundPos = armInitial - 150;
+        armBackdropDeliveryPos = armInitial - 480;
+        RobotLog.aa("SlightlyOffArmPos", String.valueOf(armSlightlyOffGroundPos));
         armSpikeMarkPos = armInitial - 250; //used to be -100, then -200
+
         arm.setTargetPosition(armDownPos); //see, driver hub? I'M DOING WHAT YOU WANT
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
@@ -440,8 +451,9 @@ public class PPBotCSDF extends LinearOpMode {
             //RobotLog.aa("DistanceFromCenter", String.valueOf(Math.abs(pixelPos.x - 320)));
             double proportionalConstant = -.025; // used to be -.5, then -.3, then -.03, then -.01, then -.015, then -.03; Desmos said -0.00344828
             pixelPos = processor.getClosestPixelPos();
+            //RobotLog.aa("PixelPos", String.valueOf(pixelPos));
             if(Math.abs(pixelPos.x - 320) < 10){ //we're close enough to centered to just go straight backwards
-                RobotLog.aa("Motors", "all the same");
+              //  RobotLog.aa("Motors", "all the same");
                 motorBL.setPower(-power * multiplierBL);
                 motorBR.setPower(-power * multiplierBR);
                 motorFL.setPower(-power * multiplierFL);
@@ -452,11 +464,11 @@ public class PPBotCSDF extends LinearOpMode {
                 if(multiplier < 0){
                     multiplier = 0; //so it doesn't start turning
                 }
-                RobotLog.aa("multiplier", String.valueOf(multiplier));
+                //RobotLog.aa("multiplier", String.valueOf(multiplier));
                 telemetry.addData("multiplier", Double.toString(multiplier));
                 telemetry.update();
-                RobotLog.aa("Going", "left");
-                RobotLog.aa("Motors", "setting FL and BR to " + (-power * multiplier));
+                //RobotLog.aa("Going", "left");
+                //RobotLog.aa("Motors", "setting FL and BR to " + (-power * multiplier));
                 motorFR.setPower(-power * multiplierFR);
                 motorBL.setPower(-power * multiplierBL);
                 motorFL.setPower(-power * multiplierFL * multiplier);
@@ -468,9 +480,9 @@ public class PPBotCSDF extends LinearOpMode {
                 }
                 telemetry.addData("multiplier", Double.toString(multiplier));
                 telemetry.update();
-                RobotLog.aa("multiplier", String.valueOf(multiplier));
-                RobotLog.aa("Going", "right");
-                RobotLog.aa("Motors", "decreasing FR and BL to " + (-power * multiplier));
+                //RobotLog.aa("multiplier", String.valueOf(multiplier));
+                //RobotLog.aa("Going", "right");
+                //RobotLog.aa("Motors", "decreasing FR and BL to " + (-power * multiplier));
                 motorFL.setPower(-power * multiplierFL);
                 motorBR.setPower(-power * multiplierBR);
                 motorFR.setPower(-power * multiplierFR * multiplier);

@@ -32,7 +32,7 @@ public class TeamPropRecognition extends LinearOpMode {
         WebcamName webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
         //TfodProcessor myTfodProcessor = TfodProcessor.easyCreateWithDefaults();
         TeamPropProcessor teamPropProcessor = new TeamPropProcessor();
-        teamPropProcessor.setAlliance(-1);
+        teamPropProcessor.setAlliance(1); //for red
         portal = VisionPortal.easyCreateWithDefaults(webcam, teamPropProcessor);
         portal.resumeStreaming();
         waitForStart();
