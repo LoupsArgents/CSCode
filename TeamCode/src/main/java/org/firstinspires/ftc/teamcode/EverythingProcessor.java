@@ -31,7 +31,7 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
     double centerVal;
     int alliance; //1 is red, -1 is blue
     int setting; //0 is team prop, 1 is wing pixel
-    int minPixelBoxArea = 1500;
+    int minPixelBoxArea = 2500; //up from 1500 so it doesn't see parts of the robot as pixels
     Point closestPixelPos = new Point(400, 400);
     Rect closestPixelRect;
     @Override
