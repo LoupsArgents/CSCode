@@ -173,7 +173,12 @@ public class ScrimmageCSTeleop extends LinearOpMode {
         while (opModeIsActive()) {
             //botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             botHeading = newHeading(imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS), offset);
-            if (imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS) == 0.0 || imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS) == -0.0) {
+            if (Double.isNaN(botHeading)) {
+                offset = lastHeading;
+                imu.initialize(new IMU.Parameters(orientationOnRobot));
+                imu.resetYaw();
+                hasBeenWeird = true;
+            } else if (imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS) == 0.0 || imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS) == -0.0) {
                 offset = lastHeading;
                 imu.initialize(new IMU.Parameters(orientationOnRobot));
                 imu.resetYaw();
