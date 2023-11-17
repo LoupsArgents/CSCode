@@ -447,8 +447,10 @@ public class PPBotCSDF extends LinearOpMode {
         //which is why (see getClosestPixelPos() method below) it's important that these
         //coordinates include the left/right center of the detected object
         double multiplier = 1;
+        int count = 0;
         while(opModeIsActive() && (/*Math.abs(pixelPos.x-320) > 10 ||*/ pixelPos.y < 340)){ //y threshold was 300
             //RobotLog.aa("DistanceFromCenter", String.valueOf(Math.abs(pixelPos.x - 320)));
+            count++;
             double proportionalConstant = -.025; // used to be -.5, then -.3, then -.03, then -.01, then -.015, then -.03; Desmos said -0.00344828
             pixelPos = processor.getClosestPixelPos();
             //RobotLog.aa("PixelPos", String.valueOf(pixelPos));

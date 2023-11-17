@@ -84,6 +84,7 @@ public class ScrimmageCSTeleop extends LinearOpMode {
     ServoImplEx v4b;
     ServoImplEx wrist;
     private IMU imu;
+    int count = 0;
 
     int armDownPos = 0; //was -100, then 0, then 200
     int armUpPos = -800; //was -1390, then -700, then -600
@@ -272,6 +273,7 @@ public class ScrimmageCSTeleop extends LinearOpMode {
 
             if (gamepad1.right_bumper) {
                 boolean isDone = false;
+                count = 0;
                 while (!isDone) {
                     isDone = centerOnClosestStack(processor);
                     if (dpadIsPressed()) { //cancel
@@ -392,13 +394,16 @@ public class ScrimmageCSTeleop extends LinearOpMode {
                 motorFR.setPower(-power * multiplierFR * multiplier);
                 motorBL.setPower(-power * multiplierBL * multiplier);
             }
+            count++;
             return false;
         } else {
             motorFL.setPower(0);
             motorFR.setPower(0);
             motorBL.setPower(0);
             motorBR.setPower(0);
-            claw.setPosition(clawClosePos);
+            if(count != 0) {
+                claw.setPosition(clawClosePos);
+            }
             return true;
         }
     }
