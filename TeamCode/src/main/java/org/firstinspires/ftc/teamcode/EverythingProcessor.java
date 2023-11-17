@@ -87,6 +87,7 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         leftVal = Core.mean(left).val[0];
         rightVal = Core.mean(right).val[0];
         centerVal = Core.mean(center).val[0];
+        //so left, right, and center val are what we need
        //  telemetry.addData("Left", leftVal);
        // telemetry.addData("Center", centerVal);
        // telemetry.addData("Right", rightVal);
@@ -230,6 +231,10 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         this.setting = m;
     }
     public String getUpdates(){ return updates; }
+    public double[] getVals(){ //return left, center, right
+        double[] d = {leftVal, centerVal, rightVal};
+        return d;
+    }
     @Override
     public void runOpMode() throws InterruptedException {
 
