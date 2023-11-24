@@ -1,6 +1,10 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.util.RobotLog;
+
+import java.util.Arrays;
+
 @Autonomous
 public class BasicScrimmageAuto extends PPBotCSDF {
     String result = "Center";
@@ -29,7 +33,10 @@ public class BasicScrimmageAuto extends PPBotCSDF {
             telemetry.update();
             currentTime = System.currentTimeMillis();
         }
+        double[] thing = processor.getVals();
+        RobotLog.aa("LeftCenterRightValues", Arrays.toString(thing));
         arm.setTargetPosition(armSlightlyOffGroundPos);
+        sleep(2000);
         goStraight(.5, 15, 0.0);
         v4b.setPosition(v4bSlightlyUpPos);
         sleep(200);

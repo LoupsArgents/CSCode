@@ -20,6 +20,7 @@ public class ScrimmageAutoNearSide extends PPBotCSDF {
             telemetry.addData("Result", result);
             telemetry.update();
         }
+
         waitForStart();
 
     }
@@ -37,7 +38,10 @@ public class ScrimmageAutoNearSide extends PPBotCSDF {
             telemetry.update();
             currentTime = System.currentTimeMillis();
         }
+        double[] thing = processor.getVals();
+        RobotLog.aa("LeftCenterRightValues", Arrays.toString(thing));
         arm.setTargetPosition(armSlightlyOffGroundPos);
+        sleep(2000);
         goStraight(.5, 16, 0.0);
         v4b.setPosition(v4bSlightlyUpPos);
         sleep(200);
@@ -110,6 +114,7 @@ public class ScrimmageAutoNearSide extends PPBotCSDF {
         double[] dist = getAprilTagDist(result);
         telemetry.addData("Distances", Arrays.toString(dist));
         telemetry.update();
+        RobotLog.aa("AprilTagXAndY", Arrays.toString(dist));
         arm.setTargetPosition(armBackdropDeliveryPos);
         v4b.setPosition(v4bDownPos);
         if(dist[0] < 0) {
@@ -118,6 +123,7 @@ public class ScrimmageAutoNearSide extends PPBotCSDF {
             strafeLeft(.3, Math.abs(dist[0]), 5, -90.0*alliance);
         }
         goStraight(.3, dist[1]-15, -90.0*alliance);
+        sleep(500);
         openClaw();
         sleep(500);
         goBackward(.4, 4, -90.0*alliance);
