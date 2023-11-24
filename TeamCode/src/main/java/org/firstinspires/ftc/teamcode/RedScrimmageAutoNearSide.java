@@ -9,6 +9,7 @@ public class RedScrimmageAutoNearSide extends ScrimmageAutoNearSide {
         initializeHardware();
         processor.setMode(0);
         processor.setAlliance(1);
+
         turret.setPosition(turretPos);
         v4b.setPosition(v4bDownPos);
         waitForStart();
