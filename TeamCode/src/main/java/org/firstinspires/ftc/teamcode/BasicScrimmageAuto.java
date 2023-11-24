@@ -33,6 +33,7 @@ public class BasicScrimmageAuto extends PPBotCSDF {
             telemetry.update();
             currentTime = System.currentTimeMillis();
         }
+        portal.saveNextFrameRaw("ScrimmageBasicProp");
         double[] thing = processor.getVals();
         RobotLog.aa("LeftCenterRightValues", Arrays.toString(thing));
         arm.setTargetPosition(armSlightlyOffGroundPos);

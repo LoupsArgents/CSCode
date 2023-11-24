@@ -167,6 +167,7 @@ public class ScrimmageCSTeleop extends LinearOpMode {
         double currentPos = 0.5;
         double offset = 0;
         double lastHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        double lastRawHeading = lastHeading;
         double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
         //Servo servoToUse = claw;
         int armInitial = arm.getCurrentPosition();
