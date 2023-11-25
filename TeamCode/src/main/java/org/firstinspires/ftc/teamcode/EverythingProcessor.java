@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.vision.VisionProcessor;
@@ -107,9 +108,14 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         return this.closestPixelRect;
     }
     public Object doWingProcessing(Mat frame){
+       //long currentTime = System.currentTimeMillis();
+       // long oldTime = currentTime;
+       // RobotLog.aa("Status", "Started");
         Mat mat = new Mat();
         Mat original = frame;
         Imgproc.cvtColor(frame, mat, Imgproc.COLOR_RGB2HSV);
+       // currentTime = System.currentTimeMillis();
+       // RobotLog.aa("Status", "Converted to HSV, time taken " + (currentTime - oldTime) + "ms");
         if (mat.empty()) {
             return frame;
         }
@@ -131,16 +137,25 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         Core.inRange(mat, lowYellowHSV, highYellowHSV, yellowThresh);
         Core.inRange(mat, lowGreenHSV, highGreenHSV, greenThresh);
         Core.inRange(mat, lowWhiteHSV, highWhiteHSV, whiteThresh);
+        //oldTime = currentTime;
+        //currentTime = System.currentTimeMillis();
+        //RobotLog.aa("Status", "Filtered, time taken " + (currentTime - oldTime) + "ms");
         Mat testOutput = new Mat();
         Core.bitwise_or(purpleThresh, yellowThresh, testOutput);
         Core.bitwise_or(testOutput, greenThresh, testOutput);
         Core.bitwise_or(testOutput, whiteThresh, testOutput); //combine the black and white images into one black and white image of things that are game elements
         //well, it also includes things that are close in color to game elements, but that's not an issue.
+        //oldTime = currentTime;
+        //currentTime = System.currentTimeMillis();
+        //RobotLog.aa("Status", "Combined, time taken " + (currentTime - oldTime) + "ms");
         Mat masked = new Mat();
         //color the white portion of thresh in with color from original image
         //output into masked
         //Mat thing = new Mat(480, 640, CvType.CV_8UC3, new Scalar(140, 70, 200)); //purple was 140 70 200
         Core.bitwise_and(original, original, masked, testOutput);
+        //oldTime = currentTime;
+        //currentTime = System.currentTimeMillis();
+        //RobotLog.aa("Status", "Filled in with color (for viewing purposes only), time taken " + (currentTime - oldTime) + "ms");
         //Scalar average = Core.mean(masked, thresh);
         Mat scaledMask = new Mat();
         //scale the average saturation to 150
@@ -151,21 +166,30 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         Imgproc.blur(masked, masked, new Size(6, 6)); //was 5, 5
         Imgproc.Canny(masked, cannyOutput, threshold, threshold * 2); //edge detection wizardry copied from OpenCV tutorials - works great.
         Imgproc.blur(cannyOutput, cannyOutput, new Size(5, 5));
+        //oldTime = currentTime;
+        //currentTime = System.currentTimeMillis();
+        //RobotLog.aa("Status", "Canny edge detection complete, time taken " + (currentTime - oldTime) + "ms");
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         Imgproc.findContours(cannyOutput, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE); //contour wizardry copied from OpenCV tutorials
+        //oldTime = currentTime;
+        //currentTime = System.currentTimeMillis();
+        //RobotLog.aa("Status", "Contours found, time taken " + (currentTime - oldTime) + "ms");
         MatOfPoint2f[] contoursPoly  = new MatOfPoint2f[contours.size()];
         Rect[] boundRect = new Rect[contours.size()];
-        Point[] centers = new Point[contours.size()];
-        float[][] radius = new float[contours.size()][1];
+        //Point[] centers = new Point[contours.size()];
+        //float[][] radius = new float[contours.size()][1];
         for (int i = 0; i < contours.size(); i++) {
             contoursPoly[i] = new MatOfPoint2f();
             Imgproc.approxPolyDP(new MatOfPoint2f(contours.get(i).toArray()), contoursPoly[i], 3, true);
             //bounding box wizardry copied from OpenCV tutorials
             boundRect[i] = Imgproc.boundingRect(new MatOfPoint(contoursPoly[i].toArray()));
-            centers[i] = new Point();
-            Imgproc.minEnclosingCircle(contoursPoly[i], centers[i], radius[i]);
+            //centers[i] = new Point();
+            //Imgproc.minEnclosingCircle(contoursPoly[i], centers[i], radius[i]);
         }
+        //oldTime = currentTime;
+        //currentTime = System.currentTimeMillis();
+        //RobotLog.aa("Status", "Bounding boxes made, time taken " + (currentTime - oldTime) + "ms");
         Mat drawing = Mat.zeros(cannyOutput.size(), CvType.CV_8UC3);
         //List<MatOfPoint> contoursPolyList = new ArrayList<>(contoursPoly.length);
         //for (MatOfPoint2f poly : contoursPoly) {
@@ -198,6 +222,9 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
                 Imgproc.putText(masked, Double.toString(r.area()), new Point(r.x, r.y), FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 0, 0));
             }
         }
+       //oldTime = currentTime;
+        //currentTime = System.currentTimeMillis();
+        //RobotLog.aa("Status", "Boxes drawn and largest box found, time taken " + (currentTime - oldTime) + "ms");
         //Rect r = new Rect(320, 100, 10, 10);
         //Mat regionOfInterest = masked.submat(r);
         //Scalar s = Core.mean(regionOfInterest);
@@ -213,6 +240,9 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         masked.copyTo(frame); //always change back to masked.copyTo(frame) to see bounding boxes, etc.
         //i have a sinking suspicion that it is, in fact, the yellow filter causing these problems
         //IT IS the yellow filter! i'm sorry for ever doubting you, green filter. you're perfect.
+        //oldTime = currentTime;
+        //currentTime = System.currentTimeMillis();
+        //RobotLog.aa("Status", "Done, time taken " + (currentTime - oldTime) + "ms");
         return frame;
     }
     public String getResult(){
