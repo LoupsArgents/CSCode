@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 
 @Autonomous
@@ -33,7 +34,9 @@ public class BasicScrimmageAuto extends PPBotCSDF {
             telemetry.update();
             currentTime = System.currentTimeMillis();
         }
-        portal.saveNextFrameRaw("ScrimmageBasicProp");
+        ZonedDateTime dt = ZonedDateTime.now();
+        String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
+        portal.saveNextFrameRaw("ScrimmageBasicProp " + time);
         double[] thing = processor.getVals();
         RobotLog.aa("LeftCenterRightValues", Arrays.toString(thing));
         arm.setTargetPosition(armSlightlyOffGroundPos);

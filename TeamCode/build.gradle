@@ -21,10 +21,16 @@ android {
     packagingOptions {
         jniLibs.useLegacyPackaging true
     }
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
     implementation project(':FtcRobotController')
     implementation 'org.ftclib.ftclib:core:2.0.1' // core
     annotationProcessor files('lib/OpModeAnnotationProcessor.jar')
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.9'
 }

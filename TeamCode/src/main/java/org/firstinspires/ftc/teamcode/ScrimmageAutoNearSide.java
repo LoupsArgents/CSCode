@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 
 @Disabled
@@ -37,7 +38,9 @@ public class ScrimmageAutoNearSide extends PPBotCSDF {
             telemetry.update();
             currentTime = System.currentTimeMillis();
         }
-        portal.saveNextFrameRaw("ScrimmageNearProp");
+        ZonedDateTime dt = ZonedDateTime.now();
+        String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
+        portal.saveNextFrameRaw("ScrimmageNearProp " + time);
         double[] thing = processor.getVals();
         RobotLog.aa("LeftCenterRightValues", Arrays.toString(thing));
         arm.setTargetPosition(armSlightlyOffGroundPos);
@@ -94,7 +97,9 @@ public class ScrimmageAutoNearSide extends PPBotCSDF {
         }else{
             goStraight(.3, 4.5, -180.0*alliance);
         }
-        portal.saveNextFrameRaw("ScrimmageNearPixel");
+        dt = ZonedDateTime.now();
+        time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
+        portal.saveNextFrameRaw("ScrimmageNearPixel " + time);
         centerOnClosestStack(processor);
         sleep(500);
         portal.setProcessorEnabled(processor, false);
@@ -112,7 +117,9 @@ public class ScrimmageAutoNearSide extends PPBotCSDF {
             strafeRight(.4, 10.5, 5, -90.0*alliance);
         }
         sleep(1500);
-        portal.saveNextFrameRaw("ScrimmageNearAprilTag");
+        dt = ZonedDateTime.now();
+        time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
+        portal.saveNextFrameRaw("ScrimmageNearAprilTag " + time);
         double[] dist = getAprilTagDist(result);
         telemetry.addData("Distances", Arrays.toString(dist));
         telemetry.update();
