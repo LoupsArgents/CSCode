@@ -109,9 +109,9 @@ public class ColorProximity extends LinearOpMode {
             if (movingAvg50.size() > 50) {
                 movingAvg50.remove(0);
             }*/
-            RobotLog.aa("distance", Double.toString(distance2m));
-            telemetry.addData("distance2m", distance2m);
-            telemetry.addData("distanceColor", distanceColor);
+            RobotLog.aa("distance2", Double.toString(distance2m));
+            telemetry.addData("distance1", distance2m);
+            telemetry.addData("distance2", distanceColor);
 
             /*telemetry.addData("movingAvg3", getAvg(movingAvg3));
             telemetry.addData("movingAvg5", getAvg(movingAvg5));
