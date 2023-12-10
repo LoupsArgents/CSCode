@@ -15,8 +15,11 @@ public class StreamWingPixelDetection extends PPBotCSDF{
         portal.resumeStreaming();
         waitForStart();
         while(opModeIsActive()){
-            telemetry.addData("Message", "This is for a camera stream that shows the wing pixel processor's results. You need to be in init for that.");
-            telemetry.update();
+            if(!p.updates.equals("")) {
+                telemetry.addLine(p.updates);
+                //telemetry.addData("Message", "This is for a camera stream that shows the wing pixel processor's results. You need to be in init for that.");
+                telemetry.update();
+            }
         }
     }
 }

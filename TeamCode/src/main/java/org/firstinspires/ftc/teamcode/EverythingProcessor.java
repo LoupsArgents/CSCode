@@ -108,6 +108,7 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         return this.closestPixelRect;
     }
     public Object doWingProcessing(Mat frame){
+        updates = "";
        //long currentTime = System.currentTimeMillis();
        // long oldTime = currentTime;
        // RobotLog.aa("Status", "Started");
@@ -209,17 +210,29 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
             }*/
         //give me the bounding box with highest y???
         Rect maxRect = new Rect(0,0,10,10);
+        double minDistance = Double.MAX_VALUE;
         for(Rect r : boundRect){
             Scalar color = new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
             if(r.area() > minPixelBoxArea){
                 Imgproc.rectangle(masked, r.tl(), r.br(), color, 2);
-                updates += "Rect " + r + "\n";
                // telemetry.addData("Rect", r);
             }
-            if(r.y > maxRect.y && r.area() > minPixelBoxArea){
+            //so this is what we need to update to do the distance formula magic
+            //so how do we get the center of the thing?
+            double centerX = r.tl().x + (double)r.width/2;
+            double centerY = r.tl().y + (double)r.height/2;
+            Imgproc.rectangle(masked, new Rect(new Point(320, 460), new Size(20, 20)), new Scalar(255, 0, 255), 16);
+            double thisDistance = Math.sqrt(Math.pow(320-centerX, 2) + Math.pow(480-centerY, 2));
+            if(r.area() > minPixelBoxArea) Imgproc.putText(masked, Integer.toString((int)thisDistance), new Point(centerX, centerY), FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 0, 0), 3);
+            updates += "Rect " + r + ", distance " + thisDistance + "\n";
+            //the problem is that openCV's origin is in the top left.
+            //but why is that a problem?????
+            //used to be if(r.y > maxRect.y && r.area() > minPixelBoxArea)
+            if(thisDistance < minDistance && r.area() > minPixelBoxArea){
                 //find the closest notable bounding box
                 maxRect = r;
-                Imgproc.putText(masked, Double.toString(r.area()), new Point(r.x, r.y), FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 0, 0));
+                minDistance = thisDistance;
+                //Imgproc.putText(masked, Double.toString(r.area()), new Point(r.x, r.y), FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 0, 0));
             }
         }
        //oldTime = currentTime;
@@ -234,6 +247,8 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         //RobotLog.aa("Box", maxRect.toString());
         closestPixelPos = new Point(maxRect.x, maxRect.y); //this is what actually informs our algorithm - see function below for a bit more processing
         closestPixelRect = maxRect;
+        //put something on closestPixelRect
+        Imgproc.rectangle(masked, closestPixelRect, new Scalar(0, 255, 255), 10);
         updates += "BoundingBox: " + maxRect;
        // telemetry.addData("BoundingBox", maxRect);
         //telemetry.update();
