@@ -72,14 +72,21 @@ public class PPBotCSDF extends LinearOpMode {
     int armInitial;
     public void runOpMode(){
         initializeHardware();
+        v4b.setPosition(v4bSlightlyUpPos);
+        arm.setPower(.5);
+        arm.setTargetPosition(armSlightlyOffGroundPos);
         openClaw();
         //portal.stopStreaming();
         processor.setMode(1);
         waitForStart();
-        centerOnClosestStack(processor);
-        while(opModeIsActive()){
+        //centerOnClosestStack(processor);
+        moveBackRight(.4, 20, 0.0);
+        sleep(500);
+        moveBackLeft(.4, 20, 0.0);
 
-        }
+        // while(opModeIsActive()){
+
+        //}
         /*String propPosition = teamProcessor.getResult();
         telemetry.addData("Position", propPosition);
         telemetry.update();
@@ -252,6 +259,102 @@ public class PPBotCSDF extends LinearOpMode {
             }
             strafeCurrentTicks = strafeOdo.getCurrentPosition();
             current = System.currentTimeMillis();
+        }
+        stopMotors();
+    }
+    public void moveForwardRight(double power, double inches, double idealHeading){
+        //this is back left on other people's view of this bot -> FL and BR backwards
+        int strafeStartTicks = strafeOdo.getCurrentPosition();
+        int strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        double multiplier;
+        motorFL.setPower(-power);
+        motorBR.setPower(-power);
+        while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) < inches && opModeIsActive()){
+            double heading = newGetHeading();
+            if(heading-idealHeading >= 0){
+                multiplier = .1*(heading-idealHeading)+1;
+                motorFL.setPower(-power);
+                motorBR.setPower(-power * multiplier);
+                //so this means we need turn left...
+                //make FL more
+            }else{
+                multiplier = -.1*(heading-idealHeading)+1;
+                motorFL.setPower(-power * multiplier);
+                motorBR.setPower(- power);
+            }
+            strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        }
+        stopMotors();
+    }
+    public void moveForwardLeft(double power, double inches, double idealHeading){
+        //this is back right on other people's view of this bot -> FR and BL backwards
+        int strafeStartTicks = strafeOdo.getCurrentPosition();
+        int strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        double multiplier;
+        motorFR.setPower(-power);
+        motorBL.setPower(-power);
+        while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) > -inches && opModeIsActive()){
+            double heading = newGetHeading();
+            if(heading-idealHeading >= 0){
+                multiplier = .1*(heading-idealHeading)+1;
+                motorBL.setPower(-power);
+                motorFR.setPower(-power * multiplier);
+                //so this means we need turn left...
+                //make FL more
+            }else{
+                multiplier = -.1*(heading-idealHeading)+1;
+                motorBL.setPower(-power * multiplier);
+                motorFR.setPower(-power);
+            }
+            strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        }
+        stopMotors();
+    }
+    public void moveBackLeft(double power, double inches, double idealHeading){
+        //this is front right on other people's view of this bot -> FL and BR forwards
+        int strafeStartTicks = strafeOdo.getCurrentPosition();
+        int strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        double multiplier;
+        motorFL.setPower(power);
+        motorBR.setPower(power);
+        while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) > -inches && opModeIsActive()){
+            double heading = newGetHeading();
+            if(heading-idealHeading >= 0){
+                multiplier = .1*(heading-idealHeading)+1;
+                motorFL.setPower(power * multiplier);
+                motorBR.setPower(power);
+                //so this means we need turn left...
+                //make FL more
+            }else{
+                multiplier = -.1*(heading-idealHeading)+1;
+                motorFL.setPower(power);
+                motorBR.setPower(power * multiplier);
+            }
+            strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        }
+        stopMotors();
+    }
+    public void moveBackRight(double power, double inches, double idealHeading){
+        //this is front left on other people's view of this bot -> FR and BL forwards
+        int strafeStartTicks = strafeOdo.getCurrentPosition();
+        int strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        double multiplier;
+        motorFR.setPower(power);
+        motorBL.setPower(power);
+        while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) < inches && opModeIsActive()){
+            double heading = newGetHeading();
+            if(heading-idealHeading >= 0){
+                multiplier = .1*(heading-idealHeading)+1;
+                motorBL.setPower(power * multiplier);
+                motorFR.setPower(power);
+                //so this means we need turn left...
+                //make FL more
+            }else{
+                multiplier = -.1*(heading-idealHeading)+1;
+                motorBL.setPower(power);
+                motorFR.setPower(power * multiplier);
+            }
+            strafeCurrentTicks = strafeOdo.getCurrentPosition();
         }
         stopMotors();
     }
