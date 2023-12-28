@@ -199,6 +199,102 @@ public class CSYorkDF extends LinearOpMode {
         }
         stopMotors();
     }
+    public void moveForwardRight(double power, double inches, double idealHeading){
+        //this is back left on other people's view of this bot -> FL and BR backwards
+        int strafeStartTicks = strafeOdo.getCurrentPosition();
+        int strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        double multiplier;
+        motorFL.setPower(-power);
+        motorBR.setPower(-power);
+        while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) < inches && opModeIsActive()){
+            double heading = newGetHeading();
+            if(heading-idealHeading >= 0){
+                multiplier = .1*(heading-idealHeading)+1;
+                motorFL.setPower(-power);
+                motorBR.setPower(-power * multiplier);
+                //so this means we need turn left...
+                //make FL more
+            }else{
+                multiplier = -.1*(heading-idealHeading)+1;
+                motorFL.setPower(-power * multiplier);
+                motorBR.setPower(- power);
+            }
+            strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        }
+        stopMotors();
+    }
+    public void moveForwardLeft(double power, double inches, double idealHeading){
+        //this is back right on other people's view of this bot -> FR and BL backwards
+        int strafeStartTicks = strafeOdo.getCurrentPosition();
+        int strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        double multiplier;
+        motorFR.setPower(-power);
+        motorBL.setPower(-power);
+        while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) > -inches && opModeIsActive()){
+            double heading = newGetHeading();
+            if(heading-idealHeading >= 0){
+                multiplier = .1*(heading-idealHeading)+1;
+                motorBL.setPower(-power);
+                motorFR.setPower(-power * multiplier);
+                //so this means we need turn left...
+                //make FL more
+            }else{
+                multiplier = -.1*(heading-idealHeading)+1;
+                motorBL.setPower(-power * multiplier);
+                motorFR.setPower(-power);
+            }
+            strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        }
+        stopMotors();
+    }
+    public void moveBackLeft(double power, double inches, double idealHeading){
+        //this is front right on other people's view of this bot -> FL and BR forwards
+        int strafeStartTicks = strafeOdo.getCurrentPosition();
+        int strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        double multiplier;
+        motorFL.setPower(power);
+        motorBR.setPower(power);
+        while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) > -inches && opModeIsActive()){
+            double heading = newGetHeading();
+            if(heading-idealHeading >= 0){
+                multiplier = .1*(heading-idealHeading)+1;
+                motorFL.setPower(power * multiplier);
+                motorBR.setPower(power);
+                //so this means we need turn left...
+                //make FL more
+            }else{
+                multiplier = -.1*(heading-idealHeading)+1;
+                motorFL.setPower(power);
+                motorBR.setPower(power * multiplier);
+            }
+            strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        }
+        stopMotors();
+    }
+    public void moveBackRight(double power, double inches, double idealHeading){
+        //this is front left on other people's view of this bot -> FR and BL forwards
+        int strafeStartTicks = strafeOdo.getCurrentPosition();
+        int strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        double multiplier;
+        motorFR.setPower(power);
+        motorBL.setPower(power);
+        while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) < inches && opModeIsActive()){
+            double heading = newGetHeading();
+            if(heading-idealHeading >= 0){
+                multiplier = .1*(heading-idealHeading)+1;
+                motorBL.setPower(power * multiplier);
+                motorFR.setPower(power);
+                //so this means we need turn left...
+                //make FL more
+            }else{
+                multiplier = -.1*(heading-idealHeading)+1;
+                motorBL.setPower(power);
+                motorFR.setPower(power * multiplier);
+            }
+            strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        }
+        stopMotors();
+    }
     //below: versions of movement functions that will maintain your current heading
     public void goStraight(double power, double inches){
         goStraight(power, inches, newGetHeading());
