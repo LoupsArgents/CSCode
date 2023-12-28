@@ -66,16 +66,21 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 @TeleOp
 public class ColorProximity extends LinearOpMode {
     //public RevColorSensorV3 color;
-    DistanceSensor color;
-    DistanceSensor distance;
-    double distance2m;
-    double distanceColor;
+    DistanceSensor color1;
+    DistanceSensor color2;
+    DistanceSensor color3;
+    //DistanceSensor distance;
+    double dist1;
+    double dist2;
+    double dist3;
 
     public void runOpMode() {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         //RevColorSensorV3 m_colorSensor = new RevColorSensorV3(0);
-        color = hardwareMap.get(DistanceSensor.class, "color");
-        distance = hardwareMap.get(DistanceSensor.class, "distance"); //for proximity sensor, put color
+        color1 = hardwareMap.get(DistanceSensor.class, "color1");
+        color2 = hardwareMap.get(DistanceSensor.class, "color2");
+        color3 = hardwareMap.get(DistanceSensor.class, "color3");
+        //distance = hardwareMap.get(DistanceSensor.class, "distance"); //for proximity sensor, put color
         telemetry.addData("Status", "Initialized");
         telemetry.update();
         /*ArrayList<Double> movingAvg3 = new ArrayList<Double>();
@@ -87,8 +92,10 @@ public class ColorProximity extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            distance2m = distance.getDistance(DistanceUnit.CM);
-            distanceColor = color.getDistance(DistanceUnit.CM);
+            dist1 = color1.getDistance(DistanceUnit.CM);
+            dist2 = color2.getDistance(DistanceUnit.CM);
+            dist3 = color3.getDistance(DistanceUnit.CM);
+            //distanceColor = color.getDistance(DistanceUnit.CM);
             /*movingAvg3.add(distance);
             if (movingAvg3.size() > 3) {
                 movingAvg3.remove(0);
@@ -109,9 +116,10 @@ public class ColorProximity extends LinearOpMode {
             if (movingAvg50.size() > 50) {
                 movingAvg50.remove(0);
             }*/
-            RobotLog.aa("distance2", Double.toString(distance2m));
-            telemetry.addData("distance1", distance2m);
-            telemetry.addData("distance2", distanceColor);
+            RobotLog.aa("distance2", Double.toString(dist1));
+            telemetry.addData("color1", dist1);
+            telemetry.addData("color2", dist2);
+            telemetry.addData("color3", dist3);
 
             /*telemetry.addData("movingAvg3", getAvg(movingAvg3));
             telemetry.addData("movingAvg5", getAvg(movingAvg5));
