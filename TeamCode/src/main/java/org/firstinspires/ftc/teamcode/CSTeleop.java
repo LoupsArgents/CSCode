@@ -90,6 +90,9 @@ public class CSTeleop extends LinearOpMode {
     double claw1close;
     double claw2open;
     double claw2close;
+    boolean doAbsHeading = false;
+    double idealAbsHeading = 0.0;
+    double turningConst = 0.5;
 
     public void runOpMode() {
         imu = hardwareMap.get(IMU.class, "imu");
@@ -154,13 +157,61 @@ public class CSTeleop extends LinearOpMode {
 
             //auto score code
 
+            //absolute heading buttons (x/y/a/b)
+            if (gamepad1.x) { //270 degrees = 3pi/2 radians
+                idealAbsHeading = Math.PI * 1.5;
+            } else if (gamepad1.y) { //0 degrees = 0 radians
+                idealAbsHeading = 0.0;
+            } else if (gamepad1.a) { //180 degrees = pi radians
+                idealAbsHeading = Math.PI;
+            } else if (gamepad1.b) { //90 degrees = pi/2 radians
+                idealAbsHeading = Math.PI/2;
+            }
+
             //mecanum drive code
             if (canDriveManually) {
                 double y = gamepad1.left_stick_y; // Remember, Y stick value is reversed
                 double x = -gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
                 double rx = gamepad1.right_stick_x;
-                //double botHeading = (imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS) + Math.PI) % (2*Math.PI) - Math.PI;
                 double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+                if (Math.abs(rx) < 0.05) {rx = 0;}
+                if (doAbsHeading) { //change rx to something that will accomplish our goal
+                    double error = Math.abs((botHeading - idealAbsHeading)%360);
+                    double sign = 0;
+                    if (error < 0.03) {
+                        rx = 0;
+                        doAbsHeading = false;
+                    } else {
+                        if (idealAbsHeading == 0) {
+                            if ((botHeading <= 2*Math.PI && botHeading >= Math.PI) || (botHeading >= -Math.PI && botHeading <= 0)) {
+                                sign = 1; // turn right
+                            } else {
+                                sign = -1; //turn left
+                            }
+                        } else if (idealAbsHeading == Math.PI / 2) {
+                            if ((3*Math.PI/2 <= botHeading && botHeading <= 2*Math.PI) || (-Math.PI/2 <= botHeading && Math.PI/2 >= botHeading)) {
+                                sign = 1; //turn right
+                            } else {
+                                sign = -1; //turn left
+                            }
+                        } else if (idealAbsHeading == Math.PI) {
+                            if ((botHeading <= 2*Math.PI && botHeading >= Math.PI) || (botHeading >= -Math.PI && botHeading <= 0)) {
+                                sign = -1; // turn left
+                            } else {
+                                sign = 1; //turn right
+                            }
+                        } else if (idealAbsHeading == 3 * Math.PI / 2) {
+                            if ((3*Math.PI/2 <= botHeading && botHeading <= 2*Math.PI) || (-Math.PI/2 <= botHeading && Math.PI/2 >= botHeading)) {
+                                sign = -1; //turn left
+                            } else {
+                                sign = 1; //turn right
+                            }
+                        }
+                        rx = error*turningConst;
+                        if (rx < 0.15) {rx = 0.15;}
+                        rx *= sign;
+                    }
+                }
                 // Rotate the movement direction counter to the bot's rotation
                 double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
                 double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
