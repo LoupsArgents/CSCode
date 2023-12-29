@@ -152,6 +152,7 @@ public class CSTeleop extends LinearOpMode {
                     }
                 }
             }
+            //manual scoring-- lift/arm
 
             //auto pickup code
 
@@ -175,6 +176,7 @@ public class CSTeleop extends LinearOpMode {
                 double rx = gamepad1.right_stick_x;
                 double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
                 if (Math.abs(rx) < 0.05) {rx = 0;}
+                //really hope the math here works
                 if (doAbsHeading) { //change rx to something that will accomplish our goal
                     double error = Math.abs((botHeading - idealAbsHeading)%360);
                     double sign = 0;
