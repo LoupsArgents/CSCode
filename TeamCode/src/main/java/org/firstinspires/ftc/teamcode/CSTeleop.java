@@ -78,12 +78,18 @@ public class CSTeleop extends LinearOpMode {
     double armUpPos;
     double armDownPos;
     boolean canDriveManually = true;
+    boolean canUseClawManually = true;
     boolean canDoEndgame = false;
     private IMU imu;
     double lss1UpPos = 0.5;
     double lss2UpPos = 0.5;
     boolean useLeadScrews = false;
     boolean lsStateCanChange = true;
+    boolean clawStateCanChange = true;
+    double claw1open;
+    double claw1close;
+    double claw2open;
+    double claw2close;
 
     public void runOpMode() {
         imu = hardwareMap.get(IMU.class, "imu");
@@ -127,8 +133,22 @@ public class CSTeleop extends LinearOpMode {
         while (opModeIsActive()) {
 
             telemetry.update();
-            //
-
+            //claw manual pickup
+            if (canUseClawManually) {
+                if (gamepad1.right_trigger > 0.05) {
+                    //close both
+                    claw1.setPosition(claw1close);
+                    claw2.setPosition(claw2close);
+                }
+                if (gamepad1.left_trigger > 0.05) {
+                    //if first one is open, open second, otherwise open first
+                    if (claw1.getPosition() == claw1open) {
+                        claw2.setPosition(claw2open);
+                    } else {
+                        claw1.setPosition(claw1open);
+                    }
+                }
+            }
 
             //auto pickup code
 
