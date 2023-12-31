@@ -18,6 +18,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.opencv.core.Point;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Autonomous
@@ -53,11 +54,32 @@ public class CSYorkDF extends LinearOpMode {
         initializeHardware();
         openClaw();
         //portal.stopStreaming();
-        processor.setMode(1);
+        //processor.setMode(1);
         waitForStart();
-        centerOnClosestStack(processor);
+        double biggest = Double.MIN_VALUE;
+        double smallest = Double.MAX_VALUE;
+        ArrayList<Double> averages = new ArrayList<>();
         while(opModeIsActive()){
-
+            double current = rightDistance.getDistance(DistanceUnit.INCH);
+            if(current > 0 && current < 300){
+                averages.add(0, current);
+                if(averages.size() > 5){
+                    averages.remove(5);
+                }
+            }
+            if(averages.size() == 5){
+                double avg = 0.0;
+                for(double d : averages){
+                    avg += d;
+                }
+                avg /= 5;
+                biggest = Math.max(biggest, avg);
+                smallest = Math.min(smallest, avg);
+            }
+            telemetry.addData("Biggest", biggest);
+            telemetry.addData("Smallest", smallest);
+            //30 inches is seeing the truss
+            telemetry.update();
         }
     }
     public void goStraight(double power, double inches, double idealHeading){
@@ -66,26 +88,26 @@ public class CSYorkDF extends LinearOpMode {
         int forwardBackStartTicks = forwardOdo.getCurrentPosition();
         telemetry.addData("StartTicks", forwardBackStartTicks);
         int forwardBackCurrentTicks = forwardOdo.getCurrentPosition();
-        motorFR.setPower(-power);
-        motorFL.setPower(-power);
-        motorBR.setPower(-power);
-        motorBL.setPower(-power); //because of my differing definition of "front of the robot"
+        motorFR.setPower(power);
+        motorFL.setPower(power);
+        motorBR.setPower(power);
+        motorBL.setPower(power); //because of my differing definition of "front of the robot"
         double targetheading = idealHeading;
         RobotLog.aa("GoStraight", "goal heading is " + targetheading);
         while(newInchesTraveled(forwardBackStartTicks, forwardBackCurrentTicks) < inches && opModeIsActive()){
             double heading = newGetHeading();
             if(heading-targetheading>=0){ //to the left
                 multiplier = .1*(heading-targetheading)+1;
-                motorFL.setPower(-power);
-                motorBL.setPower(-power);
-                motorFR.setPower(-power * multiplier);
-                motorBR.setPower(-power * multiplier);
+                motorFL.setPower(power);
+                motorBL.setPower(power);
+                motorFR.setPower(power * multiplier);
+                motorBR.setPower(power * multiplier);
             }else if(heading-targetheading<0){
                 multiplier = -.1*(heading-targetheading)+1;
-                motorFR.setPower(-power);
-                motorBR.setPower(-power);
-                motorFL.setPower(-power*multiplier);
-                motorBL.setPower(-power*multiplier);
+                motorFR.setPower(power);
+                motorBR.setPower(power);
+                motorFL.setPower(power*multiplier);
+                motorBL.setPower(power*multiplier);
             }
             forwardBackCurrentTicks = forwardOdo.getCurrentPosition();
         }
@@ -96,26 +118,26 @@ public class CSYorkDF extends LinearOpMode {
         int forwardBackStartTicks = forwardOdo.getCurrentPosition();
         telemetry.addData("StartTicks", forwardBackStartTicks);
         int forwardBackCurrentTicks = forwardOdo.getCurrentPosition();
-        motorFR.setPower(power);
-        motorFL.setPower(power);
-        motorBR.setPower(power);
-        motorBL.setPower(power);
+        motorFR.setPower(-power);
+        motorFL.setPower(-power);
+        motorBR.setPower(-power);
+        motorBL.setPower(-power);
         double targetheading = idealHeading;
         RobotLog.aa("GoBackward", "goal heading is " + targetheading);
         while(newInchesTraveled(forwardBackStartTicks, forwardBackCurrentTicks) > -inches && opModeIsActive()){
             double heading = newGetHeading();
             if(heading-targetheading>=0){ //to the left
                 multiplier = .1*(heading-targetheading)+1;
-                motorFL.setPower(power*multiplier);
-                motorBL.setPower(power*multiplier);
-                motorFR.setPower(power);
-                motorBR.setPower(power);
+                motorFL.setPower(-power*multiplier);
+                motorBL.setPower(-power*multiplier);
+                motorFR.setPower(-power);
+                motorBR.setPower(-power);
             }else if(heading-targetheading<0){
                 multiplier = -.1*(heading-targetheading)+1;
-                motorFR.setPower(power*multiplier);
-                motorBR.setPower(power*multiplier);
-                motorFL.setPower(power);
-                motorBL.setPower(power);
+                motorFR.setPower(-power*multiplier);
+                motorBR.setPower(-power*multiplier);
+                motorFL.setPower(-power);
+                motorBL.setPower(-power);
             }
             forwardBackCurrentTicks = forwardOdo.getCurrentPosition();
         }
@@ -134,52 +156,13 @@ public class CSYorkDF extends LinearOpMode {
         RobotLog.aa("Third", String.valueOf(strafeThirdTicks));
         RobotLog.aa("InitialDifference", String.valueOf(strafeCurrentTicks - strafeStartTicks));
         RobotLog.aa("InitialInches", String.valueOf(newInchesTraveled(strafeStartTicks, strafeCurrentTicks)));
-        motorFR.setPower(power);
-        motorFL.setPower(-power);
-        motorBR.setPower(-power);
-        motorBL.setPower(power);
-        double targetheading = idealHeading;
-        RobotLog.aa("StrafeRight", "goal heading is " + targetheading);
-        while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) < inches && current-startthing < 1000*timelimit && opModeIsActive()){
-            double heading = newGetHeading();
-            if(heading-targetheading>=0){
-                multiplier = .1*(heading-targetheading)+1;
-                motorFL.setPower(-power);
-                motorBL.setPower(power*multiplier);
-                motorFR.setPower(power);
-                motorBR.setPower(-power*multiplier);
-            }else if(heading-targetheading<0){
-                multiplier = -.1*(heading-targetheading)+1;
-                motorFR.setPower(power*multiplier);
-                motorBR.setPower(-power);
-                motorFL.setPower(-power*multiplier);
-                motorBL.setPower(power);
-            }
-            strafeCurrentTicks = strafeOdo.getCurrentPosition();
-            current = System.currentTimeMillis();
-        }
-        stopMotors();
-    }
-    public void strafeLeft(double power, double inches, double timelimit, double idealHeading){
-        long startthing = System.currentTimeMillis();
-        long current = System.currentTimeMillis();
-        double multiplier;
-        int strafeStartTicks = strafeOdo.getCurrentPosition();
-        int strafeCurrentTicks = strafeOdo.getCurrentPosition();
-        int strafeThirdTicks = strafeOdo.getCurrentPosition();
-        RobotLog.aa("Initial", String.valueOf(strafeStartTicks));
-        RobotLog.aa("InitialCurrent", String.valueOf(strafeCurrentTicks));
-        RobotLog.aa("Third", String.valueOf(strafeThirdTicks));
-        RobotLog.aa("InitialDifference", String.valueOf(strafeCurrentTicks - strafeStartTicks));
-        RobotLog.aa("InitialInches", String.valueOf(newInchesTraveled(strafeStartTicks, strafeCurrentTicks)));
         motorFR.setPower(-power);
         motorFL.setPower(power);
         motorBR.setPower(power);
         motorBL.setPower(-power);
         double targetheading = idealHeading;
-        RobotLog.aa("StrafeLeft", "goal heading is " + targetheading);
-        while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) > -inches && current - startthing < 1000*timelimit && opModeIsActive()){
-            RobotLog.aa("Inches", String.valueOf(newInchesTraveled(strafeStartTicks, strafeCurrentTicks)));
+        RobotLog.aa("StrafeRight", "goal heading is " + targetheading);
+        while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) > -inches && current-startthing < 1000*timelimit && opModeIsActive()){
             double heading = newGetHeading();
             if(heading-targetheading>=0){
                 multiplier = .1*(heading-targetheading)+1;
@@ -199,56 +182,47 @@ public class CSYorkDF extends LinearOpMode {
         }
         stopMotors();
     }
-    public void moveForwardRight(double power, double inches, double idealHeading){
-        //this is back left on other people's view of this bot -> FL and BR backwards
+    public void strafeLeft(double power, double inches, double timelimit, double idealHeading){
+        long startthing = System.currentTimeMillis();
+        long current = System.currentTimeMillis();
+        double multiplier;
         int strafeStartTicks = strafeOdo.getCurrentPosition();
         int strafeCurrentTicks = strafeOdo.getCurrentPosition();
-        double multiplier;
+        int strafeThirdTicks = strafeOdo.getCurrentPosition();
+        RobotLog.aa("Initial", String.valueOf(strafeStartTicks));
+        RobotLog.aa("InitialCurrent", String.valueOf(strafeCurrentTicks));
+        RobotLog.aa("Third", String.valueOf(strafeThirdTicks));
+        RobotLog.aa("InitialDifference", String.valueOf(strafeCurrentTicks - strafeStartTicks));
+        RobotLog.aa("InitialInches", String.valueOf(newInchesTraveled(strafeStartTicks, strafeCurrentTicks)));
+        motorFR.setPower(power);
         motorFL.setPower(-power);
         motorBR.setPower(-power);
-        while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) < inches && opModeIsActive()){
+        motorBL.setPower(power);
+        double targetheading = idealHeading;
+        RobotLog.aa("StrafeLeft", "goal heading is " + targetheading);
+        while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) < inches && current - startthing < 1000*timelimit && opModeIsActive()){
+            RobotLog.aa("Inches", String.valueOf(newInchesTraveled(strafeStartTicks, strafeCurrentTicks)));
             double heading = newGetHeading();
-            if(heading-idealHeading >= 0){
-                multiplier = .1*(heading-idealHeading)+1;
+            if(heading-targetheading>=0){
+                multiplier = .1*(heading-targetheading)+1;
                 motorFL.setPower(-power);
-                motorBR.setPower(-power * multiplier);
-                //so this means we need turn left...
-                //make FL more
-            }else{
-                multiplier = -.1*(heading-idealHeading)+1;
-                motorFL.setPower(-power * multiplier);
-                motorBR.setPower(- power);
+                motorBL.setPower(power*multiplier);
+                motorFR.setPower(power);
+                motorBR.setPower(-power*multiplier);
+            }else if(heading-targetheading<0){
+                multiplier = -.1*(heading-targetheading)+1;
+                motorFR.setPower(power*multiplier);
+                motorBR.setPower(-power);
+                motorFL.setPower(-power*multiplier);
+                motorBL.setPower(power);
             }
             strafeCurrentTicks = strafeOdo.getCurrentPosition();
+            current = System.currentTimeMillis();
         }
+        RobotLog.aa("Status", "Stopping");
         stopMotors();
     }
-    public void moveForwardLeft(double power, double inches, double idealHeading){
-        //this is back right on other people's view of this bot -> FR and BL backwards
-        int strafeStartTicks = strafeOdo.getCurrentPosition();
-        int strafeCurrentTicks = strafeOdo.getCurrentPosition();
-        double multiplier;
-        motorFR.setPower(-power);
-        motorBL.setPower(-power);
-        while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) > -inches && opModeIsActive()){
-            double heading = newGetHeading();
-            if(heading-idealHeading >= 0){
-                multiplier = .1*(heading-idealHeading)+1;
-                motorBL.setPower(-power);
-                motorFR.setPower(-power * multiplier);
-                //so this means we need turn left...
-                //make FL more
-            }else{
-                multiplier = -.1*(heading-idealHeading)+1;
-                motorBL.setPower(-power * multiplier);
-                motorFR.setPower(-power);
-            }
-            strafeCurrentTicks = strafeOdo.getCurrentPosition();
-        }
-        stopMotors();
-    }
-    public void moveBackLeft(double power, double inches, double idealHeading){
-        //this is front right on other people's view of this bot -> FL and BR forwards
+    public void moveForwardRight(double power, double inches, double idealHeading){
         int strafeStartTicks = strafeOdo.getCurrentPosition();
         int strafeCurrentTicks = strafeOdo.getCurrentPosition();
         double multiplier;
@@ -271,8 +245,7 @@ public class CSYorkDF extends LinearOpMode {
         }
         stopMotors();
     }
-    public void moveBackRight(double power, double inches, double idealHeading){
-        //this is front left on other people's view of this bot -> FR and BL forwards
+    public void moveForwardLeft(double power, double inches, double idealHeading){
         int strafeStartTicks = strafeOdo.getCurrentPosition();
         int strafeCurrentTicks = strafeOdo.getCurrentPosition();
         double multiplier;
@@ -290,6 +263,53 @@ public class CSYorkDF extends LinearOpMode {
                 multiplier = -.1*(heading-idealHeading)+1;
                 motorBL.setPower(power);
                 motorFR.setPower(power * multiplier);
+            }
+            strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        }
+        stopMotors();
+
+    }
+    public void moveBackLeft(double power, double inches, double idealHeading){
+        int strafeStartTicks = strafeOdo.getCurrentPosition();
+        int strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        double multiplier;
+        motorFL.setPower(-power);
+        motorBR.setPower(-power);
+        while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) < inches && opModeIsActive()){
+            double heading = newGetHeading();
+            if(heading-idealHeading >= 0){
+                multiplier = .1*(heading-idealHeading)+1;
+                motorFL.setPower(-power);
+                motorBR.setPower(-power * multiplier);
+                //so this means we need turn left...
+                //make FL more
+            }else{
+                multiplier = -.1*(heading-idealHeading)+1;
+                motorFL.setPower(-power * multiplier);
+                motorBR.setPower(- power);
+            }
+            strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        }
+        stopMotors();
+    }
+    public void moveBackRight(double power, double inches, double idealHeading){
+        int strafeStartTicks = strafeOdo.getCurrentPosition();
+        int strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        double multiplier;
+        motorFR.setPower(-power);
+        motorBL.setPower(-power);
+        while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) > -inches && opModeIsActive()){
+            double heading = newGetHeading();
+            if(heading-idealHeading >= 0){
+                multiplier = .1*(heading-idealHeading)+1;
+                motorBL.setPower(-power);
+                motorFR.setPower(-power * multiplier);
+                //so this means we need turn left...
+                //make FL more
+            }else{
+                multiplier = -.1*(heading-idealHeading)+1;
+                motorBL.setPower(-power * multiplier);
+                motorFR.setPower(-power);
             }
             strafeCurrentTicks = strafeOdo.getCurrentPosition();
         }
@@ -380,13 +400,13 @@ public class CSYorkDF extends LinearOpMode {
     }
     public void initializeHardware(){
         control_Hub = hardwareMap.get(Blinker.class, "Control Hub");
-        motorFR = hardwareMap.get(DcMotorEx.class, "motorFRandForwardOdo");
-        forwardOdo = hardwareMap.get(DcMotorEx.class, "motorFRandForwardOdo");
-        motorFL = hardwareMap.get(DcMotorEx.class, "motorFLandStrafeOdo");
-        strafeOdo = hardwareMap.get(DcMotorEx.class, "motorFLandStrafeOdo");
+        motorFR = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
+        forwardOdo = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
+        motorFL = hardwareMap.get(DcMotorEx.class, "motorFLandForwardOdo");
+        strafeOdo = hardwareMap.get(DcMotorEx.class, "motorBLandStrafeOdo");
         motorBR = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
         liftEncoder = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
-        motorBL = hardwareMap.get(DcMotorEx.class, "motorBLandBackwardOdo");
+        motorBL = hardwareMap.get(DcMotorEx.class, "motorBLandStrafeOdo");
         motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -396,8 +416,8 @@ public class CSYorkDF extends LinearOpMode {
         strafeInitialTicks = strafeOdo.getCurrentPosition();
         forwardInitialTicks = forwardOdo.getCurrentPosition();
         imu = hardwareMap.get(IMU.class, "imu");
-        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
-        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.LEFT;
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
+        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
         imu.resetYaw();
@@ -405,18 +425,18 @@ public class CSYorkDF extends LinearOpMode {
         for (LynxModule hub : allHubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }*/
-        webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
-        leftDistance = hardwareMap.get(Rev2mDistanceSensor.class, "leftDistance");
-        rightDistance = hardwareMap.get(Rev2mDistanceSensor.class, "rightDistance");
-        centerDistance = hardwareMap.get(Rev2mDistanceSensor.class, "centerDistance");
-        processor = new EverythingProcessor();
-        ATProcessor = AprilTagProcessor.easyCreateWithDefaults();
-        processor.setAlliance(1);
-        portal = VisionPortal.easyCreateWithDefaults(webcam, processor, ATProcessor);
-        portal.setProcessorEnabled(ATProcessor, false);
-        portal.resumeStreaming();
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
+        //webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
+        leftDistance = hardwareMap.get(Rev2mDistanceSensor.class, "leftProp");
+        rightDistance = hardwareMap.get(Rev2mDistanceSensor.class, "rightProp");
+        //centerDistance = hardwareMap.get(Rev2mDistanceSensor.class, "centerDistance");
+        //processor = new EverythingProcessor();
+        //ATProcessor = AprilTagProcessor.easyCreateWithDefaults();
+        //processor.setAlliance(1);
+        //portal = VisionPortal.easyCreateWithDefaults(webcam, processor, ATProcessor);
+        //portal.setProcessorEnabled(ATProcessor, false);
+        //portal.resumeStreaming();
+        //telemetry.addData("Status", "Initialized");
+        //telemetry.update();
     }
     public boolean closestStackInnerFunction(EverythingProcessor processor){
         if(pixelPos.y < 340){ //y threshold was 300
