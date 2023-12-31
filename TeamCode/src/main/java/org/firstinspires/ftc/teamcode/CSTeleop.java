@@ -60,8 +60,8 @@ public class CSTeleop extends LinearOpMode {
     DcMotorEx liftEncoder;
     CRServo arm1;
     CRServo arm2;
-    Servo claw1;
-    Servo claw2;
+    Servo clawUp;
+    Servo clawDown;
     Servo lss1;
     Servo lss2;
     DcMotorEx lsm1;
@@ -86,39 +86,44 @@ public class CSTeleop extends LinearOpMode {
     boolean useLeadScrews = false;
     boolean lsStateCanChange = true;
     boolean clawStateCanChange = true;
-    double claw1open;
-    double claw1close;
-    double claw2open;
-    double claw2close;
+    double clawUpopen = 0.5;
+    double clawUpclose = 0.4;
+    double clawDownopen = 0.58;
+    double clawDownclose = 0.49;
     boolean doAbsHeading = false;
     double idealAbsHeading = 0.0;
-    double turningConst = 0.5;
+    double turningConst = 0.1;
+    double wristDownPos = 0.135;
+    double wristAlmostDown = 0.15;//for flipping the arm up
+    double wristStraightUp = 0.45;
+    double wristTuckedIn = 0.735;
+    double wristScoringPos = 0.0;
 
     public void runOpMode() {
         imu = hardwareMap.get(IMU.class, "imu");
-        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
-        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
+        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
-        motorFR = hardwareMap.get(DcMotorEx.class, "motorFRandForwardOdo");
-        forwardOdo = hardwareMap.get(DcMotorEx.class, "motorFRandForwardOdo");
+        motorFR = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
+        forwardOdo = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
         motorFL = hardwareMap.get(DcMotorEx.class, "motorFLandStrafeOdo");
         strafeOdo = hardwareMap.get(DcMotorEx.class, "motorFLandStrafeOdo");
         motorBR = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
         liftEncoder = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
         motorBL = hardwareMap.get(DcMotorEx.class, "motorBL");
-        arm1 = hardwareMap.get(CRServo.class, "arm1");
-        arm2 = hardwareMap.get(CRServo.class, "arm2");
-        claw1 = hardwareMap.get(Servo.class, "claw1");
-        claw2 = hardwareMap.get(Servo.class, "claw2");
-        lss1 = hardwareMap.get(Servo.class, "lss1");
-        lss2 = hardwareMap.get(Servo.class, "lss2");
-        lsm1 = hardwareMap.get(DcMotorEx.class, "lsm1");
-        lsm2 = hardwareMap.get(DcMotorEx.class, "lsm2");
+        arm1 = hardwareMap.get(CRServo.class, "arm3");
+        arm2 = hardwareMap.get(CRServo.class, "arm5");
+        clawUp = hardwareMap.get(Servo.class, "claw0");
+        clawDown = hardwareMap.get(Servo.class, "claw2");
+        lss1 = hardwareMap.get(Servo.class, "leftLeadScrewServo");
+        lss2 = hardwareMap.get(Servo.class, "rightLeadScrewServo");
+        lsm1 = hardwareMap.get(DcMotorEx.class, "leadScrewRight");
+        lsm2 = hardwareMap.get(DcMotorEx.class, "leadScrewLeft");
         wrist = hardwareMap.get(ServoImplEx.class, "wrist");
-        lift1 = hardwareMap.get(DcMotorEx.class, "lift1");
-        lift2 = hardwareMap.get(DcMotorEx.class, "lift2");
+        lift1 = hardwareMap.get(DcMotorEx.class, "slideMotorL");
+        lift2 = hardwareMap.get(DcMotorEx.class, "slideMotorR");
 
         motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -127,6 +132,8 @@ public class CSTeleop extends LinearOpMode {
         motorFL.setDirection(DcMotorEx.Direction.REVERSE);
         motorBL.setDirection(DcMotorEx.Direction.REVERSE);
 
+        wrist.setPosition(wristDownPos);
+
         ticksPerRotation = liftEncoder.getMotorType().getTicksPerRev();
         liftInitial = liftEncoder.getCurrentPosition()/ticksPerRotation;
         liftPos = (liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial;
@@ -134,21 +141,32 @@ public class CSTeleop extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
+            double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            telemetry.addData("botHeading", botHeading);
+
+            if (gamepad1.start) {
+                imu.initialize(new IMU.Parameters(orientationOnRobot));
+                imu.resetYaw();
+            }
 
             telemetry.update();
             //claw manual pickup
+            if (gamepad1.left_trigger < 0.05) {
+                clawStateCanChange = true;
+            }
             if (canUseClawManually) {
                 if (gamepad1.right_trigger > 0.05) {
                     //close both
-                    claw1.setPosition(claw1close);
-                    claw2.setPosition(claw2close);
+                    clawUp.setPosition(clawUpclose);
+                    clawDown.setPosition(clawDownclose);
                 }
-                if (gamepad1.left_trigger > 0.05) {
+                if (gamepad1.left_trigger > 0.05 && clawStateCanChange) {
+                    clawStateCanChange = false;
                     //if first one is open, open second, otherwise open first
-                    if (claw1.getPosition() == claw1open) {
-                        claw2.setPosition(claw2open);
+                    if (clawDown.getPosition() == clawDownopen) {
+                        clawUp.setPosition(clawUpopen);
                     } else {
-                        claw1.setPosition(claw1open);
+                        clawDown.setPosition(clawDownopen);
                     }
                 }
             }
@@ -161,34 +179,39 @@ public class CSTeleop extends LinearOpMode {
             //absolute heading buttons (x/y/a/b)
             if (gamepad1.x) { //270 degrees = 3pi/2 radians
                 idealAbsHeading = Math.PI * 1.5;
+                doAbsHeading = true;
             } else if (gamepad1.y) { //0 degrees = 0 radians
                 idealAbsHeading = 0.0;
+                doAbsHeading = true;
             } else if (gamepad1.a) { //180 degrees = pi radians
                 idealAbsHeading = Math.PI;
+                doAbsHeading = true;
             } else if (gamepad1.b) { //90 degrees = pi/2 radians
                 idealAbsHeading = Math.PI/2;
+                doAbsHeading = true;
             }
 
             //mecanum drive code
             if (canDriveManually) {
-                double y = gamepad1.left_stick_y; // Remember, Y stick value is reversed
-                double x = -gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
+                double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
+                double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
                 double rx = gamepad1.right_stick_x;
-                double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+                //double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+                //double botHeading = 0;
                 if (Math.abs(rx) < 0.05) {rx = 0;}
                 //really hope the math here works
                 if (doAbsHeading) { //change rx to something that will accomplish our goal
-                    double error = Math.abs((botHeading - idealAbsHeading)%360);
+                    double error = Math.abs((botHeading - idealAbsHeading))%(2*Math.PI);
                     double sign = 0;
-                    if (error < 0.03) {
+                    if (error < 0.05) {
                         rx = 0;
                         doAbsHeading = false;
                     } else {
                         if (idealAbsHeading == 0) {
                             if ((botHeading <= 2*Math.PI && botHeading >= Math.PI) || (botHeading >= -Math.PI && botHeading <= 0)) {
-                                sign = 1; // turn right
+                                sign = -1; // turn right
                             } else {
-                                sign = -1; //turn left
+                                sign = 1; //turn left
                             }
                         } else if (idealAbsHeading == Math.PI / 2) {
                             if ((3*Math.PI/2 <= botHeading && botHeading <= 2*Math.PI) || (-Math.PI/2 <= botHeading && Math.PI/2 >= botHeading)) {
@@ -198,9 +221,9 @@ public class CSTeleop extends LinearOpMode {
                             }
                         } else if (idealAbsHeading == Math.PI) {
                             if ((botHeading <= 2*Math.PI && botHeading >= Math.PI) || (botHeading >= -Math.PI && botHeading <= 0)) {
-                                sign = -1; // turn left
+                                sign = 1; // turn left
                             } else {
-                                sign = 1; //turn right
+                                sign = -1; //turn right
                             }
                         } else if (idealAbsHeading == 3 * Math.PI / 2) {
                             if ((3*Math.PI/2 <= botHeading && botHeading <= 2*Math.PI) || (-Math.PI/2 <= botHeading && Math.PI/2 >= botHeading)) {
@@ -210,7 +233,7 @@ public class CSTeleop extends LinearOpMode {
                             }
                         }
                         rx = error*turningConst;
-                        if (rx < 0.15) {rx = 0.15;}
+                        if (rx < 0.04) {rx = 0.04;}
                         rx *= sign;
                     }
                 }

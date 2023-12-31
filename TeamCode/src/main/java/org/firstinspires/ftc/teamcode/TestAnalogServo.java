@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.ServoImpl;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetADCCommand;
@@ -64,8 +65,9 @@ import com.qualcomm.robotcore.hardware.PwmControl; // for Axon
 
 
 @TeleOp
-public class ServoPositionsTest extends LinearOpMode {
-    Servo servo1;
+public class TestAnalogServo extends LinearOpMode {
+    CRServo CR1;
+    CRServo CR2;
     Servo servo2;
     double s1p1;
     double s1p2;
@@ -76,26 +78,34 @@ public class ServoPositionsTest extends LinearOpMode {
     boolean change1 = true;
     boolean change2 = true;
     public void runOpMode() {
+        //get our analog input from the hardwareMap
+        AnalogInput analogInput = hardwareMap.get(AnalogInput.class, "armAna");
+        // get the voltage of our analog line
+        // divide by 3.3 (the max voltage) to get a value between 0 and 1
+        // multiply by 360 to convert it to 0 to 360 degrees
+        double position = analogInput.getVoltage() / 3.3 * 360;
 
-
-        servo1 = hardwareMap.get(Servo.class, "wrist");
+        CR1 = hardwareMap.get(CRServo.class, "arm3");
+        CR2 = hardwareMap.get(CRServo.class, "arm5");
         servo2 = hardwareMap.get(Servo.class, "claw2");
         //on broken scrimmagebot configurations: claw is part of wrist rotation, poleGuide is v4b
-        s1p1 = 0.5;
-        s1p2 = 0.5;
-        s1current = 0.5;
+        s1p1 = 180;
+        s1p2 = 180;
+        s1current = 180;
         s2p1 = 0.5;
         s2p2 = 0.5;
         s2current = 0.5;
-        servo1.setPosition(s1current);
+        //servo1.setPosition(s1current);
         servo2.setPosition(s2current);
 
         waitForStart();
         while (opModeIsActive()) {
+            position = analogInput.getVoltage() / 3.3 * 360;
             telemetry.addData("controls", "left trigger to decrease by 0.1, right trigger to decrease by 0.01, left bumper to increase by 0.1, right bumper to increase by 0.01");
             telemetry.addData("controls part 2", "dpad up is set position 1, dpad down is set position 2");
             telemetry.addData("controls part 3", "back button to move all to position 1, start button to move all to position 2");
-            telemetry.addData("s1current", s1current);
+            telemetry.addData("s1current (ideal)", s1current);
+            telemetry.addData("s1current (actual)", position);
             telemetry.addData("\tservo 1 position 1", s1p1);
             telemetry.addData("\tservo 1 position 2", s1p2);
             telemetry.addData("s2current", s2current);
@@ -103,27 +113,28 @@ public class ServoPositionsTest extends LinearOpMode {
             telemetry.addData("\tservo 2 position 2", s2p2);
             telemetry.update();
 
-            if (s1current > 1) {s1current = 1;}
+            //if (s1current > 1) {s1current = 1;}
             if (s1current < 0) {s1current = 0;}
             if (s2current > 1) {s2current = 1;}
             if (s2current < 0) {s2current = 0;}
-            servo1.setPosition(s1current);
+            //servo1.setPosition(s1current);
+            setPosition(CR1, CR2, position, s1current);
             servo2.setPosition(s2current);
             if (change1) {
                 if (gamepad1.left_trigger > 0.05) {
-                    s1current -= 0.1;
+                    s1current -= 100;
                     change1 = false;
                 }
                 if (gamepad1.right_trigger > 0.05) {
-                    s1current -= 0.005;
+                    s1current -= 10;
                     change1 = false;
                 }
                 if (gamepad1.left_bumper) {
-                    s1current += 0.1;
+                    s1current += 100;
                     change1 = false;
                 }
                 if (gamepad1.right_bumper) {
-                    s1current += 0.005;
+                    s1current += 10;
                     change1 = false;
                 }
             } else if (gamepad1.left_trigger < 0.05 && gamepad1.right_trigger < 0.05 && !gamepad1.left_bumper && !gamepad1.right_bumper) {
@@ -170,6 +181,16 @@ public class ServoPositionsTest extends LinearOpMode {
                 s1current = s1p2;
                 s2current = s2p2;
             }
+        }
+    }
+
+    public void setPosition(CRServo c1, CRServo c2, double currentPos, double idealPos) {
+        if (idealPos > currentPos) {
+            c1.setPower(-0.2);
+            c2.setPower(-0.2);
+        } else {
+            c1.setPower(0.2);
+            c2.setPower(0.2);
         }
     }
 
