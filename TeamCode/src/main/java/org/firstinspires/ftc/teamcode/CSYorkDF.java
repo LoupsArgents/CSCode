@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.Blinker;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -34,6 +35,9 @@ public class CSYorkDF extends LinearOpMode {
     DcMotorEx forwardOdo;
     DcMotorEx strafeOdo;
     DcMotorEx liftEncoder;
+    Servo clawUp;
+    Servo clawDown;
+    Servo wrist;
     VisionPortal portal;
     Rev2mDistanceSensor leftDistance;
     Rev2mDistanceSensor rightDistance;
@@ -49,6 +53,15 @@ public class CSYorkDF extends LinearOpMode {
     double multiplierBL = 1.0;
     double multiplierFL = 1.0;
     double multiplierBR = 1.0;
+    double clawUpOpen = 0.5;
+    double clawUpClose = 0.4;
+    double clawDownOpen = 0.58;
+    double clawDownClose = 0.49;
+    double wristDownPos = 0.135;
+    double wristAlmostDown = 0.15;//for flipping the arm up
+    double wristStraightUp = 0.45;
+    double wristTuckedIn = 0.735;
+    double wristScoringPos = 0.0;
     Point pixelPos;
     public void runOpMode(){
         initializeHardware();
@@ -228,18 +241,24 @@ public class CSYorkDF extends LinearOpMode {
         double multiplier;
         motorFL.setPower(power);
         motorBR.setPower(power);
+        motorFR.setPower(-power/2);
+        motorBL.setPower(-power/2);
         while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) > -inches && opModeIsActive()){
             double heading = newGetHeading();
             if(heading-idealHeading >= 0){
                 multiplier = .1*(heading-idealHeading)+1;
                 motorFL.setPower(power * multiplier);
                 motorBR.setPower(power);
+                motorFR.setPower(-power/2);
+                motorBL.setPower(-power/2);
                 //so this means we need turn left...
                 //make FL more
             }else{
                 multiplier = -.1*(heading-idealHeading)+1;
                 motorFL.setPower(power);
                 motorBR.setPower(power * multiplier);
+                motorFR.setPower(-power/2);
+                motorBL.setPower(-power/2);
             }
             strafeCurrentTicks = strafeOdo.getCurrentPosition();
         }
@@ -251,18 +270,24 @@ public class CSYorkDF extends LinearOpMode {
         double multiplier;
         motorFR.setPower(power);
         motorBL.setPower(power);
+        motorFL.setPower(-power/2);
+        motorBR.setPower(-power/2);
         while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) < inches && opModeIsActive()){
             double heading = newGetHeading();
             if(heading-idealHeading >= 0){
                 multiplier = .1*(heading-idealHeading)+1;
                 motorBL.setPower(power * multiplier);
                 motorFR.setPower(power);
+                motorFL.setPower(-power/2);
+                motorBR.setPower(-power * multiplier /2);
                 //so this means we need turn left...
                 //make FL more
             }else{
                 multiplier = -.1*(heading-idealHeading)+1;
                 motorBL.setPower(power);
                 motorFR.setPower(power * multiplier);
+                motorFL.setPower(-power * multiplier /2);
+                motorBR.setPower(-power/2);
             }
             strafeCurrentTicks = strafeOdo.getCurrentPosition();
         }
@@ -275,18 +300,24 @@ public class CSYorkDF extends LinearOpMode {
         double multiplier;
         motorFL.setPower(-power);
         motorBR.setPower(-power);
+        motorFR.setPower(power/2);
+        motorBL.setPower(power/2);
         while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) < inches && opModeIsActive()){
             double heading = newGetHeading();
             if(heading-idealHeading >= 0){
                 multiplier = .1*(heading-idealHeading)+1;
                 motorFL.setPower(-power);
                 motorBR.setPower(-power * multiplier);
+                motorFR.setPower(power/2);
+                motorBL.setPower(power/2);
                 //so this means we need turn left...
                 //make FL more
             }else{
                 multiplier = -.1*(heading-idealHeading)+1;
                 motorFL.setPower(-power * multiplier);
                 motorBR.setPower(- power);
+                motorFR.setPower(power/2);
+                motorBL.setPower(power/2);
             }
             strafeCurrentTicks = strafeOdo.getCurrentPosition();
         }
@@ -298,18 +329,24 @@ public class CSYorkDF extends LinearOpMode {
         double multiplier;
         motorFR.setPower(-power);
         motorBL.setPower(-power);
+        motorFL.setPower(power/2);
+        motorBR.setPower(power/2);
         while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) > -inches && opModeIsActive()){
             double heading = newGetHeading();
             if(heading-idealHeading >= 0){
                 multiplier = .1*(heading-idealHeading)+1;
                 motorBL.setPower(-power);
                 motorFR.setPower(-power * multiplier);
+                motorFL.setPower(power/2);
+                motorBR.setPower(power/2);
                 //so this means we need turn left...
                 //make FL more
             }else{
                 multiplier = -.1*(heading-idealHeading)+1;
                 motorBL.setPower(-power * multiplier);
                 motorFR.setPower(-power);
+                motorFL.setPower(power/2);
+                motorBR.setPower(power/2);
             }
             strafeCurrentTicks = strafeOdo.getCurrentPosition();
         }
@@ -373,8 +410,26 @@ public class CSYorkDF extends LinearOpMode {
         gyroTurn(power,degrees-processedCurrent); //This is where the actual turning bit happens.
         //It uses gyroTurn(), which you'll probably have to adapt for teleop use.
     }
-    public void closeClaw(){} //make once we're all wired and configured
-    public void openClaw(){} //make once we're all wired and configured
+    public void closeUpperClaw(){
+        clawUp.setPosition(clawUpClose);
+    }
+    public void openUpperClaw(){
+        clawUp.setPosition(clawUpOpen);
+    }
+    public void closeLowerClaw(){
+        clawDown.setPosition(clawDownClose);
+    }
+    public void openLowerClaw(){
+        clawDown.setPosition(clawDownOpen);
+    }
+    public void closeClaw(){
+        closeUpperClaw();
+        closeLowerClaw();
+    }
+    public void openClaw(){
+        openUpperClaw();
+        openLowerClaw();
+    }
     public void stopMotors(){
         motorFR.setPower(0);
         motorFL.setPower(0);
@@ -415,6 +470,9 @@ public class CSYorkDF extends LinearOpMode {
         motorBL.setDirection(DcMotorEx.Direction.REVERSE);
         strafeInitialTicks = strafeOdo.getCurrentPosition();
         forwardInitialTicks = forwardOdo.getCurrentPosition();
+        clawUp = hardwareMap.get(Servo.class, "claw0");
+        clawDown = hardwareMap.get(Servo.class, "claw2");
+        wrist = hardwareMap.get(Servo.class, "wrist");
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
@@ -556,6 +614,5 @@ public class CSYorkDF extends LinearOpMode {
         public double getCenterVal(){ return this.centerVal; }
         public double getRightVal(){ return this.rightVal; }
         public int getErrorCode(){ return this.errorCode; }
-
     }
 }
