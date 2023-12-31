@@ -92,12 +92,16 @@ public class CSTeleop extends LinearOpMode {
     double clawDownclose = 0.49;
     boolean doAbsHeading = false;
     double idealAbsHeading = 0.0;
-    double turningConst = 0.1;
+    double turningConst = 0.4;
     double wristDownPos = 0.135;
     double wristAlmostDown = 0.15;//for flipping the arm up
     double wristStraightUp = 0.45;
     double wristTuckedIn = 0.735;
     double wristScoringPos = 0.0;
+    double error = 0.0;
+
+    double previousHeading = 0;
+    double processedHeading = 0;
 
     public void runOpMode() {
         imu = hardwareMap.get(IMU.class, "imu");
@@ -108,11 +112,11 @@ public class CSTeleop extends LinearOpMode {
 
         motorFR = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
         forwardOdo = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
-        motorFL = hardwareMap.get(DcMotorEx.class, "motorFLandStrafeOdo");
-        strafeOdo = hardwareMap.get(DcMotorEx.class, "motorFLandStrafeOdo");
+        motorFL = hardwareMap.get(DcMotorEx.class, "motorFLandForwardOdo");
+        //strafeOdo = hardwareMap.get(DcMotorEx.class, "motorFLandStrafeOdo");
         motorBR = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
         liftEncoder = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
-        motorBL = hardwareMap.get(DcMotorEx.class, "motorBL");
+        motorBL = hardwareMap.get(DcMotorEx.class, "motorBLandStrafeOdo");
         arm1 = hardwareMap.get(CRServo.class, "arm3");
         arm2 = hardwareMap.get(CRServo.class, "arm5");
         clawUp = hardwareMap.get(Servo.class, "claw0");
@@ -138,15 +142,31 @@ public class CSTeleop extends LinearOpMode {
         liftInitial = liftEncoder.getCurrentPosition()/ticksPerRotation;
         liftPos = (liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial;
 
+        previousHeading = newGetHeading();
+        processedHeading = previousHeading;
+
         waitForStart();
 
         while (opModeIsActive()) {
-            double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            //double botHeading = Math.abs((newGetHeading()%360) * Math.PI/180);//imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            double botHeading = (newGetHeading()%360) * Math.PI/180;
+            while (botHeading < 0) {
+                botHeading += 2*Math.PI;
+            }
+            while (botHeading > 2*Math.PI) {
+                botHeading -= 2*Math.PI;
+            }
+            telemetry.addData("oldHeadingWay", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
             telemetry.addData("botHeading", botHeading);
+            telemetry.addData("error", error);
+            telemetry.addData("idealAbsHeading", idealAbsHeading);
+            telemetry.addData("processedError", Math.min(error, 2*Math.PI - error));
 
             if (gamepad1.start) {
                 imu.initialize(new IMU.Parameters(orientationOnRobot));
                 imu.resetYaw();
+                previousHeading = 0;
+                processedHeading = 0;
             }
 
             telemetry.update();
@@ -178,7 +198,8 @@ public class CSTeleop extends LinearOpMode {
 
             //absolute heading buttons (x/y/a/b)
             if (gamepad1.x) { //270 degrees = 3pi/2 radians
-                idealAbsHeading = Math.PI * 1.5;
+                //idealAbsHeading = Math.PI * 1.5;
+                idealAbsHeading = Math.PI/2;
                 doAbsHeading = true;
             } else if (gamepad1.y) { //0 degrees = 0 radians
                 idealAbsHeading = 0.0;
@@ -187,21 +208,36 @@ public class CSTeleop extends LinearOpMode {
                 idealAbsHeading = Math.PI;
                 doAbsHeading = true;
             } else if (gamepad1.b) { //90 degrees = pi/2 radians
-                idealAbsHeading = Math.PI/2;
+                idealAbsHeading = Math.PI*1.5;
                 doAbsHeading = true;
             }
 
             //mecanum drive code
             if (canDriveManually) {
+                imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
                 double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
                 double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
                 double rx = gamepad1.right_stick_x;
+                // Rotate the movement direction counter to the bot's rotation
+                double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
+                double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
+                rotX = rotX * 1.1;  // Counteract imperfect strafing
                 //double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
                 //double botHeading = 0;
                 if (Math.abs(rx) < 0.05) {rx = 0;}
                 //really hope the math here works
                 if (doAbsHeading) { //change rx to something that will accomplish our goal
-                    double error = Math.abs((botHeading - idealAbsHeading))%(2*Math.PI);
+                    //if (botHeading < 0) {botHeading += 2*Math.PI;}
+                    //botHeading = Math.abs(newGetHeading() * (Math.PI/180));
+                    botHeading = (newGetHeading()%360) * Math.PI/180;
+                    while (botHeading < 0) {
+                        botHeading += 2*Math.PI;
+                    }
+                    while (botHeading > 2*Math.PI) {
+                        botHeading -= 2*Math.PI;
+                    }
+                    error = Math.abs((botHeading - idealAbsHeading))%(2*Math.PI);
+                    error = Math.min(error, 2*Math.PI - error);
                     double sign = 0;
                     if (error < 0.05) {
                         rx = 0;
@@ -215,9 +251,9 @@ public class CSTeleop extends LinearOpMode {
                             }
                         } else if (idealAbsHeading == Math.PI / 2) {
                             if ((3*Math.PI/2 <= botHeading && botHeading <= 2*Math.PI) || (-Math.PI/2 <= botHeading && Math.PI/2 >= botHeading)) {
-                                sign = 1; //turn right
+                                sign = -1; //turn right
                             } else {
-                                sign = -1; //turn left
+                                sign = 1; //turn left
                             }
                         } else if (idealAbsHeading == Math.PI) {
                             if ((botHeading <= 2*Math.PI && botHeading >= Math.PI) || (botHeading >= -Math.PI && botHeading <= 0)) {
@@ -227,20 +263,18 @@ public class CSTeleop extends LinearOpMode {
                             }
                         } else if (idealAbsHeading == 3 * Math.PI / 2) {
                             if ((3*Math.PI/2 <= botHeading && botHeading <= 2*Math.PI) || (-Math.PI/2 <= botHeading && Math.PI/2 >= botHeading)) {
-                                sign = -1; //turn left
+                                sign = 1; //turn left
                             } else {
-                                sign = 1; //turn right
+                                sign = -1; //turn right
                             }
                         }
                         rx = error*turningConst;
-                        if (rx < 0.04) {rx = 0.04;}
+                        if (rx < 0.3) {rx = 0.3;}
+                        if (rx > 1) {rx = 1;}
                         rx *= sign;
                     }
                 }
-                // Rotate the movement direction counter to the bot's rotation
-                double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
-                double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
-                rotX = rotX * 1.1;  // Counteract imperfect strafing
+
                 // Denominator is the largest motor power (absolute value) or 1
                 // This ensures all the powers maintain the same ratio,
                 // but only if at least one is out of the range [-1, 1]
@@ -277,5 +311,17 @@ public class CSTeleop extends LinearOpMode {
                 //drone launcher code (not currently on bot)
             }
         }
+    }
+    public double newGetHeading(){
+        double currentHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+        double headingChange = currentHeading - previousHeading;
+        if(headingChange < -180){
+            headingChange += 360;
+        }else if(headingChange > 180){
+            headingChange -= 360;
+        }
+        processedHeading += headingChange;
+        previousHeading = currentHeading;
+        return processedHeading;
     }
 }
