@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.ServoImpl;
@@ -75,8 +76,11 @@ public class CSTeleop extends LinearOpMode {
     double liftPos;
     double liftIdealPos = 0;
     boolean liftHappyPlace = true;
-    double armUpPos = 333;
-    double armDownPos = 160;
+    double armUpPos = 173; //was 333
+    double armDownPos = 0; //was 160
+    double armIdealPosition = 0;
+    double armCurrentPosition;
+    double armInitial;
     boolean canDriveManually = true;
     boolean canUseClawManually = true;
     boolean canDoEndgame = false;
@@ -98,7 +102,7 @@ public class CSTeleop extends LinearOpMode {
     double wristAlmostDown = 0.15;//for flipping the arm up
     double wristStraightUp = 0.45;
     double wristTuckedIn = 0.735;
-    double wristScoringPos = 0.0;
+    double wristScoringPos = 0.54;
     double error = 0.0;
 
     double previousHeading = 0;
@@ -115,6 +119,10 @@ public class CSTeleop extends LinearOpMode {
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
+
+        AnalogInput analogInput = hardwareMap.get(AnalogInput.class, "armAna");
+        armCurrentPosition = analogInput.getVoltage() / 3.3 * 360;
+        armInitial = armCurrentPosition;
 
         motorFR = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
         forwardOdo = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
@@ -170,8 +178,14 @@ public class CSTeleop extends LinearOpMode {
             while (botHeading > 2*Math.PI) {
                 botHeading -= 2*Math.PI;
             }
-            telemetry.addData("oldHeadingWay", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
+            armCurrentPosition = (analogInput.getVoltage() / 3.3 * 360) - armInitial;
+            double temp = setCRPosition(arm1, arm2, armCurrentPosition, armIdealPosition);
+
+            //telemetry.addData("oldHeadingWay", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
+            telemetry.addData("armIdeal", armIdealPosition);
+            telemetry.addData("armPosition", armCurrentPosition);
             telemetry.addData("botHeading", botHeading);
+            telemetry.addData("arm power", temp);
             telemetry.addData("error", error);
             telemetry.addData("idealAbsHeading", idealAbsHeading);
             telemetry.addData("processedError", Math.min(error, 2*Math.PI - error));
@@ -205,6 +219,13 @@ public class CSTeleop extends LinearOpMode {
                 }
             }
             //manual scoring-- lift/arm
+            //lift is not yet ready to code
+            //arm flip manual code:
+            if (gamepad2.dpad_up) {
+                armIdealPosition = armUpPos;
+            } else if (gamepad2.dpad_down) {
+                armIdealPosition = armDownPos;
+            }
 
             //auto pickup code
 
@@ -362,6 +383,31 @@ public class CSTeleop extends LinearOpMode {
                 //drone launcher code (not currently on bot)
             }
         }
+    }
+    public double setCRPosition(CRServo c1, CRServo c2, double position, double ideal) {
+        double errorCR = Math.abs(ideal - position);
+        double constant = 0.005;
+        double crPower = errorCR * constant;
+        if (crPower > 0.25) {crPower = 0.25;}
+        if (position < ideal && errorCR > 50) {
+            wrist.setPosition(wristAlmostDown);
+            crPower *= -1;
+        } else if (position < ideal && position > 50) {
+            wrist.setPosition(wristScoringPos);
+            crPower *= -1;
+        } else {
+            wrist.setPosition(wristDownPos);
+        }
+        if (position > ideal && error > 50 && position < 150) {
+            wrist.setPosition(wristAlmostDown);
+        } else if (position > ideal && error < 10 && position < 50) {
+            wrist.setPosition(wristDownPos);
+        } else if (position > 160) {
+            wrist.setPosition(wristScoringPos);
+        }
+        c1.setPower(crPower);
+        c2.setPower(crPower);
+        return crPower;
     }
     public double newGetHeading(){
         double currentHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
