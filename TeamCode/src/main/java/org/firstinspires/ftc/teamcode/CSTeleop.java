@@ -76,7 +76,7 @@ public class CSTeleop extends LinearOpMode {
     double liftIdealPos = 0;
     boolean liftHappyPlace = true;
     double armUpPos = 333;
-    double armDownPos = 162;
+    double armDownPos = 160;
     boolean canDriveManually = true;
     boolean canUseClawManually = true;
     boolean canDoEndgame = false;
@@ -93,7 +93,7 @@ public class CSTeleop extends LinearOpMode {
     double clawDownclose = 0.49;
     boolean doAbsHeading = false;
     double idealAbsHeading = 0.0;
-    double turningConst = 0.46;
+    double turningConst = 0.575;
     double wristDownPos = 0.135;
     double wristAlmostDown = 0.15;//for flipping the arm up
     double wristStraightUp = 0.45;
@@ -253,7 +253,7 @@ public class CSTeleop extends LinearOpMode {
                     error = Math.abs((botHeading - idealAbsHeading))%(2*Math.PI);
                     error = Math.min(error, 2*Math.PI - error);
                     double sign = 0;
-                    if (error < 0.05) {
+                    if (error < 0.03) {
                         rx = 0;
                         doAbsHeading = false;
                     } else {
@@ -284,7 +284,7 @@ public class CSTeleop extends LinearOpMode {
                         }
                         //rx = error*turningConst; //old function with turningConst of 0.4
                         rx = turningConst*(error - Math.PI/2) + 1;
-                        if (rx < 0.3) {rx = 0.3;}
+                        if (rx < 0.2) {rx = 0.2;}
                         if (rx > 1) {rx = 1;}
                         rx *= sign;
                     }
