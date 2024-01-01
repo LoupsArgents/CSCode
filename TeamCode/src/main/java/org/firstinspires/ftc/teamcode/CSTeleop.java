@@ -84,6 +84,7 @@ public class CSTeleop extends LinearOpMode {
     double lss1UpPos = 0.5;
     double lss2UpPos = 0.5;
     boolean useLeadScrews = false;
+    boolean leadScrewsDownEnd = false;
     boolean lsStateCanChange = true;
     boolean clawStateCanChange = true;
     double clawUpopen = 0.5;
@@ -102,6 +103,11 @@ public class CSTeleop extends LinearOpMode {
 
     double previousHeading = 0;
     double processedHeading = 0;
+    double ticksPerRotationLS;
+    double lsm1init;
+    double lsm1pos;
+    double lsm2init;
+    double lsm2pos;
 
     public void runOpMode() {
         imu = hardwareMap.get(IMU.class, "imu");
@@ -144,6 +150,14 @@ public class CSTeleop extends LinearOpMode {
 
         previousHeading = newGetHeading();
         processedHeading = previousHeading;
+
+        lsm1 = hardwareMap.get(DcMotorEx.class, "leadScrewRight");
+        lsm2 = hardwareMap.get(DcMotorEx.class, "leadScrewLeft");
+        ticksPerRotationLS = lsm1.getMotorType().getTicksPerRev();
+        lsm1init = lsm1.getCurrentPosition()/ticksPerRotationLS;
+        lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
+        lsm2init = lsm2.getCurrentPosition()/ticksPerRotationLS;
+        lsm2pos = (lsm2.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
 
         waitForStart();
 
@@ -298,16 +312,52 @@ public class CSTeleop extends LinearOpMode {
                     lss2.setPosition(lss2UpPos);
                 }
                 if (gamepad1.guide && lsStateCanChange) {
-                    useLeadScrews = !useLeadScrews;
+                    //useLeadScrews = !useLeadScrews;
+                    if (!useLeadScrews) {
+                        useLeadScrews = true;
+                    } else {
+                        useLeadScrews = false;
+                        leadScrewsDownEnd = true;
+                    }
                     lsStateCanChange = false;
                 }
                 if (!gamepad1.guide) {
                     lsStateCanChange = true;
                 }
                 if (useLeadScrews) {
-                    //extend them to safe extension position
-                } else {
-                    //put them down to 0 (will work regardless of whether or not we're raising the bot)
+                    //extend them to safe extension position (1.21), do NOT let them get higher than 1.23
+                    //positive is out, negative is back in
+                    double error1 = Math.abs(lsm1pos - 1.21);
+                    double error2 = Math.abs(lsm2pos - 1.21);
+                    double lsm1const = 0.5;
+                    double lsm2const = 0.5;
+                    if (lsm1pos < 1.21) {
+                        lsm1.setPower(error1*lsm1const);
+                    } else {
+                        lsm1.setPower(0); //we don't want it going any further
+                    }
+                    if (lsm2pos < 1.21) {
+                        lsm2.setPower(error2*lsm2const);
+                    } else {
+                        lsm2.setPower(0); //we don't want it going any further
+                    }
+                } else if (leadScrewsDownEnd) {
+                    //put them down to 0.3 or something
+                    //maybe at the end set the powers to -0. something so that the bot stays up?
+                    double error1 = Math.abs(lsm1pos - 0.3);
+                    double error2 = Math.abs(lsm2pos - 0.3);
+                    double lsm1const = -0.5;
+                    double lsm2const = -0.5;
+                    if (lsm1pos > 0.3) {
+                        lsm1.setPower(error1*lsm1const);
+                    } else {
+                        lsm1.setPower(0); //we don't want it going any further
+                    }
+                    if (lsm2pos > 0.3) {
+                        lsm2.setPower(error2*lsm2const);
+                    } else {
+                        lsm2.setPower(0); //we don't want it going any further
+                    }
                 }
                 //drone launcher code (not currently on bot)
             }

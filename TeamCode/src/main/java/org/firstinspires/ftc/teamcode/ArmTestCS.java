@@ -91,9 +91,9 @@ public class ArmTestCS extends LinearOpMode {
         waitForStart();
         while (opModeIsActive()) {
             position = analogInput.getVoltage() / 3.3 * 360;
-            telemetry.addData("controls", "left trigger to decrease by 0.1, right trigger to decrease by 0.01, left bumper to increase by 0.1, right bumper to increase by 0.01");
-            telemetry.addData("controls part 2", "dpad up is set position 1, dpad down is set position 2");
-            telemetry.addData("controls part 3", "back button to move all to position 1, start button to move all to position 2");
+            //telemetry.addData("controls", "left trigger to decrease by 0.1, right trigger to decrease by 0.01, left bumper to increase by 0.1, right bumper to increase by 0.01");
+            //telemetry.addData("controls part 2", "dpad up is set position 1, dpad down is set position 2");
+            //telemetry.addData("controls part 3", "back button to move all to position 1, start button to move all to position 2");
             telemetry.addData("s1current (ideal)", s1current);
             telemetry.addData("s1current (actual)", position);
             telemetry.addData("gamepad1 left stick y", gamepad1.left_stick_y);
