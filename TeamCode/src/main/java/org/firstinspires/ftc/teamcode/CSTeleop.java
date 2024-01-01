@@ -92,7 +92,7 @@ public class CSTeleop extends LinearOpMode {
     double clawDownclose = 0.49;
     boolean doAbsHeading = false;
     double idealAbsHeading = 0.0;
-    double turningConst = 0.4;
+    double turningConst = 0.46;
     double wristDownPos = 0.135;
     double wristAlmostDown = 0.15;//for flipping the arm up
     double wristStraightUp = 0.45;
@@ -268,7 +268,8 @@ public class CSTeleop extends LinearOpMode {
                                 sign = -1; //turn right
                             }
                         }
-                        rx = error*turningConst;
+                        //rx = error*turningConst; //old function with turningConst of 0.4
+                        rx = turningConst*(error - Math.PI/2) + 1;
                         if (rx < 0.3) {rx = 0.3;}
                         if (rx > 1) {rx = 1;}
                         rx *= sign;
