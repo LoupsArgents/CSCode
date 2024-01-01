@@ -65,18 +65,13 @@ import com.qualcomm.robotcore.hardware.PwmControl; // for Axon
 
 
 @TeleOp
-public class TestAnalogServo extends LinearOpMode {
+public class ArmTestCS extends LinearOpMode {
     CRServo CR1;
     CRServo CR2;
-    Servo servo2;
     double s1p1;
     double s1p2;
-    double s2p1;
-    double s2p2;
     double s1current;
-    double s2current;
     boolean change1 = true;
-    boolean change2 = true;
     public void runOpMode() {
         //get our analog input from the hardwareMap
         AnalogInput analogInput = hardwareMap.get(AnalogInput.class, "armAna");
@@ -87,16 +82,11 @@ public class TestAnalogServo extends LinearOpMode {
 
         CR1 = hardwareMap.get(CRServo.class, "arm3");
         CR2 = hardwareMap.get(CRServo.class, "arm5");
-        servo2 = hardwareMap.get(Servo.class, "claw2");
         //on broken scrimmagebot configurations: claw is part of wrist rotation, poleGuide is v4b
         s1p1 = 180;
         s1p2 = 180;
         s1current = 180;
-        s2p1 = 0.5;
-        s2p2 = 0.5;
-        s2current = 0.5;
         //servo1.setPosition(s1current);
-        servo2.setPosition(s2current);
 
         waitForStart();
         while (opModeIsActive()) {
@@ -106,61 +96,42 @@ public class TestAnalogServo extends LinearOpMode {
             telemetry.addData("controls part 3", "back button to move all to position 1, start button to move all to position 2");
             telemetry.addData("s1current (ideal)", s1current);
             telemetry.addData("s1current (actual)", position);
+            telemetry.addData("gamepad1 left stick y", gamepad1.left_stick_y);
             telemetry.addData("\tservo 1 position 1", s1p1);
             telemetry.addData("\tservo 1 position 2", s1p2);
-            telemetry.addData("s2current", s2current);
-            telemetry.addData("\tservo 2 position 1", s2p1);
-            telemetry.addData("\tservo 2 position 2", s2p2);
             telemetry.update();
 
-            //if (s1current > 1) {s1current = 1;}
-            if (s1current < 0) {s1current = 0;}
-            if (s2current > 1) {s2current = 1;}
-            if (s2current < 0) {s2current = 0;}
-            //servo1.setPosition(s1current);
-            setPosition(CR1, CR2, position, s1current);
-            servo2.setPosition(s2current);
-            if (change1) {
-                if (gamepad1.left_trigger > 0.05) {
-                    s1current -= 100;
-                    change1 = false;
+            if (Math.abs(gamepad1.left_stick_y) > 0.05) {
+                double power = 0.1*gamepad1.left_stick_y;
+                CR1.setPower(power);
+                CR2.setPower(power);
+            }/* else {
+                //if (s1current > 1) {s1current = 1;}
+                if (s1current < 0) {s1current = 0;}
+                //servo1.setPosition(s1current);
+                setPosition(CR1, CR2, position, s1current);
+                if (change1) {
+                    if (gamepad1.left_trigger > 0.05) {
+                        s1current -= 100;
+                        change1 = false;
+                    }
+                    if (gamepad1.right_trigger > 0.05) {
+                        s1current -= 10;
+                        change1 = false;
+                    }
+                    if (gamepad1.left_bumper) {
+                        s1current += 100;
+                        change1 = false;
+                    }
+                    if (gamepad1.right_bumper) {
+                        s1current += 10;
+                        change1 = false;
+                    }
+                } else if (gamepad1.left_trigger < 0.05 && gamepad1.right_trigger < 0.05 && !gamepad1.left_bumper && !gamepad1.right_bumper) {
+                    change1 = true;
                 }
-                if (gamepad1.right_trigger > 0.05) {
-                    s1current -= 10;
-                    change1 = false;
-                }
-                if (gamepad1.left_bumper) {
-                    s1current += 100;
-                    change1 = false;
-                }
-                if (gamepad1.right_bumper) {
-                    s1current += 10;
-                    change1 = false;
-                }
-            } else if (gamepad1.left_trigger < 0.05 && gamepad1.right_trigger < 0.05 && !gamepad1.left_bumper && !gamepad1.right_bumper) {
-                change1 = true;
-            }
+            }*/
 
-            if (change2) {
-                if (gamepad2.left_trigger > 0.05) {
-                    s2current -= 0.1;
-                    change2 = false;
-                }
-                if (gamepad2.right_trigger > 0.05) {
-                    s2current -= 0.01;
-                    change2 = false;
-                }
-                if (gamepad2.left_bumper) {
-                    s2current += 0.1;
-                    change2 = false;
-                }
-                if (gamepad2.right_bumper) {
-                    s2current += 0.01;
-                    change2 = false;
-                }
-            } else if (gamepad2.left_trigger < 0.05 && gamepad2.right_trigger < 0.05 && !gamepad2.left_bumper && !gamepad2.right_bumper) {
-                change2 = true;
-            }
 
             if (gamepad1.dpad_up) {
                 s1p1 = s1current;
@@ -168,29 +139,19 @@ public class TestAnalogServo extends LinearOpMode {
             if (gamepad1.dpad_down) {
                 s1p2 = s1current;
             }
-            if (gamepad2.dpad_up) {
-                s2p1 = s2current;
-            }
-            if (gamepad2.dpad_down) {
-                s2p2 = s2current;
-            }
-            if (gamepad1.back || gamepad2.back) {
-                s1current = s1p1;
-                s2current = s2p1;
-            } else if (gamepad1.start || gamepad2.start) {
-                s1current = s1p2;
-                s2current = s2p2;
-            }
         }
     }
 
     public void setPosition(CRServo c1, CRServo c2, double currentPos, double idealPos) {
+        double p = Math.abs(currentPos - idealPos) * 0.001;
+        if (p < 0.03) {p = 0.03;}
+        if (p > 0.15) {p = 0.15;}
         if (idealPos > currentPos) {
-            c1.setPower(-0.1);
-            c2.setPower(-0.1);
+            c1.setPower(-1 * p);
+            c2.setPower(-1 * p);
         } else {
-            c1.setPower(0.1);
-            c2.setPower(0.1);
+            c1.setPower(p);
+            c2.setPower(p);
         }
     }
 
