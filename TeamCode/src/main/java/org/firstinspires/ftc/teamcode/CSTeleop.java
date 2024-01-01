@@ -81,8 +81,8 @@ public class CSTeleop extends LinearOpMode {
     boolean canUseClawManually = true;
     boolean canDoEndgame = false;
     private IMU imu;
-    double lss1UpPos = 0.5;
-    double lss2UpPos = 0.5;
+    double lss1UpPos = 0.575;
+    double lss2UpPos = 0.395;
     boolean useLeadScrews = false;
     boolean leadScrewsDownEnd = false;
     boolean lsStateCanChange = true;
