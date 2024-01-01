@@ -102,9 +102,12 @@ public class ArmTestCS extends LinearOpMode {
             telemetry.update();
 
             if (Math.abs(gamepad1.left_stick_y) > 0.05) {
-                double power = 0.1*gamepad1.left_stick_y;
+                double power = 0.2*gamepad1.left_stick_y;
                 CR1.setPower(power);
                 CR2.setPower(power);
+            } else {
+                CR1.setPower(0);
+                CR2.setPower(0);
             }/* else {
                 //if (s1current > 1) {s1current = 1;}
                 if (s1current < 0) {s1current = 0;}

@@ -75,8 +75,8 @@ public class CSTeleop extends LinearOpMode {
     double liftPos;
     double liftIdealPos = 0;
     boolean liftHappyPlace = true;
-    double armUpPos;
-    double armDownPos;
+    double armUpPos = 333;
+    double armDownPos = 162;
     boolean canDriveManually = true;
     boolean canUseClawManually = true;
     boolean canDoEndgame = false;
