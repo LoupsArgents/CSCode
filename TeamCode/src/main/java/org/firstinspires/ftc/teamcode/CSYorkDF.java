@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Size;
+
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
+import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -42,7 +45,8 @@ public class CSYorkDF extends LinearOpMode {
     Rev2mDistanceSensor leftDistance;
     Rev2mDistanceSensor rightDistance;
     Rev2mDistanceSensor centerDistance;
-
+    RevColorSensorV3 clawLeftSensor;
+    RevColorSensorV3 clawRightSensor;
     EverythingProcessor processor;
     AprilTagProcessor ATProcessor;
     int strafeInitialTicks;
@@ -67,30 +71,65 @@ public class CSYorkDF extends LinearOpMode {
         initializeHardware();
         openClaw();
         //portal.stopStreaming();
-        //processor.setMode(1);
+        processor.setMode(1);
         waitForStart();
+        //centerOnClosestStack(processor);
         double biggest = Double.MIN_VALUE;
         double smallest = Double.MAX_VALUE;
-        ArrayList<Double> averages = new ArrayList<>();
+        ArrayList<Double> rightAverages = new ArrayList<>();
+        ArrayList<Double> centerAverages = new ArrayList<>();
+        ArrayList<Double> leftAverages = new ArrayList<>();
+        double leftAvg = 0.0;
+        double centerAvg = 0.0;
+        double rightAvg = 0.0;
         while(opModeIsActive()){
-            double current = rightDistance.getDistance(DistanceUnit.INCH);
-            if(current > 0 && current < 300){
-                averages.add(0, current);
-                if(averages.size() > 5){
-                    averages.remove(5);
+            telemetry.addData("LeftClaw", clawLeftSensor.getDistance(DistanceUnit.INCH));
+            telemetry.addData("RightClaw", clawRightSensor.getDistance(DistanceUnit.INCH));
+            double leftCurrent = leftDistance.getDistance(DistanceUnit.INCH);
+            if(leftCurrent > 0){
+                leftAverages.add(0, leftCurrent);
+                if(leftAverages.size() > 5){
+                    leftAverages.remove(5);
                 }
             }
-            if(averages.size() == 5){
-                double avg = 0.0;
-                for(double d : averages){
-                    avg += d;
+            if(leftAverages.size() == 5){
+                leftAvg = 0.0;
+                for(double d : leftAverages){
+                    leftAvg += d;
                 }
-                avg /= 5;
-                biggest = Math.max(biggest, avg);
-                smallest = Math.min(smallest, avg);
+                leftAvg /= 5;
             }
-            telemetry.addData("Biggest", biggest);
-            telemetry.addData("Smallest", smallest);
+            double centerCurrent = centerDistance.getDistance(DistanceUnit.INCH);
+            if(centerCurrent > 0){
+                centerAverages.add(0, centerCurrent);
+                if(centerAverages.size() > 5){
+                    centerAverages.remove(5);
+                }
+            }
+            if(centerAverages.size() == 5){
+                centerAvg = 0.0;
+                for(double d : centerAverages){
+                    centerAvg += d;
+                }
+                centerAvg /= 5;
+            }
+            double rightCurrent = rightDistance.getDistance(DistanceUnit.INCH);
+            if(rightCurrent > 0){
+                rightAverages.add(0, rightCurrent);
+                if(rightAverages.size() > 5){
+                    rightAverages.remove(5);
+                }
+            }
+            if(rightAverages.size() == 5){
+                rightAvg = 0.0;
+                for(double d : rightAverages){
+                    rightAvg += d;
+                }
+                rightAvg /= 5;
+            }
+            telemetry.addData("Left", leftAvg);
+            telemetry.addData("Center", centerAvg);
+            telemetry.addData("Right", rightAvg);
             //30 inches is seeing the truss
             telemetry.update();
         }
@@ -483,33 +522,41 @@ public class CSYorkDF extends LinearOpMode {
         for (LynxModule hub : allHubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }*/
-        //webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
+        webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
         leftDistance = hardwareMap.get(Rev2mDistanceSensor.class, "leftProp");
         rightDistance = hardwareMap.get(Rev2mDistanceSensor.class, "rightProp");
-        //centerDistance = hardwareMap.get(Rev2mDistanceSensor.class, "centerDistance");
-        //processor = new EverythingProcessor();
-        //ATProcessor = AprilTagProcessor.easyCreateWithDefaults();
-        //processor.setAlliance(1);
-        //portal = VisionPortal.easyCreateWithDefaults(webcam, processor, ATProcessor);
-        //portal.setProcessorEnabled(ATProcessor, false);
-        //portal.resumeStreaming();
-        //telemetry.addData("Status", "Initialized");
-        //telemetry.update();
+        centerDistance = hardwareMap.get(Rev2mDistanceSensor.class, "centerDistance");
+        clawLeftSensor = hardwareMap.get(RevColorSensorV3.class, "clawLeft");
+        clawRightSensor = hardwareMap.get(RevColorSensorV3.class, "clawRight");
+        processor = new EverythingProcessor();
+        ATProcessor = AprilTagProcessor.easyCreateWithDefaults();
+        portal = new VisionPortal.Builder()
+                .setCamera(webcam)
+                .setCameraResolution(new Size(640, 360))
+                .addProcessor(processor)
+                .enableLiveView(true)
+                .build();
+        portal.resumeStreaming();
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
     }
     public boolean closestStackInnerFunction(EverythingProcessor processor){
-        if(pixelPos.y < 340){ //y threshold was 300
+        double leftSensorPos = clawLeftSensor.getDistance(DistanceUnit.INCH);
+        double rightSensorPos = clawRightSensor.getDistance(DistanceUnit.INCH);
+        boolean isThereAPixel = leftSensorPos < 2 || rightSensorPos < 2;
+        if(!isThereAPixel){ //y threshold was 300
             //RobotLog.aa("DistanceFromCenter", String.valueOf(Math.abs(pixelPos.x - 320)));
             double power = .35;
             double multiplier = 1;
             double proportionalConstant = -.025; // used to be -.5, then -.3, then -.03, then -.01, then -.015, then -.03; Desmos said -0.00344828
             pixelPos = processor.getClosestPixelPos();
             //RobotLog.aa("PixelPos", String.valueOf(pixelPos));
-            if(Math.abs(pixelPos.x - 320) < 10){ //we're close enough to centered to just go straight backwards
+            if(Math.abs(pixelPos.x - 320) < 10){ //we're close enough to centered to just go straight forwards
                 //  RobotLog.aa("Motors", "all the same");
-                motorBL.setPower(-power * multiplierBL);
-                motorBR.setPower(-power * multiplierBR);
-                motorFL.setPower(-power * multiplierFL);
-                motorFR.setPower(-power * multiplierFR);
+                motorBL.setPower(power * multiplierBL);
+                motorBR.setPower(power * multiplierBR);
+                motorFL.setPower(power * multiplierFL);
+                motorFR.setPower(power * multiplierFR);
             }else if(pixelPos.x < 320){ //we need to go left (reduce FR, BL)
                 multiplier = 1 + (Math.abs(320 - pixelPos.x) * proportionalConstant);
                 if(multiplier < 0){
@@ -520,10 +567,12 @@ public class CSYorkDF extends LinearOpMode {
                 telemetry.update();
                 //RobotLog.aa("Going", "left");
                 //RobotLog.aa("Motors", "setting FL and BR to " + (-power * multiplier));
-                motorFR.setPower(-power * multiplierFR);
-                motorBL.setPower(-power * multiplierBL);
-                motorFL.setPower(-power * multiplierFL * multiplier);
-                motorBR.setPower(-power * multiplierBR * multiplier);
+                motorFR.setPower(power * multiplierFR);
+                motorBL.setPower(power * multiplierBL);
+                //we'll see what needs to get modified with multiplier
+                //and if that needs to change at all
+                motorFL.setPower(power * multiplierFL * multiplier);
+                motorBR.setPower(power * multiplierBR * multiplier);
             }else if(pixelPos.x > 320){ //go right (reduce FL, BR)
                 multiplier = 1 + (Math.abs(320 - pixelPos.x) * proportionalConstant);
                 if(multiplier < 0){
@@ -534,10 +583,10 @@ public class CSYorkDF extends LinearOpMode {
                 //RobotLog.aa("multiplier", String.valueOf(multiplier));
                 //RobotLog.aa("Going", "right");
                 //RobotLog.aa("Motors", "decreasing FR and BL to " + (-power * multiplier));
-                motorFL.setPower(-power * multiplierFL);
-                motorBR.setPower(-power * multiplierBR);
-                motorFR.setPower(-power * multiplierFR * multiplier);
-                motorBL.setPower(-power * multiplierBL * multiplier);
+                motorFL.setPower(power * multiplierFL);
+                motorBR.setPower(power * multiplierBR);
+                motorFR.setPower(power * multiplierFR * multiplier);
+                motorBL.setPower(power * multiplierBL * multiplier);
             }
             return false;
         }else{
@@ -588,31 +637,86 @@ public class CSYorkDF extends LinearOpMode {
         return new DistanceSensorResult(leftResult, centerResult, rightResult);
     }
     public double readDistanceSensor(Rev2mDistanceSensor sensor){
-        double val = sensor.getDistance(DistanceUnit.INCH);
-        if(val == 0.0 || val > 330){
-            val = sensor.getDistance(DistanceUnit.INCH);
+        double total = 0;
+        for(int i = 0; i < 5; i++) {
+            double val = sensor.getDistance(DistanceUnit.INCH);
+            if (val == 0.0 || val > 330) {
+                val = sensor.getDistance(DistanceUnit.INCH);
+                total += val;
+            }
         }
-        return val;
+        return total / 5;
+    }
+
+    public String getPropResult(){
+        String cameraResult = processor.getResult();
+        DistanceSensorResult distResult = getDistances();
+        String sensorResult = distResult.getSensorResult();
+        if(cameraResult.equals(sensorResult)){
+            telemetry.addData("Status", "They agree, using result of " + cameraResult);
+            telemetry.update();
+            return cameraResult;
+        }
+        int code = distResult.getErrorCode();
+        //so anything below here means they disagree
+        if(code == 0){
+            //both sensors are good
+            telemetry.addData("Status", "They disagree, using sensor result of " + sensorResult);
+            telemetry.update();
+            return sensorResult;
+        }else{
+            //one or both sensors aren't working
+            telemetry.addData("Status", "One or both sensors aren't working, using camera result of " + cameraResult);
+            telemetry.update();
+            return cameraResult;
+        }
     }
     class DistanceSensorResult {
         private double leftVal;
         private double centerVal;
         private double rightVal;
+        private boolean leftIsGood;
+        //private boolean centerIsGood;
+        private boolean rightIsGood;
         private int errorCode;
+        private String sensorResult;
         public DistanceSensorResult(double leftV, double centerV, double rightV){
             this.leftVal = leftV;
-            this.centerVal = centerV;
+            //this.centerVal = centerV;
             this.rightVal = rightV;
+            leftIsGood = true;
+            //centerIsGood = true;
+            rightIsGood = true;
             //errorCode is the number of sensors that are reading nonsense
             int err = 0;
-            if(leftV < 5 || leftV > 330) err++;
-            if(centerV < 5 || centerV > 330) err++;
-            if(rightV < 5 || rightV > 330) err++;
+            if(leftV < 5 || leftV > 330){
+                err++;
+                leftIsGood = false;
+            }
+          /*  if(centerV < 5 || centerV > 330){
+                err++;
+                centerIsGood = false;
+            }*/
+            if(rightV < 5 || rightV > 330){
+                err++;
+                rightIsGood = false;
+            }
             this.errorCode = err;
+            if(leftV < 28 && leftV > 15){
+                this.sensorResult = "Left";
+            }else if(rightV < 28 && rightV > 15){
+                this.sensorResult = "Right";
+            }else {
+                this.sensorResult = "Center";
+            }
         }
         public double getLeftVal(){ return this.leftVal; }
         public double getCenterVal(){ return this.centerVal; }
         public double getRightVal(){ return this.rightVal; }
+        public boolean isLeftGood(){ return this.leftIsGood; }
+        //public boolean isCenterGood(){ return this.centerIsGood; }
+        public boolean isRightGood(){ return this.rightIsGood; }
         public int getErrorCode(){ return this.errorCode; }
+        public String getSensorResult(){ return this.sensorResult; }
     }
 }

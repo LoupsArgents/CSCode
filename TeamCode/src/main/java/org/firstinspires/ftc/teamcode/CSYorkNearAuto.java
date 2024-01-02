@@ -9,17 +9,18 @@ public class CSYorkNearAuto extends CSYorkDF {
         doRun("Blue");
     }
     public void doRun(String alliance){ //1 is blue, -1 is red
-        String result = onInit();
-        waitForStart();
         int allianceNum = 1;
         if(alliance.equals("Blue")) allianceNum = 1;
         if(alliance.equals("Red")) allianceNum = -1;
+        String result = onInit(allianceNum);
+        waitForStart();
         onRun(result, allianceNum);
     }
-    public String onInit(){ //returns the team prop result
+    public String onInit(int alliance){ //returns the team prop result
         initializeHardware();
+        processor.setAlliance(alliance);
         setInitialPositions();
-        String result = "Center";
+        String result = getPropResult();
         return result;
     }
     public void setInitialPositions(){

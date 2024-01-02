@@ -43,7 +43,6 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
     @Override
     public Object processFrame(Mat frame, long captureTimeNanos) {
         updates = "";
-        Core.flip(frame, frame, -1);
         if(setting == 0){
             return doPropProcessing(frame);
         }else{
@@ -73,7 +72,6 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         Mat thresh = new Mat();
         // Get a black and white image of red objects
         Core.inRange(mat, lowHSV, highHSV, thresh);
-
         mat.release();
         thresh.copyTo(frame);
         Imgproc.line(frame, new Point(180, 0), new Point(180, 500), new Scalar(100, 100, 100), 4, Imgproc.LINE_8);
