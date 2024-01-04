@@ -73,7 +73,7 @@ public class CSYorkDF extends LinearOpMode {
         //portal.stopStreaming();
         processor.setMode(1);
         waitForStart();
-        //centerOnClosestStack(processor);
+        centerOnClosestStack(processor);
         double biggest = Double.MIN_VALUE;
         double smallest = Double.MAX_VALUE;
         ArrayList<Double> rightAverages = new ArrayList<>();
@@ -548,7 +548,11 @@ public class CSYorkDF extends LinearOpMode {
             //RobotLog.aa("DistanceFromCenter", String.valueOf(Math.abs(pixelPos.x - 320)));
             double power = .35;
             double multiplier = 1;
-            double proportionalConstant = -.025; // used to be -.5, then -.3, then -.03, then -.01, then -.015, then -.03; Desmos said -0.00344828
+            double proportionalConstant = -.02;
+            // used to be -.5, then -.3, then -.03, then -.01, then -.015, then -.03, then -0.025, then new camera
+            //then realized that the lower limit should be -1 not 0
+            //so that necessitated new finding of a constant
+            //-.015
             pixelPos = processor.getClosestPixelPos();
             //RobotLog.aa("PixelPos", String.valueOf(pixelPos));
             if(Math.abs(pixelPos.x - 320) < 10){ //we're close enough to centered to just go straight forwards
@@ -559,10 +563,11 @@ public class CSYorkDF extends LinearOpMode {
                 motorFR.setPower(power * multiplierFR);
             }else if(pixelPos.x < 320){ //we need to go left (reduce FR, BL)
                 multiplier = 1 + (Math.abs(320 - pixelPos.x) * proportionalConstant);
-                if(multiplier < 0){
-                    multiplier = 0; //so it doesn't start turning
+                if(multiplier < -1){
+                    RobotLog.aa("Status", "Hit the multiplier floor");
+                    multiplier = -1; //so it doesn't start going backwards
                 }
-                //RobotLog.aa("multiplier", String.valueOf(multiplier));
+                RobotLog.aa("multiplier", String.valueOf(multiplier));
                 telemetry.addData("multiplier", Double.toString(multiplier));
                 telemetry.update();
                 //RobotLog.aa("Going", "left");
@@ -575,8 +580,9 @@ public class CSYorkDF extends LinearOpMode {
                 motorBR.setPower(power * multiplierBR * multiplier);
             }else if(pixelPos.x > 320){ //go right (reduce FL, BR)
                 multiplier = 1 + (Math.abs(320 - pixelPos.x) * proportionalConstant);
-                if(multiplier < 0){
-                    multiplier = 0; //so it doesn't start turning
+                if(multiplier < -1){
+                    RobotLog.aa("Status", "Hit the multiplier floor");
+                    multiplier = -1; //so it doesn't start going backwards
                 }
                 telemetry.addData("multiplier", Double.toString(multiplier));
                 telemetry.update();

@@ -32,7 +32,7 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
     double centerVal;
     int alliance; //1 is red, -1 is blue
     int setting; //0 is team prop, 1 is wing pixel
-    int minPixelBoxArea = 2500; //up from 1500 so it doesn't see parts of the robot as pixels
+    int minPixelBoxArea = 1500; //1500, then 2500, then 2000
     Point closestPixelPos = new Point(400, 400);
     Rect closestPixelRect;
     @Override
@@ -118,14 +118,15 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         if (mat.empty()) {
             return frame;
         }
-        Scalar lowPurpleHSV = new Scalar(117, 40, 20); //purple pixels
+        Scalar lowPurpleHSV = new Scalar(117, 40, 80); //purple pixels; brightness used to be 20
         Scalar highPurpleHSV = new Scalar(150, 255, 255); //120-150 should do for hue for starters
         Scalar lowYellowHSV = new Scalar(14, 100, 80); //changed lower brightness threshold b/c it saw the field as yellow lol
         Scalar highYellowHSV = new Scalar(28, 255, 255);
         Scalar lowGreenHSV = new Scalar(45,100,25);
         //the green filter is somehow perfect and has no problems. I wish all the other ones were like that.
         Scalar highGreenHSV = new Scalar(75, 255, 255);
-        Scalar lowWhiteHSV = new Scalar(0,0,200); //last was 180 - updated 11/4/23 for PP offseason bot different camera angle
+        Scalar lowWhiteHSV = new Scalar(0,0,180); //last was 180 - updated 11/4/23 for PP offseason bot different camera angle
+        //moved lower brightness threshold back down from 200 for CS bot
         Scalar highWhiteHSV = new Scalar(180, 20, 255);
         Mat purpleThresh = new Mat();
         Mat yellowThresh = new Mat();
@@ -220,7 +221,7 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
             double centerX = r.tl().x + (double)r.width/2;
             double centerY = r.tl().y + (double)r.height/2;
             Imgproc.rectangle(masked, new Rect(new Point(320, 460), new Size(20, 20)), new Scalar(255, 0, 255), 16);
-            double thisDistance = Math.sqrt(Math.pow(320-centerX, 2) + Math.pow(480-centerY, 2));
+            double thisDistance = Math.sqrt(Math.pow(320-centerX, 2) + Math.pow(360-centerY, 2));
             if(r.area() > minPixelBoxArea) Imgproc.putText(masked, Integer.toString((int)thisDistance), new Point(centerX, centerY), FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 0, 0), 3);
             updates += "Rect " + r + ", distance " + thisDistance + "\n";
             //the problem is that openCV's origin is in the top left.
