@@ -522,7 +522,7 @@ public class CSYorkDF extends LinearOpMode {
         for (LynxModule hub : allHubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }*/
-        webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
+       // webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
         leftDistance = hardwareMap.get(Rev2mDistanceSensor.class, "leftProp");
         rightDistance = hardwareMap.get(Rev2mDistanceSensor.class, "rightProp");
         centerDistance = hardwareMap.get(Rev2mDistanceSensor.class, "centerDistance");
@@ -530,13 +530,13 @@ public class CSYorkDF extends LinearOpMode {
         clawRightSensor = hardwareMap.get(RevColorSensorV3.class, "clawRight");
         processor = new EverythingProcessor();
         ATProcessor = AprilTagProcessor.easyCreateWithDefaults();
-        portal = new VisionPortal.Builder()
+        /*portal = new VisionPortal.Builder()
                 .setCamera(webcam)
                 .setCameraResolution(new Size(640, 360))
                 .addProcessor(processor)
                 .enableLiveView(true)
                 .build();
-        portal.resumeStreaming();
+        portal.resumeStreaming();*/
         telemetry.addData("Status", "Initialized");
         telemetry.update();
     }
