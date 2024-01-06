@@ -14,15 +14,19 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.VisionPortal.CameraState;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.opencv.core.Point;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Autonomous
@@ -30,7 +34,9 @@ import java.util.List;
 public class CSYorkDF extends LinearOpMode {
     Blinker control_Hub;
     IMU imu;
-    WebcamName webcam;
+
+    private WebcamName backCamera;
+    private WebcamName frontCamera;
     DcMotorEx motorFR;
     DcMotorEx motorFL;
     DcMotorEx motorBR;
@@ -44,7 +50,7 @@ public class CSYorkDF extends LinearOpMode {
     VisionPortal portal;
     Rev2mDistanceSensor leftDistance;
     Rev2mDistanceSensor rightDistance;
-    Rev2mDistanceSensor centerDistance;
+    //Rev2mDistanceSensor centerDistance;
     RevColorSensorV3 clawLeftSensor;
     RevColorSensorV3 clawRightSensor;
     EverythingProcessor processor;
@@ -70,10 +76,14 @@ public class CSYorkDF extends LinearOpMode {
     public void runOpMode(){
         initializeHardware();
         openClaw();
-        //portal.stopStreaming();
-        processor.setMode(1);
+        //while(portal.getCameraState() != CameraState.STREAMING && opModeInInit()){
+
+        //}
+        //telemetry.addData("Status", "Actually ready");
+        //telemetry.update();
         waitForStart();
-        centerOnClosestStack(processor);
+        //activateBackCamera();
+        //centerOnClosestStack(processor);
         double biggest = Double.MIN_VALUE;
         double smallest = Double.MAX_VALUE;
         ArrayList<Double> rightAverages = new ArrayList<>();
@@ -83,8 +93,13 @@ public class CSYorkDF extends LinearOpMode {
         double centerAvg = 0.0;
         double rightAvg = 0.0;
         while(opModeIsActive()){
-            telemetry.addData("LeftClaw", clawLeftSensor.getDistance(DistanceUnit.INCH));
-            telemetry.addData("RightClaw", clawRightSensor.getDistance(DistanceUnit.INCH));
+            //telemetry.addData("AprilTagsLeft", Arrays.toString(getAprilTagDist("Left")));
+            //telemetry.addData("AprilTagsCenter", Arrays.toString(getAprilTagDist("Center")));
+            //telemetry.addData("AprilTagsRight", Arrays.toString(getAprilTagDist("Right")));
+            telemetry.addData("StrafeTicks", strafeOdo.getCurrentPosition());
+            telemetry.addData("ForwardTicks", forwardOdo.getCurrentPosition());
+            //telemetry.addData("LeftClaw", clawLeftSensor.getDistance(DistanceUnit.INCH));
+            //telemetry.addData("RightClaw", clawRightSensor.getDistance(DistanceUnit.INCH));
             double leftCurrent = leftDistance.getDistance(DistanceUnit.INCH);
             if(leftCurrent > 0){
                 leftAverages.add(0, leftCurrent);
@@ -99,7 +114,7 @@ public class CSYorkDF extends LinearOpMode {
                 }
                 leftAvg /= 5;
             }
-            double centerCurrent = centerDistance.getDistance(DistanceUnit.INCH);
+            double centerCurrent = 0;//centerDistance.getDistance(DistanceUnit.INCH);
             if(centerCurrent > 0){
                 centerAverages.add(0, centerCurrent);
                 if(centerAverages.size() > 5){
@@ -133,6 +148,7 @@ public class CSYorkDF extends LinearOpMode {
             //30 inches is seeing the truss
             telemetry.update();
         }
+        portal.close();
     }
     public void goStraight(double power, double inches, double idealHeading){
         double multiplier;
@@ -329,6 +345,7 @@ public class CSYorkDF extends LinearOpMode {
                 motorBR.setPower(-power/2);
             }
             strafeCurrentTicks = strafeOdo.getCurrentPosition();
+            RobotLog.aa("Strafe", String.valueOf(strafeCurrentTicks));
         }
         stopMotors();
 
@@ -469,6 +486,20 @@ public class CSYorkDF extends LinearOpMode {
         openUpperClaw();
         openLowerClaw();
     }
+    public void activateFrontCamera(){
+        if(portal.getCameraState() == CameraState.STREAMING){
+            portal.setActiveCamera(frontCamera);
+            if(!portal.getProcessorEnabled(processor)) portal.setProcessorEnabled(processor, true);
+            if(portal.getProcessorEnabled(ATProcessor)) portal.setProcessorEnabled(ATProcessor, false);
+        }
+    }
+    public void activateBackCamera(){
+        if(portal.getCameraState() == CameraState.STREAMING){
+            portal.setActiveCamera(backCamera);
+            if(!portal.getProcessorEnabled(ATProcessor)) portal.setProcessorEnabled(ATProcessor, true);
+            if(portal.getProcessorEnabled(processor)) portal.setProcessorEnabled(processor, false);
+        }
+    }
     public void stopMotors(){
         motorFR.setPower(0);
         motorFL.setPower(0);
@@ -522,21 +553,24 @@ public class CSYorkDF extends LinearOpMode {
         for (LynxModule hub : allHubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }*/
-       // webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
+       backCamera = hardwareMap.get(WebcamName.class, "Webcam 1");
+        frontCamera = hardwareMap.get(WebcamName.class, "Webcam 2");
         leftDistance = hardwareMap.get(Rev2mDistanceSensor.class, "leftProp");
         rightDistance = hardwareMap.get(Rev2mDistanceSensor.class, "rightProp");
-        centerDistance = hardwareMap.get(Rev2mDistanceSensor.class, "centerDistance");
+        //centerDistance = hardwareMap.get(Rev2mDistanceSensor.class, "centerDistance");
         clawLeftSensor = hardwareMap.get(RevColorSensorV3.class, "clawLeft");
         clawRightSensor = hardwareMap.get(RevColorSensorV3.class, "clawRight");
         processor = new EverythingProcessor();
         ATProcessor = AprilTagProcessor.easyCreateWithDefaults();
-        /*portal = new VisionPortal.Builder()
+        CameraName webcam = ClassFactory.getInstance().getCameraManager().nameForSwitchableCamera(frontCamera, backCamera);
+        portal = new VisionPortal.Builder()
                 .setCamera(webcam)
                 .setCameraResolution(new Size(640, 360))
                 .addProcessor(processor)
-                .enableLiveView(true)
+                .addProcessor(ATProcessor)
+                .enableLiveView(false)
                 .build();
-        portal.resumeStreaming();*/
+        if(portal.getProcessorEnabled(ATProcessor)) portal.setProcessorEnabled(ATProcessor, false);
         telemetry.addData("Status", "Initialized");
         telemetry.update();
     }
@@ -611,11 +645,11 @@ public class CSYorkDF extends LinearOpMode {
         //IDs: 1 is blue left, 2 is blue center, 3 is blue right
         //4 is red left, 5 is red center, 6 is red right
         List<AprilTagDetection> currentDetections = ATProcessor.getDetections();
-        double xDist = 0.0;
-        double yDist = 0.0;
         double[] dists = new double[2];
+        double frontDistAvg = 0.0;
+        double[] leftCenterRightXDists = new double[3];
         for(AprilTagDetection d : currentDetections) {
-            if (result.equals("Center")) {
+            /*if (result.equals("Center")) {
                 if (d.id == 2 || d.id == 5) {
                     xDist = d.ftcPose.x;
                     yDist = d.ftcPose.y;
@@ -630,15 +664,76 @@ public class CSYorkDF extends LinearOpMode {
                     xDist = d.ftcPose.x;
                     yDist = d.ftcPose.y;
                 }
+            }*/
+            if(d.id == 1 || d.id == 4){
+                leftCenterRightXDists[0] = d.ftcPose.x;
+            }else if(d.id == 2 || d.id == 5){
+                leftCenterRightXDists[1] = d.ftcPose.x;
+            }else{
+                leftCenterRightXDists[2] = d.ftcPose.x;
             }
+            frontDistAvg += d.ftcPose.y;
         }
-        dists[0] = xDist;
-        dists[1] = yDist;
+        double xAvg = 0.0;
+        if(result.equals("Left")){
+            //there appears to be 4 inches between tags (counting white barriers)
+            //and the tags themselves are 2 inches wide (not counting white border)
+            //average (if they exist) the left, the center -6, the right -12
+            ArrayList<Double> valsToAverage = new ArrayList<>();
+            if(leftCenterRightXDists[0] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[0]);
+            }
+            if(leftCenterRightXDists[1] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[1] - 6);
+            }
+            if(leftCenterRightXDists[2] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[2] - 12);
+            }
+            for(double d : valsToAverage){
+                xAvg += d;
+            }
+            xAvg /= valsToAverage.size();
+        }else if(result.equals("Center")){
+            //average (if they exist) the left +6, the center, the right-6
+            ArrayList<Double> valsToAverage = new ArrayList<>();
+            if(leftCenterRightXDists[0] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[0] + 6);
+            }
+            if(leftCenterRightXDists[1] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[1]);
+            }
+            if(leftCenterRightXDists[2] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[2] - 6);
+            }
+            for(double d : valsToAverage){
+                xAvg += d;
+            }
+            xAvg /= valsToAverage.size();
+        }else if(result.equals("Right")){
+            //average (if they exist) the left +12, the center +6, the right
+            ArrayList<Double> valsToAverage = new ArrayList<>();
+            if(leftCenterRightXDists[0] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[0] + 12);
+            }
+            if(leftCenterRightXDists[1] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[1] + 6);
+            }
+            if(leftCenterRightXDists[2] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[2]);
+            }
+            for(double d : valsToAverage){
+                xAvg += d;
+            }
+            xAvg /= valsToAverage.size();
+        }
+        frontDistAvg /= currentDetections.size();
+        dists[0] = xAvg;
+        dists[1] = frontDistAvg;
         return dists;
     }
     public DistanceSensorResult getDistances(){
         double leftResult = readDistanceSensor(leftDistance);
-        double centerResult = readDistanceSensor(centerDistance);
+        double centerResult = 0.0; //readDistanceSensor(centerDistance);
         double rightResult = readDistanceSensor(rightDistance);
         return new DistanceSensorResult(leftResult, centerResult, rightResult);
     }

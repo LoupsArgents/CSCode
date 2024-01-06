@@ -77,7 +77,7 @@ public class PPBotCSDF extends LinearOpMode {
         arm.setTargetPosition(armSlightlyOffGroundPos);
         openClaw();
         //portal.stopStreaming();
-        processor.setMode(1);
+        processor.setMode(EverythingProcessor.ProcessorMode.PIXEL);
         waitForStart();
         //centerOnClosestStack(processor);
         moveBackRight(.4, 20, 0.0);
@@ -538,7 +538,7 @@ public class PPBotCSDF extends LinearOpMode {
     *
       webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
       processor = new EverythingProcessor();
-      processor.setMode(1);
+      processor.setMode(EverythingProcessor.ProcessorMode.PIXEL);
       portal = VisionPortal.easyCreateWithDefaults(webcam, processor);
       portal.resumeStreaming();
     *

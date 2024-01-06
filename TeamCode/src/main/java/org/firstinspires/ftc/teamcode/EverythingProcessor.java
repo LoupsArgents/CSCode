@@ -32,9 +32,14 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
     double centerVal;
     int alliance; //1 is red, -1 is blue
     int setting; //0 is team prop, 1 is wing pixel
+    ProcessorMode mode = ProcessorMode.PROP;
     int minPixelBoxArea = 1500; //1500, then 2500, then 2000
     Point closestPixelPos = new Point(400, 400);
     Rect closestPixelRect;
+    enum ProcessorMode {
+        PROP,
+        PIXEL
+    }
     @Override
     public void init(int width, int height, CameraCalibration calibration) {
 
@@ -43,7 +48,7 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
     @Override
     public Object processFrame(Mat frame, long captureTimeNanos) {
         updates = "";
-        if(setting == 0){
+        if(mode == ProcessorMode.PROP){
             return doPropProcessing(frame);
         }else{
             return doWingProcessing(frame);
@@ -271,8 +276,8 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
     public void setAlliance(int a){ //0 is not-black HSV filter just for fun use on the board
         alliance = a;
     }
-    public void setMode(int m){
-        this.setting = m;
+    public void setMode(ProcessorMode m){
+        this.mode = m;
     }
     public String getUpdates(){ return updates; }
     public double[] getVals(){ //return left, center, right

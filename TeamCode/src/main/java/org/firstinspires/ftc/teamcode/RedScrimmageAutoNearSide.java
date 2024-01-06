@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 public class RedScrimmageAutoNearSide extends ScrimmageAutoNearSide {
     public void runOpMode(){
         initializeHardware();
-        processor.setMode(0);
+        processor.setMode(EverythingProcessor.ProcessorMode.PROP);
         processor.setAlliance(1);
 
         turret.setPosition(turretPos);

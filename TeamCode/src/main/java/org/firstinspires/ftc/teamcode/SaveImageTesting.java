@@ -14,7 +14,7 @@ public class SaveImageTesting extends LinearOpMode {
         VisionPortal portal;
         WebcamName webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
         EverythingProcessor p = new EverythingProcessor();
-        p.setMode(0);
+        p.setMode(EverythingProcessor.ProcessorMode.PROP);
         p.setAlliance(1); //for red
         portal = VisionPortal.easyCreateWithDefaults(webcam, p);
         portal.resumeStreaming();

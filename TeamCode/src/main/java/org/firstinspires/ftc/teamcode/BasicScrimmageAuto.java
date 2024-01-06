@@ -11,7 +11,7 @@ public class BasicScrimmageAuto extends PPBotCSDF {
     String result = "Center";
     public void runOpMode(){
         initializeHardware();
-        processor.setMode(0);
+        processor.setMode(EverythingProcessor.ProcessorMode.PROP);
         processor.setAlliance(1);
         closeClaw();
         sleep(500);

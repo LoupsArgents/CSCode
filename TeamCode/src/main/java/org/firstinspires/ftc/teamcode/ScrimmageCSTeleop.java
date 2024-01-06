@@ -152,7 +152,7 @@ public class ScrimmageCSTeleop extends LinearOpMode {
 
         webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
         processor = new EverythingProcessor();
-        processor.setMode(1);
+        processor.setMode(EverythingProcessor.ProcessorMode.PIXEL);
         portal = VisionPortal.easyCreateWithDefaults(webcam, processor);
         portal.resumeStreaming();
 
@@ -344,7 +344,7 @@ public class ScrimmageCSTeleop extends LinearOpMode {
     *
       webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
       processor = new EverythingProcessor();
-      processor.setMode(1);
+      processor.setMode(EverythingProcessor.ProcessorMode.PIXEL);
       portal = VisionPortal.easyCreateWithDefaults(webcam, processor);
       portal.resumeStreaming();
     *

@@ -12,7 +12,7 @@ public class StreamWingPixelDetection extends CSYorkDF{
     public void runOpMode(){
         WebcamName webcam = hardwareMap.get(WebcamName.class, "Webcam 1");
         EverythingProcessor p = new EverythingProcessor();
-        p.setMode(1);
+        p.setMode(EverythingProcessor.ProcessorMode.PIXEL);
         VisionPortal portal = new VisionPortal.Builder()
                 .setCamera(webcam)
                 .setCameraResolution(new Size(640, 360))

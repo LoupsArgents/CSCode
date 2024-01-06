@@ -16,7 +16,7 @@ public class TwoWebcams extends LinearOpMode {
         WebcamName firstCam = hardwareMap.get(WebcamName.class, "Webcam 1");
         WebcamName secondCam = hardwareMap.get(WebcamName.class, "Webcam 2");
         EverythingProcessor p = new EverythingProcessor();
-        p.setMode(1);
+        p.setMode(EverythingProcessor.ProcessorMode.PIXEL);
         CameraName webcam = ClassFactory.getInstance()
                 .getCameraManager().nameForSwitchableCamera(firstCam, secondCam);
         VisionPortal myVisionPortal = new VisionPortal.Builder()

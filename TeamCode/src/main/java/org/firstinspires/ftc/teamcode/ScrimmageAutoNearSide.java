@@ -48,7 +48,7 @@ public class ScrimmageAutoNearSide extends PPBotCSDF {
         goStraight(.5, 16, 0.0);
         v4b.setPosition(v4bSlightlyUpPos);
         sleep(200);
-        processor.setMode(1);
+        processor.setMode(EverythingProcessor.ProcessorMode.PIXEL);
         processor.setAlliance(alliance);
         if(result.equals("Left")){
             absoluteHeading(.3, 50); //used to be 45
