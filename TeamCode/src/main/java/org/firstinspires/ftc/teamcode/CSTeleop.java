@@ -148,6 +148,8 @@ public class CSTeleop extends LinearOpMode {
     double headingForCV = 90;
     double allianceMultiplier = -1;
     double cmDistanceFromBoard = 5.0;
+    double xFromFunction = 0;
+    double yFromFunction = 0;
 
     public void runOpMode() {
         imu = hardwareMap.get(IMU.class, "imu");
@@ -281,6 +283,8 @@ public class CSTeleop extends LinearOpMode {
                 canUseClawManually = false;
                 canDriveManually = false;
                 double[] originalDistances = getAprilTagDist("Right");
+                xFromFunction = originalDistances[0];
+                yFromFunction = originalDistances[1];
                 moveXYcm = new double[2];
                 if (allianceMultiplier == -1) { //blue alliance
                     moveXYcm[1] = -1*(2.54 * originalDistances[0]);
@@ -301,6 +305,8 @@ public class CSTeleop extends LinearOpMode {
                 doAutoScore = !(placeAndHeading(originalX + moveXYcm[0], originalY + moveXYcm[1], headingForCV, 0.5, 0.5, 0.5));
                 telemetry.addData("x cm", moveXYcm[0]);
                 telemetry.addData("y cm", moveXYcm[1]);
+                telemetry.addData("originalX", xFromFunction);
+                telemetry.addData("originalY", yFromFunction);
             }
             if (!doAutoScore) {canDriveManually = true;}
             if (canUseClawManually) {
