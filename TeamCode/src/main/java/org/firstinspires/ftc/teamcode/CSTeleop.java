@@ -150,6 +150,7 @@ public class CSTeleop extends LinearOpMode {
     double cmDistanceFromBoard = 5.0;
     double xFromFunction = 0;
     double yFromFunction = 0;
+    boolean moveToDoingScore = true;
 
     public void runOpMode() {
         imu = hardwareMap.get(IMU.class, "imu");
@@ -279,6 +280,7 @@ public class CSTeleop extends LinearOpMode {
                 clawStateCanChange = true;
             }
             if (gamepad1.left_bumper) {
+                moveToDoingScore = false;
                 doAutoScore = true;
                 canUseClawManually = false;
                 canDriveManually = false;
@@ -287,20 +289,22 @@ public class CSTeleop extends LinearOpMode {
                 yFromFunction = originalDistances[1];
                 moveXYcm = new double[2];
                 if (allianceMultiplier == -1) { //blue alliance
-                    moveXYcm[1] = -1*(2.54 * originalDistances[0]);
-                    moveXYcm[0] = -1*(-2.54 * originalDistances[1] + cmDistanceFromBoard);
+                    moveXYcm[1] = (2.54 * originalDistances[0]);
+                    moveXYcm[0] = (-2.54 * originalDistances[1] + cmDistanceFromBoard);
                 } else {
-                    moveXYcm[1] = -1*(-2.54 * originalDistances[0]);
-                    moveXYcm[0] = -1*(2.54 * originalDistances[1] - cmDistanceFromBoard);
+                    moveXYcm[1] = (-2.54 * originalDistances[0]);
+                    moveXYcm[0] = (2.54 * originalDistances[1] - cmDistanceFromBoard);
                 }
                 originalX = -odometry.getPose().getY();
                 originalY = odometry.getPose().getX();
                 headingForCV = 90*allianceMultiplier;
-                if (headingForCV < 360) {
+                /*if (headingForCV < 360) {
                     headingForCV += 360;
-                }
+                }*/
+            } else {
+                moveToDoingScore = true;
             }
-            if (doAutoScore) {
+            if (doAutoScore && moveToDoingScore) {
                 telemetry.addData("it is running", "but not working");
                 doAutoScore = !(placeAndHeading(originalX + moveXYcm[0], originalY + moveXYcm[1], headingForCV, 0.5, 0.5, 0.5));
                 telemetry.addData("x cm", moveXYcm[0]);
