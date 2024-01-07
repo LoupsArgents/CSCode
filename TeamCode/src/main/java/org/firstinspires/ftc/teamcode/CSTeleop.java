@@ -1,5 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Size;
+
+import com.arcrobotics.ftclib.geometry.Pose2d;
+import com.arcrobotics.ftclib.hardware.motors.Motor;
+import com.arcrobotics.ftclib.hardware.motors.MotorEx;
+import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -8,6 +14,10 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.ServoImpl;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetADCCommand;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetADCResponse;
+
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.robot.Robot;
@@ -41,8 +51,14 @@ import com.qualcomm.robotcore.hardware.IntegratingGyroscope;
 import org.firstinspires.ftc.robotcore.external.navigation.Axis;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import com.qualcomm.hardware.lynx.LynxModule;
@@ -52,6 +68,19 @@ import com.qualcomm.robotcore.hardware.PwmControl; // for Axon
 
 @TeleOp
 public class CSTeleop extends LinearOpMode {
+    VisionPortal portal;
+    private WebcamName backCamera;
+    private WebcamName frontCamera;
+    EverythingProcessor processor;
+    AprilTagProcessor ATProcessor;
+    public static final double TRACKWIDTH = 30.04;
+    public static final double CENTER_WHEEL_OFFSET = -17.75; //was -19.943815, then -18
+    public static final double WHEEL_DIAMETER = 3.5;
+    public static final double TICKS_PER_REV = 8192;
+    public static final double DISTANCE_PER_PULSE = Math.PI * WHEEL_DIAMETER / TICKS_PER_REV;
+    private MotorEx motorFLenc, motorFRenc, motorBLenc, motorBRenc;
+    private Motor.Encoder leftOdometer, rightOdometer, centerOdometer;
+    private HolonomicOdometry odometry;
     DcMotorEx motorFR;
     DcMotorEx motorFL;
     DcMotorEx motorBR;
@@ -112,6 +141,13 @@ public class CSTeleop extends LinearOpMode {
     double lsm1pos;
     double lsm2init;
     double lsm2pos;
+    boolean doAutoScore = false;
+    double[] moveXYcm = new double[2];
+    double originalX;
+    double originalY;
+    double headingForCV = 90;
+    double allianceMultiplier = -1;
+    double cmDistanceFromBoard = 5.0;
 
     public void runOpMode() {
         imu = hardwareMap.get(IMU.class, "imu");
@@ -125,9 +161,7 @@ public class CSTeleop extends LinearOpMode {
         armInitial = armCurrentPosition;
 
         motorFR = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
-        forwardOdo = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
         motorFL = hardwareMap.get(DcMotorEx.class, "motorFLandForwardOdo");
-        //strafeOdo = hardwareMap.get(DcMotorEx.class, "motorFLandStrafeOdo");
         motorBR = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
         liftEncoder = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
         motorBL = hardwareMap.get(DcMotorEx.class, "motorBLandStrafeOdo");
@@ -143,12 +177,46 @@ public class CSTeleop extends LinearOpMode {
         lift1 = hardwareMap.get(DcMotorEx.class, "slideMotorL");
         lift2 = hardwareMap.get(DcMotorEx.class, "slideMotorR");
 
+        motorFLenc = new MotorEx(hardwareMap, "motorFLandForwardOdo");
+        motorFRenc = new MotorEx(hardwareMap, "motorFRandForwardEncoder"); //also has right odometer
+        motorBLenc = new MotorEx(hardwareMap, "motorBLandStrafeOdo");
+        motorBRenc = new MotorEx(hardwareMap, "motorBRandLiftEncoder");
+
+        backCamera = hardwareMap.get(WebcamName.class, "Webcam 1");
+        frontCamera = hardwareMap.get(WebcamName.class, "Webcam 2");
+        processor = new EverythingProcessor();
+        ATProcessor = AprilTagProcessor.easyCreateWithDefaults();
+        CameraName webcam = ClassFactory.getInstance().getCameraManager().nameForSwitchableCamera(frontCamera, backCamera);
+        portal = new VisionPortal.Builder()
+                .setCamera(webcam)
+                .setCameraResolution(new Size(640, 360))
+                .addProcessor(processor)
+                .addProcessor(ATProcessor)
+                .enableLiveView(false)
+                .build();
+        if(portal.getProcessorEnabled(ATProcessor)) portal.setProcessorEnabled(ATProcessor, false);
+
         motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFL.setDirection(DcMotorEx.Direction.REVERSE);
         motorBL.setDirection(DcMotorEx.Direction.REVERSE);
+
+        leftOdometer = motorFLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+        rightOdometer = motorFRenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+        centerOdometer = motorBLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+
+        rightOdometer.setDirection(Motor.Direction.REVERSE);
+
+        odometry = new HolonomicOdometry(
+                leftOdometer::getDistance,
+                rightOdometer::getDistance,
+                centerOdometer::getDistance,
+                TRACKWIDTH, CENTER_WHEEL_OFFSET
+        );
+
+        odometry.updatePose(new Pose2d());
 
         wrist.setPosition(wristDownPos);
 
@@ -167,7 +235,12 @@ public class CSTeleop extends LinearOpMode {
         lsm2init = lsm2.getCurrentPosition()/ticksPerRotationLS;
         lsm2pos = (lsm2.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
 
+        telemetry.addData("status", "initialized");
+        telemetry.update();
+
         waitForStart();
+
+        activateBackCamera();
 
         while (opModeIsActive()) {
             //double botHeading = Math.abs((newGetHeading()%360) * Math.PI/180);//imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
@@ -189,6 +262,7 @@ public class CSTeleop extends LinearOpMode {
             telemetry.addData("error", error);
             telemetry.addData("idealAbsHeading", idealAbsHeading);
             telemetry.addData("processedError", Math.min(error, 2*Math.PI - error));
+            telemetry.addData("doAutoScore", doAutoScore);
 
             if (gamepad1.start) {
                 imu.initialize(new IMU.Parameters(orientationOnRobot));
@@ -202,6 +276,33 @@ public class CSTeleop extends LinearOpMode {
             if (gamepad1.left_trigger < 0.05) {
                 clawStateCanChange = true;
             }
+            if (gamepad1.left_bumper) {
+                doAutoScore = true;
+                canUseClawManually = false;
+                canDriveManually = false;
+                double[] originalDistances = getAprilTagDist("Right");
+                moveXYcm = new double[2];
+                if (allianceMultiplier == -1) { //blue alliance
+                    moveXYcm[1] = -1*(2.54 * originalDistances[0]);
+                    moveXYcm[0] = -1*(-2.54 * originalDistances[1] + cmDistanceFromBoard);
+                } else {
+                    moveXYcm[1] = -1*(-2.54 * originalDistances[0]);
+                    moveXYcm[0] = -1*(2.54 * originalDistances[1] - cmDistanceFromBoard);
+                }
+                originalX = -odometry.getPose().getY();
+                originalY = odometry.getPose().getX();
+                headingForCV = 90*allianceMultiplier;
+                if (headingForCV < 360) {
+                    headingForCV += 360;
+                }
+            }
+            if (doAutoScore) {
+                telemetry.addData("it is running", "but not working");
+                doAutoScore = !(placeAndHeading(originalX + moveXYcm[0], originalY + moveXYcm[1], headingForCV, 0.5, 0.5, 0.5));
+                telemetry.addData("x cm", moveXYcm[0]);
+                telemetry.addData("y cm", moveXYcm[1]);
+            }
+            if (!doAutoScore) {canDriveManually = true;}
             if (canUseClawManually) {
                 if (gamepad1.right_trigger > 0.05) {
                     //close both
@@ -261,7 +362,8 @@ public class CSTeleop extends LinearOpMode {
                 //double botHeading = 0;
                 if (Math.abs(rx) < 0.05) {rx = 0;}
                 //really hope the math here works
-                if (doAbsHeading) { //change rx to something that will accomplish our goal
+                if (doAbsHeading) {
+                    //change rx to something that will accomplish our goal
                     //if (botHeading < 0) {botHeading += 2*Math.PI;}
                     //botHeading = Math.abs(newGetHeading() * (Math.PI/180));
                     botHeading = (newGetHeading()%360) * Math.PI/180;
@@ -384,6 +486,111 @@ public class CSTeleop extends LinearOpMode {
             }
         }
     }
+    //returns [x, y]
+    public double[] getAprilTagDist(String result){
+        //IDs: 1 is blue left, 2 is blue center, 3 is blue right
+        //4 is red left, 5 is red center, 6 is red right
+        List<AprilTagDetection> currentDetections = ATProcessor.getDetections();
+        double[] dists = new double[2];
+        double frontDistAvg = 0.0;
+        double[] leftCenterRightXDists = new double[3];
+        for(AprilTagDetection d : currentDetections) {
+            /*if (result.equals("Center")) {
+                if (d.id == 2 || d.id == 5) {
+                    xDist = d.ftcPose.x;
+                    yDist = d.ftcPose.y;
+                }
+            } else if (result.equals("Left")) {
+                if (d.id == 1 || d.id == 4) {
+                    xDist = d.ftcPose.x;
+                    yDist = d.ftcPose.y;
+                }
+            } else if (result.equals("Right")) {
+                if (d.id == 3 || d.id == 6) {
+                    xDist = d.ftcPose.x;
+                    yDist = d.ftcPose.y;
+                }
+            }*/
+            if(d.id == 1 || d.id == 4){
+                leftCenterRightXDists[0] = d.ftcPose.x;
+            }else if(d.id == 2 || d.id == 5){
+                leftCenterRightXDists[1] = d.ftcPose.x;
+            }else{
+                leftCenterRightXDists[2] = d.ftcPose.x;
+            }
+            frontDistAvg += d.ftcPose.y;
+        }
+        double xAvg = 0.0;
+        if(result.equals("Left")){
+            //there appears to be 4 inches between tags (counting white barriers)
+            //and the tags themselves are 2 inches wide (not counting white border)
+            //average (if they exist) the left, the center -6, the right -12
+            ArrayList<Double> valsToAverage = new ArrayList<>();
+            if(leftCenterRightXDists[0] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[0]);
+            }
+            if(leftCenterRightXDists[1] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[1] - 6);
+            }
+            if(leftCenterRightXDists[2] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[2] - 12);
+            }
+            for(double d : valsToAverage){
+                xAvg += d;
+            }
+            xAvg /= valsToAverage.size();
+        }else if(result.equals("Center")){
+            //average (if they exist) the left +6, the center, the right-6
+            ArrayList<Double> valsToAverage = new ArrayList<>();
+            if(leftCenterRightXDists[0] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[0] + 6);
+            }
+            if(leftCenterRightXDists[1] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[1]);
+            }
+            if(leftCenterRightXDists[2] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[2] - 6);
+            }
+            for(double d : valsToAverage){
+                xAvg += d;
+            }
+            xAvg /= valsToAverage.size();
+        }else if(result.equals("Right")){
+            //average (if they exist) the left +12, the center +6, the right
+            ArrayList<Double> valsToAverage = new ArrayList<>();
+            if(leftCenterRightXDists[0] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[0] + 12);
+            }
+            if(leftCenterRightXDists[1] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[1] + 6);
+            }
+            if(leftCenterRightXDists[2] != 0.0){
+                valsToAverage.add(leftCenterRightXDists[2]);
+            }
+            for(double d : valsToAverage){
+                xAvg += d;
+            }
+            xAvg /= valsToAverage.size();
+        }
+        frontDistAvg /= currentDetections.size();
+        dists[0] = xAvg;
+        dists[1] = frontDistAvg;
+        return dists;
+    }
+    public void activateFrontCamera(){
+        if(portal.getCameraState() == VisionPortal.CameraState.STREAMING){
+            portal.setActiveCamera(frontCamera);
+            if(!portal.getProcessorEnabled(processor)) portal.setProcessorEnabled(processor, true);
+            if(portal.getProcessorEnabled(ATProcessor)) portal.setProcessorEnabled(ATProcessor, false);
+        }
+    }
+    public void activateBackCamera(){
+        if(portal.getCameraState() == VisionPortal.CameraState.STREAMING){
+            portal.setActiveCamera(backCamera);
+            if(!portal.getProcessorEnabled(ATProcessor)) portal.setProcessorEnabled(ATProcessor, true);
+            if(portal.getProcessorEnabled(processor)) portal.setProcessorEnabled(processor, false);
+        }
+    }
     public double setCRPosition(CRServo c1, CRServo c2, double position, double ideal) {
         double errorCR = Math.abs(ideal - position);
         double constant = 0.005;
@@ -420,5 +627,74 @@ public class CSTeleop extends LinearOpMode {
         processedHeading += headingChange;
         previousHeading = currentHeading;
         return processedHeading;
+    }
+    public boolean placeAndHeading(double x, double y, double idealHeading, double powerMult, double cmTol, double degTol) {
+        odometry.updatePose();
+        processedHeading = newGetHeading();
+        double rxConst = 6;
+        double moveConst = 1;
+        double currentX = -odometry.getPose().getY();
+        double currentY = -odometry.getPose().getX();
+        //telemetry.addData("currentX, currentY", currentX + ", " + currentY);
+        double xDifference = currentX - x;
+        double yDifference = currentY - y;
+        double l = Math.sqrt(xDifference*xDifference + yDifference*yDifference); // diagonal error
+        double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        //x = fake joystick left left/right (strafe)
+        double joyX = -1 * xDifference / l;
+        //telemetry.addData("joyX", joyX);
+        //y = fake joystick left up/down (move)
+        double joyY = -1 * yDifference / l;
+        //telemetry.addData("joyY", joyY);
+        if (l < cmTol) {
+            joyX = 0;
+            joyY = 0;
+        }
+        if (l < 5) {
+            moveConst = l/5;
+            joyX *= moveConst;
+            joyY *= moveConst;
+        }
+        //rx = fake joystick right left/right aka turning
+        double rx = 0;
+        double rotError = Math.abs(processedHeading % 360 - idealHeading);
+        if (l < cmTol && rotError < degTol) {
+            //if we actually don't need to do anything
+            motorFR.setPower(0);
+            motorFL.setPower(0);
+            motorBR.setPower(0);
+            motorBL.setPower(0);
+            return true;
+        }
+        double sign = rotError/(processedHeading % 360 - idealHeading);
+        if (rotError > 45) {rxConst = 90;}
+        if (rotError < degTol) {
+            rx = 0;
+        } else if (sign == -1) {
+            //turning left
+            rx = -1 * (rxConst * 180) * rotError;
+        } else if (sign == 1) {
+            //turning right
+            rx = (rxConst/180) * rotError;
+        }
+        if (rx < -1) {rx = -1;}
+        if (rx > 1) {rx = 1;}
+        //telemetry.addData("rX", rx);
+
+        double rotX = joyX * Math.cos(-botHeading) - joyY * Math.sin(-botHeading);
+        double rotY = joyX * Math.sin(-botHeading) + joyY * Math.cos(-botHeading);
+
+        double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
+        double frontLeftPower = (rotY + rotX + rx) / denominator;
+        double backLeftPower = (rotY - rotX + rx) / denominator;
+        double frontRightPower = (rotY - rotX - rx) / denominator;
+        double backRightPower = (rotY + rotX - rx) / denominator;
+
+        motorFL.setPower(powerMult * frontLeftPower);
+        motorBL.setPower(powerMult * backLeftPower);
+        motorFR.setPower(powerMult * frontRightPower);
+        motorBR.setPower(powerMult * backRightPower);
+        //telemetry.update();
+        return false;
     }
 }

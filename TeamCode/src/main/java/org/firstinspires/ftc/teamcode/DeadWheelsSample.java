@@ -65,15 +65,15 @@ public class DeadWheelsSample extends LinearOpMode {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
         imu.resetYaw();
 
-        motorFLenc = new MotorEx(hardwareMap, "motorFLandStrafeOdo");
-        motorFRenc = new MotorEx(hardwareMap, "motorFRandForwardOdo"); //also has right odometer
-        motorBLenc = new MotorEx(hardwareMap, "motorBLandBackwardOdo");
+        motorFLenc = new MotorEx(hardwareMap, "motorFLandForwardOdo");
+        motorFRenc = new MotorEx(hardwareMap, "motorFRandForwardEncoder"); //also has right odometer
+        motorBLenc = new MotorEx(hardwareMap, "motorBLandStrafeOdo");
         motorBRenc = new MotorEx(hardwareMap, "motorBRandLiftEncoder");
 
-        motorFR = hardwareMap.get(DcMotorEx.class, "motorFRandForwardOdo");
-        motorFL = hardwareMap.get(DcMotorEx.class, "motorFLandStrafeOdo");
+        motorFR = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
+        motorFL = hardwareMap.get(DcMotorEx.class, "motorFLandForwardOdo");
         motorBR = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
-        motorBL = hardwareMap.get(DcMotorEx.class, "motorBLandBackwardOdo");
+        motorBL = hardwareMap.get(DcMotorEx.class, "motorBLandStrafeOdo");
 
         //motorFRenc.setDirection(Motor.Direction.REVERSE);
         motorFL.setDirection(DcMotorEx.Direction.REVERSE);
@@ -86,9 +86,9 @@ public class DeadWheelsSample extends LinearOpMode {
 
         // Here we set the distance per pulse of the odometers.
         // This is to keep the units consistent for the odometry.
-        leftOdometer = motorBLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE); //said front left
+        leftOdometer = motorFLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE); //said front left
         rightOdometer = motorFRenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE); //said front right
-        centerOdometer = motorFLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE); //said back left
+        centerOdometer = motorBLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE); //said back left
 
         rightOdometer.setDirection(Motor.Direction.REVERSE);
 
