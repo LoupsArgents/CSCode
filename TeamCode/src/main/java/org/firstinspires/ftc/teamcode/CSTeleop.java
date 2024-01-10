@@ -602,10 +602,12 @@ public class CSTeleop extends LinearOpMode {
         }
     }
     public double setCRPosition(CRServo c1, CRServo c2, double position, double ideal) {
+        //216 is vertical
+        double verticalPos = 216.0;
         double errorCR = Math.abs(ideal - position);
-        double constant = 0.005;
+        double constant = 0.0025;
         double crPower = errorCR * constant;
-        if (crPower > 0.25) {crPower = 0.25;}
+        if (crPower > 0.175) {crPower = 0.175;}
         if (position < ideal && errorCR > 50) {
             wrist.setPosition(wristAlmostDown);
             crPower *= -1;
@@ -615,12 +617,18 @@ public class CSTeleop extends LinearOpMode {
         } else {
             wrist.setPosition(wristDownPos);
         }
+        if (position < ideal && position > verticalPos) {
+            crPower = -0.01;
+        }
         if (position > ideal && error > 50 && position < 150) {
             wrist.setPosition(wristAlmostDown);
         } else if (position > ideal && error < 10 && position < 50) {
             wrist.setPosition(wristDownPos);
-        } else if (position > 160) {
+        } else if (position >= 150) {
             wrist.setPosition(wristScoringPos);
+        }
+        if (position > ideal && position < verticalPos) {
+            crPower = 0.01;
         }
         c1.setPower(crPower);
         c2.setPower(crPower);
