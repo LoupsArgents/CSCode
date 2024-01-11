@@ -78,7 +78,7 @@ public class ServoPositionsTest extends LinearOpMode {
     public void runOpMode() {
 
 
-        servo1 = hardwareMap.get(Servo.class, "wrist");
+        servo1 = hardwareMap.get(Servo.class, "frontCamera");
         servo2 = hardwareMap.get(Servo.class, "rightLeadScrewServo");
         //on broken scrimmagebot configurations: claw is part of wrist rotation, poleGuide is v4b
         s1p1 = 0.5;

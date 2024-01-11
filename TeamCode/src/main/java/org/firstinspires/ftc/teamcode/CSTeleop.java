@@ -88,8 +88,10 @@ public class CSTeleop extends LinearOpMode {
     DcMotorEx forwardOdo;
     DcMotorEx strafeOdo;
     DcMotorEx liftEncoder;
-    CRServo arm1;
-    CRServo arm2;
+    ServoImplEx arm1;
+    ServoImplEx arm2;
+    double arm1ScoringPos = 0.2675;
+    double arm1DownPos = 0.97;
     Servo clawUp;
     Servo clawDown;
     Servo lss1;
@@ -155,6 +157,20 @@ public class CSTeleop extends LinearOpMode {
     boolean armHappy = true;
     double armPower = 0.0;
     boolean armPastVertical = false;
+    double camBarCurrentPos;
+    double camInit;
+    double camOutOfWay = 0.35; //pointing straight out
+    double camUsePos = 0.645;
+    double camTuckedIn = 0.95;
+    double wristCurrentPos;
+    double wristInit;
+    private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    private double currentTime;
+    private double lastTime;
+    private ElapsedTime armTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    private double armCurrentTime;
+    private double armLastTime;
+
 
     public void runOpMode() {
         imu = hardwareMap.get(IMU.class, "imu");
@@ -163,17 +179,23 @@ public class CSTeleop extends LinearOpMode {
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
-        AnalogInput analogInput = hardwareMap.get(AnalogInput.class, "armAna");
-        armCurrentPosition = analogInput.getVoltage() / 3.3 * 360;
+        AnalogInput armAna = hardwareMap.get(AnalogInput.class, "armAna");
+        armCurrentPosition = armAna.getVoltage() / 3.3 * 360;
         armInitial = armCurrentPosition;
+        AnalogInput wristAna = hardwareMap.get(AnalogInput.class, "wriatAna");
+        wristCurrentPos = armAna.getVoltage() / 3.3 * 360;
+        wristInit = wristCurrentPos;
+        AnalogInput camAna = hardwareMap.get(AnalogInput.class, "camAna");
+        camBarCurrentPos = armAna.getVoltage() / 3.3 * 360;
+        camInit = wristCurrentPos;
 
         motorFR = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
         motorFL = hardwareMap.get(DcMotorEx.class, "motorFLandStrafeOdo");
         motorBR = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
         liftEncoder = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
         motorBL = hardwareMap.get(DcMotorEx.class, "motorBLandForwardOdo");
-        arm1 = hardwareMap.get(CRServo.class, "arm3");
-        arm2 = hardwareMap.get(CRServo.class, "arm5");
+        arm1 = hardwareMap.get(ServoImplEx.class, "arm3"); //this is the one that DOES have an encoder
+        arm2 = hardwareMap.get(ServoImplEx.class, "arm5"); //this is the one that DOES NOT have an encoder
         clawUp = hardwareMap.get(Servo.class, "claw0");
         clawDown = hardwareMap.get(Servo.class, "claw2");
         lss1 = hardwareMap.get(Servo.class, "leftLeadScrewServo");
@@ -249,7 +271,11 @@ public class CSTeleop extends LinearOpMode {
 
         activateBackCamera();
 
+        timer.reset();
+        armTimer.reset();
+
         while (opModeIsActive()) {
+            updateAnalogs(armAna, camAna, wristAna);
             //double botHeading = Math.abs((newGetHeading()%360) * Math.PI/180);//imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             double botHeading = (newGetHeading()%360) * Math.PI/180;
             while (botHeading < 0) {
@@ -258,16 +284,16 @@ public class CSTeleop extends LinearOpMode {
             while (botHeading > 2*Math.PI) {
                 botHeading -= 2*Math.PI;
             }
-            armCurrentPosition = (analogInput.getVoltage() / 3.3 * 360) - armInitial;
-            if (armIdealPosition == armUpPos) {
-                armPower = setCRPosition(arm1, arm2, armCurrentPosition, armIdealPosition, armVerticalPos, 1, 0.2);
-                /*if ((armCurrentPosition < armVerticalPos || Math.abs(armPower) > 0.01) && !armPastVertical) {
+
+            /*if (armIdealPosition == armUpPos) {
+                //armPower = setCRPosition(arm1, arm2, armCurrentPosition, armIdealPosition, armVerticalPos, 1, 0.2);
+                if ((armCurrentPosition < armVerticalPos || Math.abs(armPower) > 0.01) && !armPastVertical) {
                     armPastVertical = false;
                     armPower = setCRPosition(arm1, arm2, armCurrentPosition, armIdealPosition, armVerticalPos, 1, 0.2);
                 } else {
                     armPastVertical = true;
                     armPower = setCRPosition(arm1, arm2, armCurrentPosition, armIdealPosition, armIdealPosition, 0.1, 0.075);
-                }*/
+                }
             } else {
                 if ((armCurrentPosition > armVerticalPos || Math.abs(armPower) > 0.01) && !armPastVertical) {
                     armPastVertical = false;
@@ -276,12 +302,15 @@ public class CSTeleop extends LinearOpMode {
                     armPastVertical = true;
                     armPower = setCRPosition(arm1, arm2, armCurrentPosition, armIdealPosition, armIdealPosition, 0.1, 0.075);
                 }
-            }
+            }*/
 
 
             //telemetry.addData("oldHeadingWay", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
-            telemetry.addData("armIdeal", armIdealPosition);
-            telemetry.addData("armPosition", armCurrentPosition);
+            currentTime = timer.milliseconds();
+            telemetry.addData("loop time, ms", currentTime);
+            timer.reset();
+            //telemetry.addData("armIdeal", armIdealPosition);
+            //telemetry.addData("armPosition", armCurrentPosition);
             telemetry.addData("botHeading", botHeading);
             //telemetry.addData("arm power", temp);
             telemetry.addData("error", error);
@@ -356,10 +385,8 @@ public class CSTeleop extends LinearOpMode {
             //arm flip manual code:
             if (gamepad2.dpad_up) {
                 armIdealPosition = armUpPos;
-                armPastVertical = false;
             } else if (gamepad2.dpad_down) {
                 armIdealPosition = armDownPos;
-                armPastVertical = false;
             }
 
             //auto pickup code
@@ -520,6 +547,18 @@ public class CSTeleop extends LinearOpMode {
             }
         }
     }
+    public void updateAnalogs(AnalogInput armAna, AnalogInput camAna, AnalogInput wristAna) {
+        //update arm position
+        armCurrentPosition = (armAna.getVoltage() / 3.3 * 360) - armInitial;
+        //update camera bar position
+        camBarCurrentPos = (camAna.getVoltage() / 3.3 * 360) - camInit;
+        //update wrist position
+        wristCurrentPos = (wristAna.getVoltage() / 3.3 * 360) - wristInit;
+        //update all odo encoders
+        odometry.updatePose(); //I think???
+        //update lift encoder
+        liftPos = (liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial;
+    }
     //returns [x, y]
     public double[] getAprilTagDist(String result){
         //IDs: 1 is blue left, 2 is blue center, 3 is blue right
@@ -673,7 +712,7 @@ public class CSTeleop extends LinearOpMode {
         return processedHeading;
     }
     public boolean placeAndHeading(double x, double y, double idealHeading, double powerMult, double cmTol, double degTol) {
-        odometry.updatePose();
+        //odometry.updatePose();
         processedHeading = newGetHeading();
         double rxConst = 6;
         double moveConst = 1;
