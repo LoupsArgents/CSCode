@@ -98,13 +98,13 @@ public class CSTestLeadScrew extends LinearOpMode {
             //good value for ls2 (left lead screw) is 1.20495338 (not above 1.23)
             //probably 1.21 is good?
             if (Math.abs(gamepad1.left_stick_y) > 0.05) {
-                ls1.setPower(-0.2*gamepad1.left_stick_y);
+                ls1.setPower(-0.5*gamepad1.left_stick_y);
             } else {
                 ls1.setPower(0);
             }
 
             if (Math.abs(gamepad1.right_stick_y) > 0.05) {
-                ls2.setPower(-0.2*gamepad1.right_stick_y);
+                ls2.setPower(-0.5*gamepad1.right_stick_y);
             } else {
                 ls2.setPower(0);
             }

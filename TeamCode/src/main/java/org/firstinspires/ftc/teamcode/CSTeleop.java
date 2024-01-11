@@ -107,6 +107,7 @@ public class CSTeleop extends LinearOpMode {
     boolean liftHappyPlace = true;
     double armUpPos = 173; //was 333
     double armDownPos = 0; //was 160
+    double armVerticalPos = 216.0;
     double armIdealPosition = 0;
     double armCurrentPosition;
     double armInitial;
@@ -151,6 +152,9 @@ public class CSTeleop extends LinearOpMode {
     double xFromFunction = 0;
     double yFromFunction = 0;
     boolean moveToDoingScore = true;
+    boolean armHappy = true;
+    double armPower = 0.0;
+    boolean armPastVertical = false;
 
     public void runOpMode() {
         imu = hardwareMap.get(IMU.class, "imu");
@@ -164,10 +168,10 @@ public class CSTeleop extends LinearOpMode {
         armInitial = armCurrentPosition;
 
         motorFR = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
-        motorFL = hardwareMap.get(DcMotorEx.class, "motorFLandForwardOdo");
+        motorFL = hardwareMap.get(DcMotorEx.class, "motorFLandStrafeOdo");
         motorBR = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
         liftEncoder = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
-        motorBL = hardwareMap.get(DcMotorEx.class, "motorBLandStrafeOdo");
+        motorBL = hardwareMap.get(DcMotorEx.class, "motorBLandForwardOdo");
         arm1 = hardwareMap.get(CRServo.class, "arm3");
         arm2 = hardwareMap.get(CRServo.class, "arm5");
         clawUp = hardwareMap.get(Servo.class, "claw0");
@@ -180,9 +184,9 @@ public class CSTeleop extends LinearOpMode {
         lift1 = hardwareMap.get(DcMotorEx.class, "slideMotorL");
         lift2 = hardwareMap.get(DcMotorEx.class, "slideMotorR");
 
-        motorFLenc = new MotorEx(hardwareMap, "motorFLandForwardOdo");
+        motorFLenc = new MotorEx(hardwareMap, "motorFLandStrafeOdo");
         motorFRenc = new MotorEx(hardwareMap, "motorFRandForwardEncoder"); //also has right odometer
-        motorBLenc = new MotorEx(hardwareMap, "motorBLandStrafeOdo");
+        motorBLenc = new MotorEx(hardwareMap, "motorBLandForwardOdo");
         motorBRenc = new MotorEx(hardwareMap, "motorBRandLiftEncoder");
 
         backCamera = hardwareMap.get(WebcamName.class, "Webcam 1");
@@ -206,9 +210,9 @@ public class CSTeleop extends LinearOpMode {
         motorFL.setDirection(DcMotorEx.Direction.REVERSE);
         motorBL.setDirection(DcMotorEx.Direction.REVERSE);
 
-        leftOdometer = motorFLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+        leftOdometer = motorBLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
         rightOdometer = motorFRenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
-        centerOdometer = motorBLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+        centerOdometer = motorFLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
 
         rightOdometer.setDirection(Motor.Direction.REVERSE);
 
@@ -255,13 +259,31 @@ public class CSTeleop extends LinearOpMode {
                 botHeading -= 2*Math.PI;
             }
             armCurrentPosition = (analogInput.getVoltage() / 3.3 * 360) - armInitial;
-            double temp = setCRPosition(arm1, arm2, armCurrentPosition, armIdealPosition);
+            if (armIdealPosition == armUpPos) {
+                armPower = setCRPosition(arm1, arm2, armCurrentPosition, armIdealPosition, armVerticalPos, 1, 0.2);
+                /*if ((armCurrentPosition < armVerticalPos || Math.abs(armPower) > 0.01) && !armPastVertical) {
+                    armPastVertical = false;
+                    armPower = setCRPosition(arm1, arm2, armCurrentPosition, armIdealPosition, armVerticalPos, 1, 0.2);
+                } else {
+                    armPastVertical = true;
+                    armPower = setCRPosition(arm1, arm2, armCurrentPosition, armIdealPosition, armIdealPosition, 0.1, 0.075);
+                }*/
+            } else {
+                if ((armCurrentPosition > armVerticalPos || Math.abs(armPower) > 0.01) && !armPastVertical) {
+                    armPastVertical = false;
+                    armPower = setCRPosition(arm1, arm2, armCurrentPosition, armIdealPosition, armVerticalPos, 1, 0.175);
+                } else {
+                    armPastVertical = true;
+                    armPower = setCRPosition(arm1, arm2, armCurrentPosition, armIdealPosition, armIdealPosition, 0.1, 0.075);
+                }
+            }
+
 
             //telemetry.addData("oldHeadingWay", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
             telemetry.addData("armIdeal", armIdealPosition);
             telemetry.addData("armPosition", armCurrentPosition);
             telemetry.addData("botHeading", botHeading);
-            telemetry.addData("arm power", temp);
+            //telemetry.addData("arm power", temp);
             telemetry.addData("error", error);
             telemetry.addData("idealAbsHeading", idealAbsHeading);
             telemetry.addData("processedError", Math.min(error, 2*Math.PI - error));
@@ -334,8 +356,10 @@ public class CSTeleop extends LinearOpMode {
             //arm flip manual code:
             if (gamepad2.dpad_up) {
                 armIdealPosition = armUpPos;
+                armPastVertical = false;
             } else if (gamepad2.dpad_down) {
                 armIdealPosition = armDownPos;
+                armPastVertical = false;
             }
 
             //auto pickup code
@@ -601,35 +625,37 @@ public class CSTeleop extends LinearOpMode {
             if(portal.getProcessorEnabled(processor)) portal.setProcessorEnabled(processor, false);
         }
     }
-    public double setCRPosition(CRServo c1, CRServo c2, double position, double ideal) {
+    public double setCRPosition(CRServo c1, CRServo c2, double position, double ideal, double idealStop, double constant, double limit) {
         //216 is vertical
-        double verticalPos = 216.0;
-        double errorCR = Math.abs(ideal - position);
-        double constant = 0.0025;
+        double errorCR = Math.abs(idealStop - position); //was ideal - position
         double crPower = errorCR * constant;
-        if (crPower > 0.175) {crPower = 0.175;}
-        if (position < ideal && errorCR > 50) {
-            wrist.setPosition(wristAlmostDown);
+        if (crPower > limit) {crPower = limit;}
+        if (!armPastVertical) {
+            if (crPower < 0.01) {crPower = 0.1;}
+        }
+        if (position < idealStop) {
             crPower *= -1;
+        }
+        if (position < ideal && position <= 50) {
+            wrist.setPosition(wristAlmostDown);
         } else if (position < ideal && position > 50) {
             wrist.setPosition(wristScoringPos);
-            crPower *= -1;
         } else {
             wrist.setPosition(wristDownPos);
         }
-        if (position < ideal && position > verticalPos) {
+        /*if (position < ideal && position > verticalPos) {
             crPower = -0.01;
-        }
-        if (position > ideal && error > 50 && position < 150) {
+        }*/
+        if (position > ideal && position >= 50 && position < 140) {
             wrist.setPosition(wristAlmostDown);
-        } else if (position > ideal && error < 10 && position < 50) {
+        } else if (position > ideal && position < 50) {
             wrist.setPosition(wristDownPos);
-        } else if (position >= 150) {
+        } else if (position >= 140) {
             wrist.setPosition(wristScoringPos);
         }
-        if (position > ideal && position < verticalPos) {
+        /*if (position > ideal && position < verticalPos) {
             crPower = 0.01;
-        }
+        }*/
         c1.setPower(crPower);
         c2.setPower(crPower);
         return crPower;
