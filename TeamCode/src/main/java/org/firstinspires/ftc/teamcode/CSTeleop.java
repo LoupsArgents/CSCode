@@ -122,6 +122,8 @@ public class CSTeleop extends LinearOpMode {
     private IMU imu;
     double lss1UpPos = 0.575;
     double lss2UpPos = 0.395;
+    double lss1DownPos = 0.575 - 0.125;
+    double lss2DownPos = 0.395 + 0.125;
     boolean useLeadScrews = false;
     boolean leadScrewsDownEnd = false;
     boolean lsStateCanChange = true;
@@ -174,6 +176,7 @@ public class CSTeleop extends LinearOpMode {
     private ElapsedTime armTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     private double armCurrentTime;
     private double armLastTime;
+    boolean leadScrewsManual = false;
 
 
     public void runOpMode() {
@@ -512,17 +515,20 @@ public class CSTeleop extends LinearOpMode {
                 motorBR.setPower(backRightPower);
             }
 
-            if (gamepad2.back) {
+            if (gamepad2.guide) {
                 canDoEndgame = true;
             }
             //endgame code
             if (canDoEndgame) {
                 //lead screw code
-                if (gamepad2.start) {
+                if (gamepad2.y) {
                     lss1.setPosition(lss1UpPos);
                     lss2.setPosition(lss2UpPos);
+                } else if (gamepad2.a) {
+                    lss1.setPosition(lss1DownPos);
+                    lss2.setPosition(lss2DownPos);
                 }
-                if (gamepad2.guide && lsStateCanChange) {
+                /*if (gamepad2.guide && lsStateCanChange) {
                     //useLeadScrews = !useLeadScrews;
                     if (!useLeadScrews) {
                         useLeadScrews = true;
@@ -531,46 +537,91 @@ public class CSTeleop extends LinearOpMode {
                         leadScrewsDownEnd = true;
                     }
                     lsStateCanChange = false;
+                }*/
+                //if (!gamepad2.guide) {
+                //    lsStateCanChange = true;
+                //}
+                if (Math.abs(gamepad2.left_stick_y) > 0.05 || Math.abs(gamepad2.right_stick_y) > 0.05) {
+                    useLeadScrews = false;
+                    leadScrewsDownEnd = false;
+                    leadScrewsManual = true;
                 }
-                if (!gamepad2.guide) {
-                    lsStateCanChange = true;
+                if (gamepad2.x) {
+                    leadScrewsManual = false;
+                    useLeadScrews = true;
                 }
-                if (useLeadScrews) {
+                if (gamepad2.b) {
+                    leadScrewsManual = false;
+                    useLeadScrews = false;
+                    leadScrewsDownEnd = true;
+                }
+                if (leadScrewsManual) {
+                    if (Math.abs(gamepad2.left_stick_y) > 0.05) {
+                        lsm2.setPower(-0.5*gamepad2.left_stick_y);
+                    } else {
+                        lsm2.setPower(0);
+                    }
+                    if (Math.abs(gamepad2.right_stick_y) > 0.05) {
+                        lsm1.setPower(-0.5*gamepad2.right_stick_y);
+                    } else {
+                        lsm1.setPower(0);
+                    }
+                } else if (useLeadScrews) {
+                    telemetry.addData("right lead screw", lsm1pos);
+                    telemetry.addData("left lead screw", lsm2pos);
                     lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
                     lsm2pos = (lsm2.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
-                    //extend them to safe extension position (1.21), do NOT let them get higher than 1.23
-                    //positive is out, negative is back in
-                    double tempPos = 1.21/2;
-                    double error1 = Math.abs(lsm1pos - tempPos);
-                    double error2 = Math.abs(lsm2pos - tempPos);
-                    double lsm1const = 0.5;
-                    double lsm2const = 0.5;
-                    if (lsm1pos < tempPos) {
-                        lsm1.setPower(error1*lsm1const);
-                    } else { //doesn't run
-                        telemetry.addData("THIS", "RUNS");
-                        lsm1.setPower(0); //we don't want it going any further
+
+                    if (!leadScrewsManual) {
+                        //extend them to safe extension position (1.21), do NOT let them get higher than 1.23
+                        //positive is out, negative is back in
+                        double tempPos = 1.25;
+                        double error1 = Math.abs(lsm1pos - tempPos);
+                        double error2 = Math.abs(lsm2pos - tempPos);
+                        double lsm1const = 15;
+                        double lsm2const = 5;
+                        /*if (lsm1pos < tempPos) {
+                            lsm1.setPower(error1*lsm1const);
+                        } else { //doesn't run
+                            lsm1.setPower(0); //we don't want it going any further
+                        }
+                        if (lsm2pos < tempPos) {
+                            lsm2.setPower(error2*lsm2const);
+                        } else { //doesn't run
+                            lsm2.setPower(0); //we don't want it going any further
+                        }*/
+                        if (lsm1pos < tempPos) {
+                            lsm1.setPower(error1*lsm1const);
+                        } else { //doesn't run
+                            lsm1.setPower(-0.05);
+                        }
+                        if (lsm2pos < tempPos) {
+                            lsm2.setPower(error2*lsm2const);
+                        } else { //doesn't run
+                            lsm2.setPower(-0.05); //we don't want it going any further
+                        }
                     }
-                    if (lsm2pos < tempPos) {
-                        lsm2.setPower(error2*lsm2const);
-                    } else { //doesn't run
-                        telemetry.addData("THIS", "RUNS");
-                        lsm2.setPower(0); //we don't want it going any further
-                    }
+
                 } else if (leadScrewsDownEnd) {
+                    telemetry.addData("right lead screw", lsm1pos);
+                    telemetry.addData("left lead screw", lsm2pos);
+                    lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
+                    lsm2pos = (lsm2.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
                     //put them down to 0.3 or something
                     //maybe at the end set the powers to -0. something so that the bot stays up?
-                    double error1 = Math.abs(lsm1pos - 0.75);
-                    double error2 = Math.abs(lsm2pos - 0.75);
-                    double lsm1const = -0.5;
-                    double lsm2const = -0.5;
-                    if (lsm1pos > 0.75) {
-                        lsm1.setPower(error1*lsm1const);
+                    double error1 = Math.abs(lsm1pos - 0.5);
+                    double error2 = Math.abs(lsm2pos - 0.55);
+                    double lsm1const = -15;
+                    double lsm2const = -5;
+                    if (lsm1pos > 0.5) {
+                        //lsm1.setPower(error1*lsm1const);
+                        lsm1.setPower(-1);
                     } else {
                         lsm1.setPower(0); //we don't want it going any further
                     }
-                    if (lsm2pos > 0.75) {
-                        lsm2.setPower(error2*lsm2const);
+                    if (lsm2pos > 0.5) {
+                        //lsm2.setPower(error2*lsm2const);
+                        lsm2.setPower(-1);
                     } else {
                         lsm2.setPower(0); //we don't want it going any further
                     }
