@@ -13,7 +13,7 @@ public class CSYorkNearAuto extends CSYorkDF {
         if(alliance.equals("Blue")) allianceNum = 1;
         if(alliance.equals("Red")) allianceNum = -1;
         String result = onInit(allianceNum);
-        waitForStart();
+        //waitForStart();
         onRun(result, allianceNum);
     }
     public String onInit(int alliance){ //returns the team prop result
@@ -21,10 +21,12 @@ public class CSYorkNearAuto extends CSYorkDF {
         processor.setAlliance(alliance);
         processor.setMode(EverythingProcessor.ProcessorMode.PROP);
         setInitialPositions();
-        String result = "Right"; //getPropResult();
+        waitForStart();
+        String result = getPropResult();
         return result;
     }
     public void setInitialPositions(){
+        cameraBar.setPosition(camTuckedIn);
         wrist.setPosition(wristDownPos);
         sleep(100);
         closeClaw();
@@ -64,12 +66,19 @@ public class CSYorkNearAuto extends CSYorkDF {
             openLowerClaw();
             sleep(500);
         }
+        wrist.setPosition(wristAlmostDown);
+        sleep(100);
+        arm1.setPosition(armAlmostUp);
+        sleep(5000);
     }
     public void doYellowPixel(String result, int alliance) {
        getToBackdrop(result, alliance);
+       arm1.setPosition(arm1ScoringPos);
+       wrist.setPosition(wristScoringPos);
        absoluteHeading(.2, -90.0*alliance);
        sleep(500);
        positionOnBackdrop(result, alliance);
+       openClaw();
     }
     public void getToBackdrop(String result, int alliance){
         if((result.equals("Left") && alliance == 1) || (result.equals("Right") && alliance == -1)){
@@ -131,12 +140,14 @@ public class CSYorkNearAuto extends CSYorkDF {
                 strafeLeft(.35, dists[0]+2.5, 5, -90.0*alliance);
             }
         }
-        if(dists[1] - 10 > 0){
+        double inchesAway = 7;
+        if(dists[1] - inchesAway > 0){
             sleep(100);
-            goBackward(.3, dists[1]-10, -90.0*alliance);
-        }else if(dists[1] - 10 < 0){
+            goBackward(.3, dists[1]-inchesAway, -90.0*alliance);
+        }else if(dists[1] - inchesAway < 0){
             sleep(100);
-            goStraight(.3, dists[1]-10, -90.0*alliance);
+            goStraight(.3, dists[1]-inchesAway, -90.0*alliance);
         }
+        sleep(30000);
     }
 }

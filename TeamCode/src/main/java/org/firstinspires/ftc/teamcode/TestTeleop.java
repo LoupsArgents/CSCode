@@ -77,7 +77,7 @@ public class TestTeleop extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            //= [Vobserved / ((Vcc/1024) * 6)] - 300 is the formula on the maxbotix website
+            //= [Vobserved / ((Vcc/1024) * 6)] - 300 is the formula on the maxbotix website. it doesn't work very well
             double volt = ultra.getVoltage();
             distance = 205.849 * volt - 28.0321;
             movingAvg3.add(distance);
