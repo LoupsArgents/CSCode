@@ -106,6 +106,7 @@ public class CSYorkDF extends LinearOpMode {
             //telemetry.addData("AprilTagsLeft", Arrays.toString(getAprilTagDist("Left")));
             //telemetry.addData("AprilTagsCenter", Arrays.toString(getAprilTagDist("Center")));
             //telemetry.addData("AprilTagsRight", Arrays.toString(getAprilTagDist("Right")));
+            telemetry.addData("Heading", newGetHeading());
             telemetry.addData("StrafeTicks", strafeOdo.getCurrentPosition());
             telemetry.addData("ForwardTicks", forwardOdo.getCurrentPosition());
             telemetry.addData("Ultrasonic", getUltraDistance());
@@ -170,19 +171,22 @@ public class CSYorkDF extends LinearOpMode {
         motorFR.setPower(power);
         motorFL.setPower(power);
         motorBR.setPower(power);
-        motorBL.setPower(power); //because of my differing definition of "front of the robot"
+        motorBL.setPower(power);
         double targetheading = idealHeading;
         RobotLog.aa("GoStraight", "goal heading is " + targetheading);
         while(newInchesTraveled(forwardBackStartTicks, forwardBackCurrentTicks) < inches && opModeIsActive()){
             double heading = newGetHeading();
-            if(heading-targetheading>=0){ //to the left
-                multiplier = .1*(heading-targetheading)+1;
+            //RobotLog.aa("CurrentHeading", String.valueOf(heading));
+            if(heading-targetheading<0){  //we need to turn left
+                //RobotLog.aa("Going", "Left");
+                multiplier = -.1*(heading-targetheading)+1;
                 motorFL.setPower(power);
                 motorBL.setPower(power);
                 motorFR.setPower(power * multiplier);
                 motorBR.setPower(power * multiplier);
-            }else if(heading-targetheading<0){
-                multiplier = -.1*(heading-targetheading)+1;
+            }else if(heading-targetheading>=0){
+                //RobotLog.aa("Going", "Right");
+                multiplier = .1*(heading-targetheading)+1;
                 motorFR.setPower(power);
                 motorBR.setPower(power);
                 motorFL.setPower(power*multiplier);
@@ -205,14 +209,14 @@ public class CSYorkDF extends LinearOpMode {
         RobotLog.aa("GoBackward", "goal heading is " + targetheading);
         while(newInchesTraveled(forwardBackStartTicks, forwardBackCurrentTicks) > -inches && opModeIsActive()){
             double heading = newGetHeading();
-            if(heading-targetheading>=0){ //to the left
-                multiplier = .1*(heading-targetheading)+1;
+            if(heading-targetheading < 0){ //turn to the left
+                multiplier = -.1*(heading-targetheading)+1;
                 motorFL.setPower(-power*multiplier);
                 motorBL.setPower(-power*multiplier);
                 motorFR.setPower(-power);
                 motorBR.setPower(-power);
-            }else if(heading-targetheading<0){
-                multiplier = -.1*(heading-targetheading)+1;
+            }else if(heading-targetheading >= 0){ //turn to the right
+                multiplier = .1*(heading-targetheading)+1;
                 motorFR.setPower(-power*multiplier);
                 motorBR.setPower(-power*multiplier);
                 motorFL.setPower(-power);
@@ -301,9 +305,10 @@ public class CSYorkDF extends LinearOpMode {
         RobotLog.aa("Status", "Stopping");
         stopMotors();
     }
-    public void moveForwardRight(double power, double inches, double idealHeading){
+    public double moveForwardRight(double power, double inches, double idealHeading){ //returns the number of inches it moved forward
         int strafeStartTicks = strafeOdo.getCurrentPosition();
         int strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        int forwardStartTicks = forwardOdo.getCurrentPosition();
         double multiplier;
         motorFL.setPower(power);
         motorBR.setPower(power);
@@ -317,7 +322,7 @@ public class CSYorkDF extends LinearOpMode {
                 motorBR.setPower(power);
                 motorFR.setPower(-power/2);
                 motorBL.setPower(-power/2);
-                //so this means we need turn left...
+                //so this means we need turn right...
                 //make FL more
             }else{
                 multiplier = -.1*(heading-idealHeading)+1;
@@ -329,10 +334,13 @@ public class CSYorkDF extends LinearOpMode {
             strafeCurrentTicks = strafeOdo.getCurrentPosition();
         }
         stopMotors();
+        int forwardEndTicks = forwardOdo.getCurrentPosition();
+        return newInchesTraveled(forwardStartTicks, forwardEndTicks);
     }
-    public void moveForwardLeft(double power, double inches, double idealHeading){
+    public double moveForwardLeft(double power, double inches, double idealHeading){ //returns number of inches moved forwards
         int strafeStartTicks = strafeOdo.getCurrentPosition();
         int strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        int forwardStartTicks = forwardOdo.getCurrentPosition();
         double multiplier;
         motorFR.setPower(power);
         motorBL.setPower(power);
@@ -346,8 +354,6 @@ public class CSYorkDF extends LinearOpMode {
                 motorFR.setPower(power);
                 motorFL.setPower(-power/2);
                 motorBR.setPower(-power * multiplier /2);
-                //so this means we need turn left...
-                //make FL more
             }else{
                 multiplier = -.1*(heading-idealHeading)+1;
                 motorBL.setPower(power);
@@ -359,11 +365,13 @@ public class CSYorkDF extends LinearOpMode {
             RobotLog.aa("Strafe", String.valueOf(strafeCurrentTicks));
         }
         stopMotors();
-
+        int forwardEndTicks = forwardOdo.getCurrentPosition();
+        return newInchesTraveled(forwardStartTicks, forwardEndTicks);
     }
-    public void moveBackLeft(double power, double inches, double idealHeading){
+    public double moveBackLeft(double power, double inches, double idealHeading){ //returns number of inches moved (will be negative)
         int strafeStartTicks = strafeOdo.getCurrentPosition();
         int strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        int forwardStartTicks = forwardOdo.getCurrentPosition();
         double multiplier;
         motorFL.setPower(-power);
         motorBR.setPower(-power);
@@ -389,10 +397,13 @@ public class CSYorkDF extends LinearOpMode {
             strafeCurrentTicks = strafeOdo.getCurrentPosition();
         }
         stopMotors();
+        int forwardEndTicks = forwardOdo.getCurrentPosition();
+        return newInchesTraveled(forwardStartTicks, forwardEndTicks);
     }
-    public void moveBackRight(double power, double inches, double idealHeading){
+    public double moveBackRight(double power, double inches, double idealHeading){
         int strafeStartTicks = strafeOdo.getCurrentPosition();
         int strafeCurrentTicks = strafeOdo.getCurrentPosition();
+        int forwardStartTicks = forwardOdo.getCurrentPosition();
         double multiplier;
         motorFR.setPower(-power);
         motorBL.setPower(-power);
@@ -418,6 +429,8 @@ public class CSYorkDF extends LinearOpMode {
             strafeCurrentTicks = strafeOdo.getCurrentPosition();
         }
         stopMotors();
+        int forwardEndTicks = forwardOdo.getCurrentPosition();
+        return newInchesTraveled(forwardStartTicks, forwardEndTicks);
     }
     //below: versions of movement functions that will maintain your current heading
     public void goStraight(double power, double inches){
@@ -763,12 +776,20 @@ public class CSYorkDF extends LinearOpMode {
         return total / 5;
     }
 
-    public String getPropResult(){
+    public String getPropResult(double leftAv, double rightAv){
         String cameraResult = processor.getResult();
         DistanceSensorResult distResult = getDistances();
         double ultraDist = getUltraDistance();
         //75ish is center prop, ~300 is nothing there
-        String sensorResult = distResult.getSensorResult();
+        //String sensorResult = distResult.getSensorResult();
+        String sensorResult;
+        if(leftAv > 15 && leftAv < 28){
+            sensorResult = "Left";
+        }else if(rightAv > 15 && rightAv < 28){
+            sensorResult = "Right";
+        }else{
+            sensorResult = "Neither";
+        }
         if(ultraDist < 200){
             return "Center";
         }else if(sensorResult.equals("Left")){
