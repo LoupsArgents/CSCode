@@ -35,6 +35,7 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
     ProcessorMode mode = ProcessorMode.PROP;
     int minPixelBoxArea = 1500; //1500, then 2500, then 2000
     Point closestPixelPos = new Point(400, 400);
+    boolean seeingPixel = false;
     Rect closestPixelRect;
     enum ProcessorMode {
         PROP,
@@ -239,6 +240,11 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
                 //Imgproc.putText(masked, Double.toString(r.area()), new Point(r.x, r.y), FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 0, 0));
             }
         }
+        if(maxRect.width == 10 && maxRect.height == 10){
+            seeingPixel = false;
+        }else{
+            seeingPixel = true;
+        }
        //oldTime = currentTime;
         //currentTime = System.currentTimeMillis();
         //RobotLog.aa("Status", "Boxes drawn and largest box found, time taken " + (currentTime - oldTime) + "ms");
@@ -272,6 +278,9 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         }else{
             return "Center";
         }
+    }
+    public boolean getIsSeeingPixel(){
+        return seeingPixel;
     }
     public void setAlliance(int a){ //0 is not-black HSV filter just for fun use on the board
         alliance = a;

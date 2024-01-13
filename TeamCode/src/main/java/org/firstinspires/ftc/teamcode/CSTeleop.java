@@ -6,6 +6,7 @@ import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
+import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
@@ -54,6 +55,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.opencv.core.Point;
 
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -68,6 +70,13 @@ import com.qualcomm.robotcore.hardware.PwmControl; // for Axon
 
 @TeleOp
 public class CSTeleop extends LinearOpMode {
+    boolean doAutoPickup = false;
+    double multiplierFR = 1.0;
+    double multiplierBL = 1.0;
+    double multiplierFL = 1.0;
+    double multiplierBR = 1.0;
+    RevColorSensorV3 clawLeftSensor;
+    RevColorSensorV3 clawRightSensor;
     VisionPortal portal;
     private WebcamName backCamera;
     private WebcamName frontCamera;
@@ -174,6 +183,7 @@ public class CSTeleop extends LinearOpMode {
     private double currentTime;
     private double lastTime;
     private ElapsedTime armTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    private ElapsedTime camBarTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     private double armCurrentTime;
     private double armLastTime;
     boolean leadScrewsManual = false;
@@ -185,6 +195,12 @@ public class CSTeleop extends LinearOpMode {
     boolean canUseSlides = true;
     boolean isJoysticking = false;
     double boardClickUpAmt = 0.05;
+    Point pixelPos;
+    boolean hasEverSeenPixel = false;
+    //stacks positions: top level (pixels 4 and 5) arm is 0.905, wrist is 0.11
+    //pixels 3 and 4 arm is 0.92, wrist is 0.12
+    //pixels 2 and 3 arm is 0.945, wrist is 0.125
+    //pixels 1 and 2 are normal arm/claw levels (they're on the ground)
 
     public void runOpMode() {
         imu = hardwareMap.get(IMU.class, "imu");
@@ -226,9 +242,13 @@ public class CSTeleop extends LinearOpMode {
         motorBLenc = new MotorEx(hardwareMap, "motorBLandForwardOdo");
         motorBRenc = new MotorEx(hardwareMap, "motorBRandLiftEncoder");
 
+        clawLeftSensor = hardwareMap.get(RevColorSensorV3.class, "clawLeft");
+        clawRightSensor = hardwareMap.get(RevColorSensorV3.class, "clawRight");
+
         backCamera = hardwareMap.get(WebcamName.class, "Webcam 1");
         frontCamera = hardwareMap.get(WebcamName.class, "Webcam 2");
         processor = new EverythingProcessor();
+        processor.setMode(EverythingProcessor.ProcessorMode.PIXEL);
         ATProcessor = AprilTagProcessor.easyCreateWithDefaults();
         CameraName webcam = ClassFactory.getInstance().getCameraManager().nameForSwitchableCamera(frontCamera, backCamera);
         portal = new VisionPortal.Builder()
@@ -239,6 +259,7 @@ public class CSTeleop extends LinearOpMode {
                 .enableLiveView(false)
                 .build();
         if(portal.getProcessorEnabled(ATProcessor)) portal.setProcessorEnabled(ATProcessor, false);
+        portal.resumeStreaming();
 
         motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -265,6 +286,8 @@ public class CSTeleop extends LinearOpMode {
         odometry.updatePose(new Pose2d());
 
         wrist.setPosition(wristDownPos);
+        clawUp.setPosition(clawUpopen);
+        clawDown.setPosition(clawDownopen);
 
         ticksPerRotation = liftEncoder.getMotorType().getTicksPerRev();
         liftInitial = liftEncoder.getCurrentPosition()/ticksPerRotation;
@@ -296,7 +319,7 @@ public class CSTeleop extends LinearOpMode {
 
         waitForStart();
 
-        activateBackCamera();
+        activateFrontCamera();
 
         timer.reset();
         armTimer.reset();
@@ -328,24 +351,38 @@ public class CSTeleop extends LinearOpMode {
             telemetry.addData("armPhase", armPhase);
             telemetry.addData("inEndgame", canDoEndgame);
 
-            while (botHeading < 0) {
+            while (botHeading < 0 && opModeIsActive()) {
                 botHeading += 2*Math.PI;
             }
-            while (botHeading > 2*Math.PI) {
+            while (botHeading > 2*Math.PI && opModeIsActive()) {
                 botHeading -= 2*Math.PI;
             }
+            //manual camera bar code
+            if (gamepad2.left_bumper) {
+                cameraBar.setPosition(camTuckedIn);
+            } else if (gamepad2.right_bumper) {
+                cameraBar.setPosition(camOutOfWay);
+            }
             //arm manual code
-            if (Math.abs(cameraBar.getPosition() - camTuckedIn) < 0.05) { //we're allowed to move the arm
+            if (Math.abs(cameraBar.getPosition() - camTuckedIn) < 0.05 || Math.abs(cameraBar.getPosition() - camOutOfWay) < 0.05) { //we're allowed to move the arm
                 //telemetry.addData("this", "runs");
                 if (gamepad2.dpad_up) {
+                    activateBackCamera();
                     armIdealPosition = arm1ScoringPos;
                     armPhase = 1;
                     armTimer.reset();
                 }
                 if (gamepad2.dpad_down) {
+                    activateFrontCamera();
                     armIdealPosition = arm1DownPos;
                     armPhase = 2;
                     armTimer.reset();
+                    if (clawUpSetTo != clawUpclose || clawDownSetTo != clawDownclose) {
+                        clawUp.setPosition(clawUpclose);
+                        clawUpSetTo = clawUpclose;
+                        clawDown.setPosition(clawDownclose);
+                        clawDownSetTo = clawDownclose;
+                    }
                 }
                 if ((armPhase == 1) && armCurrentTime > 1500) {
                     armPhase += 2;
@@ -361,6 +398,12 @@ public class CSTeleop extends LinearOpMode {
                     if (!(wristSetTo == wristAlmostDown)) {
                         wrist.setPosition(wristAlmostDown);
                         wristSetTo = wristAlmostDown;
+                    }
+                    if (clawUpSetTo != clawUpclose || clawDownSetTo != clawDownclose) {
+                        clawUp.setPosition(clawUpclose);
+                        clawUpSetTo = clawUpclose;
+                        clawDown.setPosition(clawDownclose);
+                        clawDownSetTo = clawDownclose;
                     }
                 } else if (armPhase == 2) { //just starting to go down
                     if (!(armSetTo == armAlmostDown)) {
@@ -400,7 +443,44 @@ public class CSTeleop extends LinearOpMode {
             }
 
             telemetry.update();
-            //claw manual pickup
+            //claw stuff
+            if (gamepad1.right_bumper && armSetTo == arm1DownPos) {
+                cameraBar.setPosition(camUsePos);
+                lift1.setPower(0);
+                lift2.setPower(0);
+                canUseClawManually = false;
+                canDriveManually = false;
+                doAutoPickup = true;
+                hasEverSeenPixel = false;
+                camBarTimer.reset();
+            }
+            if (doAutoPickup && camBarTimer.milliseconds() > 1000 && (processor.getIsSeeingPixel() || clawSeesPixels() || hasEverSeenPixel)) {
+                doAutoPickup = !closestStackInnerFunction(processor); //true = keep going, false = stop
+                if (!doAutoPickup) {
+                    clawUp.setPosition(clawUpclose);
+                    clawUpSetTo = clawUpclose;
+                    clawDown.setPosition(clawDownclose);
+                    clawDownSetTo = clawDownclose;
+                    gamepad1.rumble(500);
+                }
+                if (processor.getIsSeeingPixel() || clawSeesPixels()) {
+                    hasEverSeenPixel = true;
+                }
+                if (gamepad1.back) {
+                    doAutoPickup = false;
+                }
+                if (!doAutoPickup) {
+                    canUseClawManually = true;
+                    canDriveManually = true;
+                    cameraBar.setPosition(camTuckedIn);
+                }
+            } else if (doAutoPickup && camBarTimer.milliseconds() > 1000 && !(processor.getIsSeeingPixel() || clawSeesPixels() || hasEverSeenPixel)) {
+                doAutoPickup = false;
+                canUseClawManually = true;
+                canDriveManually = true;
+                cameraBar.setPosition(camTuckedIn);
+                gamepad1.rumble(100);
+            }
             if (gamepad1.left_trigger < 0.1) {
                 clawStateCanChange = true;
             }
@@ -430,27 +510,30 @@ public class CSTeleop extends LinearOpMode {
                 moveToDoingScore = true;
             }
             if (doAutoScore && moveToDoingScore) {
-                telemetry.addData("it is running", "but not working");
                 doAutoScore = !(placeAndHeading(originalX + moveXYcm[0], originalY + moveXYcm[1], headingForCV, 0.5, 0.5, 0.5));
                 telemetry.addData("x cm", moveXYcm[0]);
                 telemetry.addData("y cm", moveXYcm[1]);
                 telemetry.addData("originalX", xFromFunction);
                 telemetry.addData("originalY", yFromFunction);
             }
-            if (!doAutoScore) {canDriveManually = true;}
+            if (!doAutoScore && !doAutoPickup) {canDriveManually = true;}
             if (canUseClawManually) {
                 if (gamepad1.right_trigger > 0.1) {
                     //close both
                     clawUp.setPosition(clawUpclose);
+                    clawUpSetTo = clawUpclose;
                     clawDown.setPosition(clawDownclose);
+                    clawDownSetTo = clawDownclose;
                 }
                 if (gamepad1.left_trigger > 0.1 && clawStateCanChange) {
                     clawStateCanChange = false;
                     //if first one is open, open second, otherwise open first
                     if (clawDown.getPosition() == clawDownopen) {
                         clawUp.setPosition(clawUpopen);
+                        clawUpSetTo = clawUpopen;
                     } else {
                         clawDown.setPosition(clawDownopen);
+                        clawDownSetTo = clawDownopen;
                     }
                 }
             }
@@ -458,6 +541,7 @@ public class CSTeleop extends LinearOpMode {
             if (liftPos > 0.03) {
                 cameraBar.setPosition(camOutOfWay);
             }
+
             if (gamepad2.y && !canDoEndgame && !isJoysticking) {
                 liftIdealPos += boardClickUpAmt;
                 liftIdealPos += boardClickUpAmt;
@@ -537,10 +621,10 @@ public class CSTeleop extends LinearOpMode {
                     //if (botHeading < 0) {botHeading += 2*Math.PI;}
                     //botHeading = Math.abs(newGetHeading() * (Math.PI/180));
                     botHeading = (newGetHeading()%360) * Math.PI/180;
-                    while (botHeading < 0) {
+                    while (botHeading < 0 && opModeIsActive()) {
                         botHeading += 2*Math.PI;
                     }
-                    while (botHeading > 2*Math.PI) {
+                    while (botHeading > 2*Math.PI && opModeIsActive()) {
                         botHeading -= 2*Math.PI;
                     }
                     error = Math.abs((botHeading - idealAbsHeading))%(2*Math.PI);
@@ -876,6 +960,65 @@ public class CSTeleop extends LinearOpMode {
         previousHeading = currentHeading;
         return processedHeading;
     }
+    public boolean closestStackInnerFunction(EverythingProcessor processor){
+        double leftSensorPos = clawLeftSensor.getDistance(DistanceUnit.INCH);
+        double rightSensorPos = clawRightSensor.getDistance(DistanceUnit.INCH);
+        boolean isThereAPixel = leftSensorPos < 2 || rightSensorPos < 2;
+        if(!isThereAPixel){ //y threshold was 300
+            //RobotLog.aa("DistanceFromCenter", String.valueOf(Math.abs(pixelPos.x - 320)));
+            double power = .35;
+            double multiplier = 1;
+            double proportionalConstant = -.02;
+            // used to be -.5, then -.3, then -.03, then -.01, then -.015, then -.03, then -0.025, then new camera
+            //then realized that the lower limit should be -1 not 0
+            //so that necessitated new finding of a constant
+            //-.015
+            pixelPos = processor.getClosestPixelPos();
+            //RobotLog.aa("PixelPos", String.valueOf(pixelPos));
+            if(Math.abs(pixelPos.x - 320) < 10){ //we're close enough to centered to just go straight forwards
+                //  RobotLog.aa("Motors", "all the same");
+                motorBL.setPower(power * multiplierBL);
+                motorBR.setPower(power * multiplierBR);
+                motorFL.setPower(power * multiplierFL);
+                motorFR.setPower(power * multiplierFR);
+            }else if(pixelPos.x < 320){ //we need to go left (reduce FR, BL)
+                multiplier = 1 + (Math.abs(320 - pixelPos.x) * proportionalConstant);
+                if(multiplier < -1){
+                    RobotLog.aa("Status", "Hit the multiplier floor");
+                    multiplier = -1; //so it doesn't start going backwards
+                }
+                RobotLog.aa("multiplier", String.valueOf(multiplier));
+                telemetry.addData("multiplier", Double.toString(multiplier));
+                telemetry.update();
+                //RobotLog.aa("Going", "left");
+                //RobotLog.aa("Motors", "setting FL and BR to " + (-power * multiplier));
+                motorFR.setPower(power * multiplierFR);
+                motorBL.setPower(power * multiplierBL);
+                //we'll see what needs to get modified with multiplier
+                //and if that needs to change at all
+                motorFL.setPower(power * multiplierFL * multiplier);
+                motorBR.setPower(power * multiplierBR * multiplier);
+            }else if(pixelPos.x > 320){ //go right (reduce FL, BR)
+                multiplier = 1 + (Math.abs(320 - pixelPos.x) * proportionalConstant);
+                if(multiplier < -1){
+                    RobotLog.aa("Status", "Hit the multiplier floor");
+                    multiplier = -1; //so it doesn't start going backwards
+                }
+                telemetry.addData("multiplier", Double.toString(multiplier));
+                telemetry.update();
+                //RobotLog.aa("multiplier", String.valueOf(multiplier));
+                //RobotLog.aa("Going", "right");
+                //RobotLog.aa("Motors", "decreasing FR and BL to " + (-power * multiplier));
+                motorFL.setPower(power * multiplierFL);
+                motorBR.setPower(power * multiplierBR);
+                motorFR.setPower(power * multiplierFR * multiplier);
+                motorBL.setPower(power * multiplierBL * multiplier);
+            }
+            return false;
+        }else{
+            return true;
+        }
+    }
     public boolean placeAndHeading(double x, double y, double idealHeading, double powerMult, double cmTol, double degTol) {
         //odometry.updatePose();
         processedHeading = newGetHeading();
@@ -944,5 +1087,10 @@ public class CSTeleop extends LinearOpMode {
         motorBR.setPower(powerMult * backRightPower);
         //telemetry.update();
         return false;
+    }
+    public boolean clawSeesPixels() {
+        double leftSensorPos = clawLeftSensor.getDistance(DistanceUnit.INCH);
+        double rightSensorPos = clawRightSensor.getDistance(DistanceUnit.INCH);
+        return (leftSensorPos < 2 || rightSensorPos < 2);
     }
 }

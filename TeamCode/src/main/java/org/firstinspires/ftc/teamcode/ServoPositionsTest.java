@@ -78,8 +78,8 @@ public class ServoPositionsTest extends LinearOpMode {
     public void runOpMode() {
 
 
-        servo1 = hardwareMap.get(Servo.class, "rightLeadScrewServo");
-        servo2 = hardwareMap.get(Servo.class, "leftLeadScrewServo");
+        servo1 = hardwareMap.get(Servo.class, "arm3");
+        servo2 = hardwareMap.get(Servo.class, "wrist");
         //on broken scrimmagebot configurations: claw is part of wrist rotation, poleGuide is v4b
         s1p1 = 0.5;
         s1p2 = 0.5;
@@ -136,7 +136,7 @@ public class ServoPositionsTest extends LinearOpMode {
                     change2 = false;
                 }
                 if (gamepad2.right_trigger > 0.05) {
-                    s2current -= 0.01;
+                    s2current -= 0.005;
                     change2 = false;
                 }
                 if (gamepad2.left_bumper) {
@@ -144,7 +144,7 @@ public class ServoPositionsTest extends LinearOpMode {
                     change2 = false;
                 }
                 if (gamepad2.right_bumper) {
-                    s2current += 0.01;
+                    s2current += 0.005;
                     change2 = false;
                 }
             } else if (gamepad2.left_trigger < 0.05 && gamepad2.right_trigger < 0.05 && !gamepad2.left_bumper && !gamepad2.right_bumper) {
