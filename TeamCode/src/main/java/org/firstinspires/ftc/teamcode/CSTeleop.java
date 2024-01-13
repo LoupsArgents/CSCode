@@ -177,7 +177,14 @@ public class CSTeleop extends LinearOpMode {
     private double armCurrentTime;
     private double armLastTime;
     boolean leadScrewsManual = false;
-
+    double armSetTo = arm1DownPos;
+    double wristSetTo = wristDownPos;
+    double camSetTo = camTuckedIn;
+    double clawUpSetTo = clawUpopen;
+    double clawDownSetTo = clawDownopen;
+    boolean canUseSlides = true;
+    boolean isJoysticking = false;
+    double boardClickUpAmt = 0.05;
 
     public void runOpMode() {
         imu = hardwareMap.get(IMU.class, "imu");
@@ -237,6 +244,8 @@ public class CSTeleop extends LinearOpMode {
         motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lift1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lift2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFL.setDirection(DcMotorEx.Direction.REVERSE);
         motorBL.setDirection(DcMotorEx.Direction.REVERSE);
 
@@ -279,6 +288,12 @@ public class CSTeleop extends LinearOpMode {
 
         arm1.setPosition(arm1DownPos);
 
+        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
+
+        for (LynxModule hub : allHubs) {
+            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        }
+
         waitForStart();
 
         activateBackCamera();
@@ -296,6 +311,8 @@ public class CSTeleop extends LinearOpMode {
             armCurrentTime = armTimer.milliseconds();
             telemetry.addData("loop time, ms", currentTime);
             telemetry.addData("arm time, ms", armCurrentTime);
+            telemetry.addData("liftPos", liftPos);
+            telemetry.addData("-gamepad2.left_stick_y", -gamepad2.left_stick_y);
             timer.reset();
             telemetry.addData("armAna", armCurrentPosition);
             telemetry.addData("wristAna", wristCurrentPos);
@@ -337,17 +354,41 @@ public class CSTeleop extends LinearOpMode {
                     armPhase += 2;
                 }
                 if (armPhase == 1) {//just starting to go up
-                    arm1.setPosition(armAlmostUp);
-                    wrist.setPosition(wristAlmostDown);
+                    if (!(armSetTo == armAlmostUp)) {
+                        arm1.setPosition(armAlmostUp);
+                        armSetTo = armAlmostUp;
+                    }
+                    if (!(wristSetTo == wristAlmostDown)) {
+                        wrist.setPosition(wristAlmostDown);
+                        wristSetTo = wristAlmostDown;
+                    }
                 } else if (armPhase == 2) { //just starting to go down
-                    arm1.setPosition(armAlmostDown);
-                    wrist.setPosition(wristAlmostDown);
+                    if (!(armSetTo == armAlmostDown)) {
+                        arm1.setPosition(armAlmostDown);
+                        armSetTo = armAlmostDown;
+                    }
+                    if (!(wristSetTo == wristAlmostDown)) {
+                        wrist.setPosition(wristAlmostDown);
+                        wristSetTo = wristAlmostDown;
+                    }
                 } else if (armPhase == 3) { //rest of the way up
-                    arm1.setPosition(arm1ScoringPos);
-                    wrist.setPosition(wristScoringPos);
+                    if (!(armSetTo == arm1ScoringPos)) {
+                        arm1.setPosition(arm1ScoringPos);
+                        armSetTo = arm1ScoringPos;
+                    }
+                    if (!(wristSetTo == wristScoringPos)) {
+                        wrist.setPosition(wristScoringPos);
+                        wristSetTo = wristScoringPos;
+                    }
                 } else if (armPhase == 4) { //rest of the way down
-                    arm1.setPosition(arm1DownPos);
-                    wrist.setPosition(wristDownPos);
+                    if (!(armSetTo == arm1DownPos)) {
+                        arm1.setPosition(arm1DownPos);
+                        armSetTo = arm1DownPos;
+                    }
+                    if (!(wristSetTo == wristDownPos)) {
+                        wrist.setPosition(wristDownPos);
+                        wristSetTo = wristDownPos;
+                    }
                 }
             }
 
@@ -413,8 +454,49 @@ public class CSTeleop extends LinearOpMode {
                     }
                 }
             }
-            //manual scoring-- lift/arm
-            //lift is not yet ready to code
+            //lift manual code
+            if (liftPos > 0.03) {
+                cameraBar.setPosition(camOutOfWay);
+            }
+            if (gamepad2.y && !canDoEndgame && !isJoysticking) {
+                liftIdealPos += boardClickUpAmt;
+                liftIdealPos += boardClickUpAmt;
+            }
+            if (canUseSlides) {
+                double liftPower = -gamepad2.left_stick_y;
+                double liftError = liftIdealPos - liftPos;
+                double liftTolerance = 0.05;
+                double Kp = 10;
+                if (Math.abs(liftError) < liftTolerance) {
+                    liftHappyPlace = true;
+                } else {
+                    liftHappyPlace = false;
+                }
+                if (!isJoysticking && !liftHappyPlace) {
+                    lift2.setPower(liftError*Kp);
+                    lift1.setPower(-liftError*Kp);
+                } else if (isJoysticking == false) { //liftHappyPlace == true
+                    if (liftPos > 0.05) {
+                        lift2.setPower(0.3);
+                        lift1.setPower(-0.3);
+                    } else if (liftPos > 0.125) {
+                        lift2.setPower(0.4);
+                        lift1.setPower(-0.4);
+                    } else if (liftPos > 0.20) {
+                        lift2.setPower(0.5);
+                        lift1.setPower(-0.5);
+                    }
+                }
+                if ((liftPower > 0.05 && liftPos < 0.22) || (liftPower < -0.05 && liftPos > 0)) {
+                    isJoysticking = true;
+                    liftHappyPlace = true;
+                    liftIdealPos = liftPos;
+                    lift2.setPower(liftPower);
+                    lift1.setPower(-liftPower);
+                } else {
+                    isJoysticking = false;
+                }
+            }
 
             //auto pickup code
 
@@ -640,7 +722,7 @@ public class CSTeleop extends LinearOpMode {
         //update all odo encoders
         odometry.updatePose(); //I think???
         //update lift encoder
-        liftPos = (liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial;
+        liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
     }
     //returns [x, y]
     public double[] getAprilTagDist(String result){
