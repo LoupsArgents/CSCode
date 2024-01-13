@@ -91,6 +91,8 @@ public class CSTeleop extends LinearOpMode {
     ServoImplEx arm1;
     ServoImplEx arm2;
     double arm1ScoringPos = 0.2675;
+    double armAlmostUp = 0.37;
+    double armAlmostDown = 0.8;
     double arm1DownPos = 0.97;
     Servo clawUp;
     Servo clawDown;
@@ -107,9 +109,10 @@ public class CSTeleop extends LinearOpMode {
     double liftPos;
     double liftIdealPos = 0;
     boolean liftHappyPlace = true;
-    double armUpPos = 173; //was 333
-    double armDownPos = 0; //was 160
+    //double armUpPos = 173; //was 333
+    //double armDownPos = 0; //was 160
     double armVerticalPos = 216.0;
+    double armPhase = 0;
     double armIdealPosition = 0;
     double armCurrentPosition;
     double armInitial;
@@ -119,14 +122,16 @@ public class CSTeleop extends LinearOpMode {
     private IMU imu;
     double lss1UpPos = 0.575;
     double lss2UpPos = 0.395;
+    double lss1DownPos = 0.575 - 0.125;
+    double lss2DownPos = 0.395 + 0.125;
     boolean useLeadScrews = false;
     boolean leadScrewsDownEnd = false;
     boolean lsStateCanChange = true;
     boolean clawStateCanChange = true;
-    double clawUpopen = 0.5;
-    double clawUpclose = 0.4;
+    double clawUpopen = 0.51;
+    double clawUpclose = 0.355;
     double clawDownopen = 0.58;
-    double clawDownclose = 0.49;
+    double clawDownclose = 0.47;
     boolean doAbsHeading = false;
     double idealAbsHeading = 0.0;
     double turningConst = 0.575;
@@ -159,6 +164,7 @@ public class CSTeleop extends LinearOpMode {
     boolean armPastVertical = false;
     double camBarCurrentPos;
     double camInit;
+    ServoImplEx cameraBar;
     double camOutOfWay = 0.35; //pointing straight out
     double camUsePos = 0.645;
     double camTuckedIn = 0.95;
@@ -170,6 +176,7 @@ public class CSTeleop extends LinearOpMode {
     private ElapsedTime armTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     private double armCurrentTime;
     private double armLastTime;
+    boolean leadScrewsManual = false;
 
 
     public void runOpMode() {
@@ -203,6 +210,7 @@ public class CSTeleop extends LinearOpMode {
         lsm1 = hardwareMap.get(DcMotorEx.class, "leadScrewRight");
         lsm2 = hardwareMap.get(DcMotorEx.class, "leadScrewLeft");
         wrist = hardwareMap.get(ServoImplEx.class, "wrist");
+        cameraBar = hardwareMap.get(ServoImplEx.class, "frontCamera");
         lift1 = hardwareMap.get(DcMotorEx.class, "slideMotorL");
         lift2 = hardwareMap.get(DcMotorEx.class, "slideMotorR");
 
@@ -267,6 +275,10 @@ public class CSTeleop extends LinearOpMode {
         telemetry.addData("status", "initialized");
         telemetry.update();
 
+        cameraBar.setPosition(camTuckedIn);
+
+        arm1.setPosition(arm1DownPos);
+
         waitForStart();
 
         activateBackCamera();
@@ -276,39 +288,18 @@ public class CSTeleop extends LinearOpMode {
 
         while (opModeIsActive()) {
             updateAnalogs(armAna, camAna, wristAna);
-            //double botHeading = Math.abs((newGetHeading()%360) * Math.PI/180);//imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             double botHeading = (newGetHeading()%360) * Math.PI/180;
-            while (botHeading < 0) {
-                botHeading += 2*Math.PI;
-            }
-            while (botHeading > 2*Math.PI) {
-                botHeading -= 2*Math.PI;
-            }
-
-            /*if (armIdealPosition == armUpPos) {
-                //armPower = setCRPosition(arm1, arm2, armCurrentPosition, armIdealPosition, armVerticalPos, 1, 0.2);
-                if ((armCurrentPosition < armVerticalPos || Math.abs(armPower) > 0.01) && !armPastVertical) {
-                    armPastVertical = false;
-                    armPower = setCRPosition(arm1, arm2, armCurrentPosition, armIdealPosition, armVerticalPos, 1, 0.2);
-                } else {
-                    armPastVertical = true;
-                    armPower = setCRPosition(arm1, arm2, armCurrentPosition, armIdealPosition, armIdealPosition, 0.1, 0.075);
-                }
-            } else {
-                if ((armCurrentPosition > armVerticalPos || Math.abs(armPower) > 0.01) && !armPastVertical) {
-                    armPastVertical = false;
-                    armPower = setCRPosition(arm1, arm2, armCurrentPosition, armIdealPosition, armVerticalPos, 1, 0.175);
-                } else {
-                    armPastVertical = true;
-                    armPower = setCRPosition(arm1, arm2, armCurrentPosition, armIdealPosition, armIdealPosition, 0.1, 0.075);
-                }
-            }*/
-
+            //double botHeading = Math.abs((newGetHeading()%360) * Math.PI/180);//imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
             //telemetry.addData("oldHeadingWay", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
             currentTime = timer.milliseconds();
+            armCurrentTime = armTimer.milliseconds();
             telemetry.addData("loop time, ms", currentTime);
+            telemetry.addData("arm time, ms", armCurrentTime);
             timer.reset();
+            telemetry.addData("armAna", armCurrentPosition);
+            telemetry.addData("wristAna", wristCurrentPos);
+            telemetry.addData("camAna", camBarCurrentPos);
             //telemetry.addData("armIdeal", armIdealPosition);
             //telemetry.addData("armPosition", armCurrentPosition);
             telemetry.addData("botHeading", botHeading);
@@ -317,6 +308,48 @@ public class CSTeleop extends LinearOpMode {
             telemetry.addData("idealAbsHeading", idealAbsHeading);
             telemetry.addData("processedError", Math.min(error, 2*Math.PI - error));
             telemetry.addData("doAutoScore", doAutoScore);
+            telemetry.addData("armPhase", armPhase);
+            telemetry.addData("inEndgame", canDoEndgame);
+
+            while (botHeading < 0) {
+                botHeading += 2*Math.PI;
+            }
+            while (botHeading > 2*Math.PI) {
+                botHeading -= 2*Math.PI;
+            }
+            //arm manual code
+            if (Math.abs(cameraBar.getPosition() - camTuckedIn) < 0.05) { //we're allowed to move the arm
+                //telemetry.addData("this", "runs");
+                if (gamepad2.dpad_up) {
+                    armIdealPosition = arm1ScoringPos;
+                    armPhase = 1;
+                    armTimer.reset();
+                }
+                if (gamepad2.dpad_down) {
+                    armIdealPosition = arm1DownPos;
+                    armPhase = 2;
+                    armTimer.reset();
+                }
+                if ((armPhase == 1) && armCurrentTime > 1500) {
+                    armPhase += 2;
+                }
+                if ((armPhase == 2) && armCurrentTime > 1500) {
+                    armPhase += 2;
+                }
+                if (armPhase == 1) {//just starting to go up
+                    arm1.setPosition(armAlmostUp);
+                    wrist.setPosition(wristAlmostDown);
+                } else if (armPhase == 2) { //just starting to go down
+                    arm1.setPosition(armAlmostDown);
+                    wrist.setPosition(wristAlmostDown);
+                } else if (armPhase == 3) { //rest of the way up
+                    arm1.setPosition(arm1ScoringPos);
+                    wrist.setPosition(wristScoringPos);
+                } else if (armPhase == 4) { //rest of the way down
+                    arm1.setPosition(arm1DownPos);
+                    wrist.setPosition(wristDownPos);
+                }
+            }
 
             if (gamepad1.start) {
                 imu.initialize(new IMU.Parameters(orientationOnRobot));
@@ -327,7 +360,7 @@ public class CSTeleop extends LinearOpMode {
 
             telemetry.update();
             //claw manual pickup
-            if (gamepad1.left_trigger < 0.05) {
+            if (gamepad1.left_trigger < 0.1) {
                 clawStateCanChange = true;
             }
             if (gamepad1.left_bumper) {
@@ -365,12 +398,12 @@ public class CSTeleop extends LinearOpMode {
             }
             if (!doAutoScore) {canDriveManually = true;}
             if (canUseClawManually) {
-                if (gamepad1.right_trigger > 0.05) {
+                if (gamepad1.right_trigger > 0.1) {
                     //close both
                     clawUp.setPosition(clawUpclose);
                     clawDown.setPosition(clawDownclose);
                 }
-                if (gamepad1.left_trigger > 0.05 && clawStateCanChange) {
+                if (gamepad1.left_trigger > 0.1 && clawStateCanChange) {
                     clawStateCanChange = false;
                     //if first one is open, open second, otherwise open first
                     if (clawDown.getPosition() == clawDownopen) {
@@ -382,12 +415,6 @@ public class CSTeleop extends LinearOpMode {
             }
             //manual scoring-- lift/arm
             //lift is not yet ready to code
-            //arm flip manual code:
-            if (gamepad2.dpad_up) {
-                armIdealPosition = armUpPos;
-            } else if (gamepad2.dpad_down) {
-                armIdealPosition = armDownPos;
-            }
 
             //auto pickup code
 
@@ -488,14 +515,20 @@ public class CSTeleop extends LinearOpMode {
                 motorBR.setPower(backRightPower);
             }
 
+            if (gamepad2.guide) {
+                canDoEndgame = true;
+            }
             //endgame code
             if (canDoEndgame) {
                 //lead screw code
-                if (gamepad1.start) {
+                if (gamepad2.y) {
                     lss1.setPosition(lss1UpPos);
                     lss2.setPosition(lss2UpPos);
+                } else if (gamepad2.a) {
+                    lss1.setPosition(lss1DownPos);
+                    lss2.setPosition(lss2DownPos);
                 }
-                if (gamepad1.guide && lsStateCanChange) {
+                /*if (gamepad2.guide && lsStateCanChange) {
                     //useLeadScrews = !useLeadScrews;
                     if (!useLeadScrews) {
                         useLeadScrews = true;
@@ -504,41 +537,91 @@ public class CSTeleop extends LinearOpMode {
                         leadScrewsDownEnd = true;
                     }
                     lsStateCanChange = false;
+                }*/
+                //if (!gamepad2.guide) {
+                //    lsStateCanChange = true;
+                //}
+                if (Math.abs(gamepad2.left_stick_y) > 0.05 || Math.abs(gamepad2.right_stick_y) > 0.05) {
+                    useLeadScrews = false;
+                    leadScrewsDownEnd = false;
+                    leadScrewsManual = true;
                 }
-                if (!gamepad1.guide) {
-                    lsStateCanChange = true;
+                if (gamepad2.x) {
+                    leadScrewsManual = false;
+                    useLeadScrews = true;
                 }
-                if (useLeadScrews) {
-                    //extend them to safe extension position (1.21), do NOT let them get higher than 1.23
-                    //positive is out, negative is back in
-                    double error1 = Math.abs(lsm1pos - 1.21);
-                    double error2 = Math.abs(lsm2pos - 1.21);
-                    double lsm1const = 0.5;
-                    double lsm2const = 0.5;
-                    if (lsm1pos < 1.21) {
-                        lsm1.setPower(error1*lsm1const);
+                if (gamepad2.b) {
+                    leadScrewsManual = false;
+                    useLeadScrews = false;
+                    leadScrewsDownEnd = true;
+                }
+                if (leadScrewsManual) {
+                    if (Math.abs(gamepad2.left_stick_y) > 0.05) {
+                        lsm2.setPower(-0.5*gamepad2.left_stick_y);
                     } else {
-                        lsm1.setPower(0); //we don't want it going any further
+                        lsm2.setPower(0);
                     }
-                    if (lsm2pos < 1.21) {
-                        lsm2.setPower(error2*lsm2const);
+                    if (Math.abs(gamepad2.right_stick_y) > 0.05) {
+                        lsm1.setPower(-0.5*gamepad2.right_stick_y);
                     } else {
-                        lsm2.setPower(0); //we don't want it going any further
+                        lsm1.setPower(0);
                     }
+                } else if (useLeadScrews) {
+                    telemetry.addData("right lead screw", lsm1pos);
+                    telemetry.addData("left lead screw", lsm2pos);
+                    lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
+                    lsm2pos = (lsm2.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
+
+                    if (!leadScrewsManual) {
+                        //extend them to safe extension position (1.21), do NOT let them get higher than 1.23
+                        //positive is out, negative is back in
+                        double tempPos = 1.25;
+                        double error1 = Math.abs(lsm1pos - tempPos);
+                        double error2 = Math.abs(lsm2pos - tempPos);
+                        double lsm1const = 15;
+                        double lsm2const = 5;
+                        /*if (lsm1pos < tempPos) {
+                            lsm1.setPower(error1*lsm1const);
+                        } else { //doesn't run
+                            lsm1.setPower(0); //we don't want it going any further
+                        }
+                        if (lsm2pos < tempPos) {
+                            lsm2.setPower(error2*lsm2const);
+                        } else { //doesn't run
+                            lsm2.setPower(0); //we don't want it going any further
+                        }*/
+                        if (lsm1pos < tempPos) {
+                            lsm1.setPower(error1*lsm1const);
+                        } else { //doesn't run
+                            lsm1.setPower(-0.05);
+                        }
+                        if (lsm2pos < tempPos) {
+                            lsm2.setPower(error2*lsm2const);
+                        } else { //doesn't run
+                            lsm2.setPower(-0.05); //we don't want it going any further
+                        }
+                    }
+
                 } else if (leadScrewsDownEnd) {
+                    telemetry.addData("right lead screw", lsm1pos);
+                    telemetry.addData("left lead screw", lsm2pos);
+                    lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
+                    lsm2pos = (lsm2.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
                     //put them down to 0.3 or something
                     //maybe at the end set the powers to -0. something so that the bot stays up?
-                    double error1 = Math.abs(lsm1pos - 0.3);
-                    double error2 = Math.abs(lsm2pos - 0.3);
-                    double lsm1const = -0.5;
-                    double lsm2const = -0.5;
-                    if (lsm1pos > 0.3) {
-                        lsm1.setPower(error1*lsm1const);
+                    double error1 = Math.abs(lsm1pos - 0.5);
+                    double error2 = Math.abs(lsm2pos - 0.55);
+                    double lsm1const = -15;
+                    double lsm2const = -5;
+                    if (lsm1pos > 0.5) {
+                        //lsm1.setPower(error1*lsm1const);
+                        lsm1.setPower(-1);
                     } else {
                         lsm1.setPower(0); //we don't want it going any further
                     }
-                    if (lsm2pos > 0.3) {
-                        lsm2.setPower(error2*lsm2const);
+                    if (lsm2pos > 0.5) {
+                        //lsm2.setPower(error2*lsm2const);
+                        lsm2.setPower(-1);
                     } else {
                         lsm2.setPower(0); //we don't want it going any further
                     }
