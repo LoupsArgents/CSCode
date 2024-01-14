@@ -80,11 +80,11 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         Core.inRange(mat, lowHSV, highHSV, thresh);
         mat.release();
         thresh.copyTo(frame);
-        Imgproc.line(frame, new Point(180, 0), new Point(180, 500), new Scalar(100, 100, 100), 4, Imgproc.LINE_8);
-        Imgproc.line(frame, new Point(460, 0), new Point(460, 500), new Scalar(100, 100, 100), 4, Imgproc.LINE_8);
-        Mat left = thresh.submat(0, thresh.rows(), 0, thresh.cols()/3);
-        Mat center = thresh.submat(0, thresh.rows(), thresh.cols()/3, 2*thresh.cols()/3);
-        Mat right = thresh.submat(0, thresh.rows(), 2 * thresh.cols() / 3, thresh.cols());
+        //Imgproc.line(frame, new Point(180, 0), new Point(180, 500), new Scalar(100, 100, 100), 4, Imgproc.LINE_8);
+        //Imgproc.line(frame, new Point(460, 0), new Point(460, 500), new Scalar(100, 100, 100), 4, Imgproc.LINE_8);
+        Mat left = thresh.submat(0, thresh.rows()/2, 0, thresh.cols() / 3);
+        Mat center = thresh.submat(0, thresh.rows()/2, thresh.cols() / 3, 2 * thresh.cols() / 3);
+        Mat right = thresh.submat(0, thresh.rows()/2, 2 * thresh.cols() / 3, thresh.cols());
         //ok now we have left, right, center: do pixel avgs.
         Core.extractChannel(left, left, 0);
         Core.extractChannel(right, right, 0);
@@ -100,6 +100,15 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
        // telemetry.update();
         return left;
         //frame.release();
+    }
+    public double getLeftVal(){
+        return leftVal;
+    }
+    public double getCenterVal(){
+        return centerVal;
+    }
+    public double getRightVal(){
+        return rightVal;
     }
     public Point getClosestPixelPos(){
         //what we're doing here is actually getting the center of the top edge of the bounding box
@@ -270,13 +279,16 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         //RobotLog.aa("Status", "Done, time taken " + (currentTime - oldTime) + "ms");
         return frame;
     }
-    public String getResult(){
-        if(leftVal > rightVal && leftVal > centerVal){
+    public String getResult(double leftInitial, double centerInitial, double rightInitial){
+        double leftDiff = leftVal - leftInitial;
+        double centerDiff = centerVal - centerInitial;
+        double rightDiff = rightVal - rightInitial;
+        if(leftDiff > rightDiff && leftDiff > centerDiff){
             return "Left";
-        }else if(rightVal > leftVal && rightVal > centerVal){
-            return "Right";
-        }else{
+        }else if(centerDiff > rightDiff && centerDiff > leftDiff){
             return "Center";
+        }else{
+            return "Right";
         }
     }
     public boolean getIsSeeingPixel(){

@@ -28,7 +28,7 @@ public class BasicScrimmageAuto extends PPBotCSDF {
         long startTime = System.currentTimeMillis();
         long currentTime = System.currentTimeMillis();
         while(opModeIsActive() && currentTime - startTime < 3000){
-            result = processor.getResult();
+            //result = processor.getResult();
             telemetry.addData("Result", result);
             telemetry.addData("Time", currentTime-startTime);
             telemetry.update();

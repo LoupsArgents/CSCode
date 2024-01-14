@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.vision.VisionPortal;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -34,8 +35,17 @@ public class CSYorkNearAuto extends CSYorkDF {
         ArrayList<Double> leftAverages = new ArrayList<>();
         double leftAvg = 0.0;
         double rightAvg = 0.0;
+        double camLeftInitial = 0.0;
+        double camCenterInitial = 0.0;
+        double camRightInitial = 0.0;
         setInitialPositions();
         while(opModeInInit()){
+            if(portal.getCameraState() == VisionPortal.CameraState.STREAMING){
+                camLeftInitial = processor.getLeftVal();
+                camCenterInitial = processor.getCenterVal();
+                camRightInitial = processor.getRightVal();
+                telemetry.addData("Status", "Now you can put the prop down");
+            }
             double leftCurrent = leftDistance.getDistance(DistanceUnit.INCH);
             if(leftCurrent > 0){
                 leftAverages.add(0, leftCurrent);
@@ -69,7 +79,7 @@ public class CSYorkNearAuto extends CSYorkDF {
             telemetry.update();
         }
         waitForStart();
-        String result = getPropResult(leftAvg, rightAvg);
+        String result = getPropResult(leftAvg, rightAvg, processor.getResult(camLeftInitial, camCenterInitial, camRightInitial));
         return result;
     }
     public void setInitialPositions(){
@@ -233,21 +243,21 @@ public class CSYorkNearAuto extends CSYorkDF {
         double inchesMoved = 0.0;
         if(result.equals("Left")){
             if(alliance == 1){
-                strafeLeft(.4, 20, 5 ,-90.0 * alliance);
+                strafeLeft(.4, 18, 5 ,-90.0 * alliance);
             }else if(alliance == -1){
-                strafeRight(.4, 20, 5 ,-90.0 * alliance);
+                strafeRight(.4, 18, 5 ,-90.0 * alliance);
             }
         }else if(result.equals("Center")){
-            if(alliance == 1){
-                strafeLeft(.4, 12, 5 ,-90.0 * alliance);
-            }else if(alliance == -1){
-                strafeRight(.4, 12, 5 ,-90.0 * alliance);
-            }
-        }else if(result.equals("Right")){
             if(alliance == 1){
                 strafeLeft(.4, 8, 5 ,-90.0 * alliance);
             }else if(alliance == -1){
                 strafeRight(.4, 8, 5 ,-90.0 * alliance);
+            }
+        }else if(result.equals("Right")){
+            if(alliance == 1){
+                strafeLeft(.4, 4, 5 ,-90.0 * alliance);
+            }else if(alliance == -1){
+                strafeRight(.4, 4, 5 ,-90.0 * alliance);
             }
         }
         arm1.setPosition(arm1DownPos);

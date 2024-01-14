@@ -838,16 +838,31 @@ public class CSYorkDF extends LinearOpMode {
         return total / 5;
     }
 
-    public String getPropResult(double leftAv, double rightAv){
-        String cameraResult = processor.getResult();
-        DistanceSensorResult distResult = getDistances();
+    public String getPropResult(double leftAv, double rightAv, String processorResult){
+        String cameraResult = processorResult;
         double ultraDist = getUltraDistance();
+        if(ultraDist < 200 && !cameraResult.equals("Center")){
+            //we don't trust the camera, so we trust the ultrasonic and the ultrasonic says center
+            return "Center";
+        }else if(ultraDist > 200 && cameraResult.equals("Center")){
+            //we don't trust the camera, so we trust the distance sensors
+            //(hope we don't get here)
+            if(leftAv > 15 && leftAv < 26){
+                return "Left";
+            }else{
+                return "Right";
+            }
+        }else {
+            //we trust the camera
+            return cameraResult;
+        }
+        //DistanceSensorResult distResult = getDistances();
         //75ish is center prop, ~300 is nothing there
         //String sensorResult = distResult.getSensorResult();
-        String sensorResult;
+        //String sensorResult;
         //if(leftAv > 15 && leftAv < 29){
           //  sensorResult = "Left";
-        /*}else */if(rightAv > 15 && rightAv < 28){
+        /*}else if(rightAv > 15 && rightAv < 26){
             sensorResult = "Right";
         }else{
             sensorResult = "Not Right";
@@ -856,8 +871,8 @@ public class CSYorkDF extends LinearOpMode {
             return "Center";
         }else if(sensorResult.equals("Right")){
             return "Right";
-        /*}else if(sensorResult.equals("Left")){
-            return "Left";*/
+        }else if(sensorResult.equals("Left")){
+            return "Left";
         }else{
             return "Left"; //ahh so much fun when only two sensors work :))))))
         }

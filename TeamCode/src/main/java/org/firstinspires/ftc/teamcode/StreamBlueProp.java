@@ -15,9 +15,18 @@ public class StreamBlueProp extends LinearOpMode {
         p.setAlliance(-1); //for blue
         portal = VisionPortal.easyCreateWithDefaults(webcam, p);
         portal.resumeStreaming();
+        while(portal.getCameraState() != VisionPortal.CameraState.STREAMING){
+            telemetry.addData("Status", "not ready");
+            telemetry.update();
+        }
+        double leftInitial = p.getLeftVal();
+        double centerInitial = p.getCenterVal();
+        double rightInitial = p.getRightVal();
+        telemetry.addData("Status", "Ready");
+        telemetry.update();
         waitForStart();
         while(opModeIsActive()){
-            telemetry.addData("Result", p.getResult());
+            telemetry.addData("Result", p.getResult(leftInitial, centerInitial, rightInitial));
             telemetry.update();
         }
     }
