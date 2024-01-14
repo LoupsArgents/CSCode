@@ -102,7 +102,7 @@ public class CSTeleop extends LinearOpMode {
     double arm1ScoringPos = 0.2675;
     double armAlmostUp = 0.37;
     double armAlmostDown = 0.8;
-    double arm1DownPos = 0.97;
+    double arm1DownPos = 1.0; //was 0.97
     Servo clawUp;
     Servo clawDown;
     Servo lss1;
@@ -184,6 +184,7 @@ public class CSTeleop extends LinearOpMode {
     private double currentTime;
     private double lastTime;
     private ElapsedTime armTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    private ElapsedTime wristTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     private ElapsedTime camBarTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     private double armCurrentTime;
     private double armLastTime;
@@ -204,6 +205,9 @@ public class CSTeleop extends LinearOpMode {
     double baseBoardHeightAmt = 0.05;
     double stacksLevel = 0; //0 is pixels 1 and 2, 1 is pixels 2 and 3, 2 is pixels 3 and 4, 4 is pixels 4 and 5
     boolean stacksLevelCanChange = true;
+    boolean phase4JustStarted = false;
+    boolean doStacks = false;
+    double wristStackIdeal = wristDownPos;
 
     //stacks positions: top level (pixels 4 and 5) arm is 0.905, wrist is 0.11
     //pixels 3 and 4 arm is 0.92, wrist is 0.12
@@ -382,8 +386,10 @@ public class CSTeleop extends LinearOpMode {
                     armIdealPosition = arm1ScoringPos;
                     armPhase = 1;
                     armTimer.reset();
+                    doStacks = false;
                 }
                 if (gamepad2.dpad_down) {
+                    doStacks = false;
                     activateFrontCamera();
                     armIdealPosition = arm1DownPos;
                     armPhase = 2;
@@ -402,23 +408,43 @@ public class CSTeleop extends LinearOpMode {
                 if (gamepad2.dpad_right) {
                     stacksLevel = 3;//0 is pixels 1 and 2, 1 is pixels 2 and 3, 2 is pixels 3 and 4, 3 is pixels 4 and 5
                     arm1.setPosition(0.905);
-                    wrist.setPosition(0.11);
+                    //wrist.setPosition(0.11);
+                    wristStackIdeal = 0.11;
+                    wristTimer.reset();
+                    doStacks = true;
                 }
                 if (gamepad2.dpad_left && stacksLevelCanChange) {
+                    doStacks = true;
                     stacksLevel -= 1;
                     if (stacksLevel < 0) {stacksLevel = 0;}
                     if (stacksLevel == 2) {
                         arm1.setPosition(0.92);
-                        wrist.setPosition(0.12);
+                        //wrist.setPosition(0.12);
+                        wristStackIdeal = 0.12;
                     } else if (stacksLevel == 1) {
                         arm1.setPosition(0.945);
-                        wrist.setPosition(0.125);
+                        //wrist.setPosition(0.125);
+                        wristStackIdeal = 0.125;
                     } else if (stacksLevel == 0) {
                         arm1.setPosition(arm1DownPos);
-                        wrist.setPosition(wristDownPos);
+                        //wrist.setPosition(wristDownPos);
+                        wristStackIdeal = wristDownPos;
                     }
                 } else if (!gamepad2.dpad_left) {
                     stacksLevelCanChange = true;
+                }
+                if (doStacks && wristTimer.milliseconds() > 1000) {
+                    if (wristSetTo != wristStackIdeal) {
+                        wrist.setPosition(wristStackIdeal);
+                        wristSetTo = wristStackIdeal;
+                    }
+                }
+                if (armPhase == 4 && wristTimer.milliseconds() > 500) {
+                    if (!(wristSetTo == wristDownPos)) {
+                        wrist.setPosition(wristDownPos);
+                        wristSetTo = wristDownPos;
+                    }
+                    wristSetTo = wristDownPos;
                 }
                 if ((armPhase == 1) && armTimer.milliseconds() > 2000) {
                     armPhase += 2;
@@ -442,6 +468,7 @@ public class CSTeleop extends LinearOpMode {
                         clawDownSetTo = clawDownclose;
                     }
                 } else if (armPhase == 2) { //just starting to go down
+                    phase4JustStarted = true;
                     if (!(armSetTo == armAlmostDown)) {
                         arm1.setPosition(armAlmostDown);
                         armSetTo = armAlmostDown;
@@ -460,14 +487,18 @@ public class CSTeleop extends LinearOpMode {
                         wristSetTo = wristScoringPos;
                     }
                 } else if (armPhase == 4) { //rest of the way down
+                    if (phase4JustStarted) {
+                        wristTimer.reset();
+                    }
+                    phase4JustStarted = false;
                     if (!(armSetTo == arm1DownPos)) {
                         arm1.setPosition(arm1DownPos);
                         armSetTo = arm1DownPos;
                     }
-                    if (!(wristSetTo == wristDownPos)) {
+                    /*if (!(wristSetTo == wristDownPos)) {
                         wrist.setPosition(wristDownPos);
                         wristSetTo = wristDownPos;
-                    }
+                    }*/
                 }
             }
 
@@ -538,6 +569,7 @@ public class CSTeleop extends LinearOpMode {
                     if (clawDownSetTo == clawDownopen) {
                         clawUp.setPosition(clawUpopen);
                         clawUpSetTo = clawUpopen;
+                        pixelRow = 0;
                     } else {
                         clawDown.setPosition(clawDownopen);
                         clawDownSetTo = clawDownopen;
@@ -597,6 +629,9 @@ public class CSTeleop extends LinearOpMode {
             }
             if (canUseSlides) {
                 double liftPower = -gamepad2.left_stick_y;
+                if (liftPower < 0) { //we're trying to go down
+                    liftPower *= 0.25;
+                }
                 double liftError = liftIdealPos - liftPos;
                 double liftTolerance = 0.05;
                 double Kp = 10;
