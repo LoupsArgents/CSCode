@@ -283,6 +283,9 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         double leftDiff = leftVal - leftInitial;
         double centerDiff = centerVal - centerInitial;
         double rightDiff = rightVal - rightInitial;
+        RobotLog.aa("LeftDiff", String.valueOf(leftDiff));
+        RobotLog.aa("CenterDiff", String.valueOf(centerDiff));
+        RobotLog.aa("RightDiff", String.valueOf(rightDiff));
         if(leftDiff > rightDiff && leftDiff > centerDiff){
             return "Left";
         }else if(centerDiff > rightDiff && centerDiff > leftDiff){

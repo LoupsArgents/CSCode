@@ -29,7 +29,7 @@ public class CSYorkNearAuto extends CSYorkDF {
     }
     public String onInit(int alliance){ //returns the team prop result
         initializeHardware();
-        processor.setAlliance(alliance);
+        processor.setAlliance(-alliance);
         processor.setMode(EverythingProcessor.ProcessorMode.PROP);
         ArrayList<Double> rightAverages = new ArrayList<>();
         ArrayList<Double> leftAverages = new ArrayList<>();
@@ -39,13 +39,21 @@ public class CSYorkNearAuto extends CSYorkDF {
         double camCenterInitial = 0.0;
         double camRightInitial = 0.0;
         setInitialPositions();
+        boolean doneTheThing = false;
         while(opModeInInit()){
-            if(portal.getCameraState() == VisionPortal.CameraState.STREAMING){
+            if(portal.getCameraState() == VisionPortal.CameraState.STREAMING && !doneTheThing){
+                ZonedDateTime dt = ZonedDateTime.now();
+                String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
+                portal.saveNextFrameRaw("YorkAutoPropInitial " + time);
                 camLeftInitial = processor.getLeftVal();
                 camCenterInitial = processor.getCenterVal();
                 camRightInitial = processor.getRightVal();
-                telemetry.addData("Status", "Now you can put the prop down");
+                RobotLog.aa("CamLeftInitial", String.valueOf(camLeftInitial));
+                RobotLog.aa("CamRightInitial", String.valueOf(camRightInitial));
+                RobotLog.aa("CamCenterInitial", String.valueOf(camCenterInitial));
+                doneTheThing = true;
             }
+            if(doneTheThing) telemetry.addData("Status", "Now you can put the prop down");
             double leftCurrent = leftDistance.getDistance(DistanceUnit.INCH);
             if(leftCurrent > 0){
                 leftAverages.add(0, leftCurrent);
@@ -79,6 +87,9 @@ public class CSYorkNearAuto extends CSYorkDF {
             telemetry.update();
         }
         waitForStart();
+        ZonedDateTime dt = ZonedDateTime.now();
+        String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
+        portal.saveNextFrameRaw("YorkAutoPropFinal " + time);
         String result = getPropResult(leftAvg, rightAvg, processor.getResult(camLeftInitial, camCenterInitial, camRightInitial));
         return result;
     }
