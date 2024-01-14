@@ -112,6 +112,7 @@ public class CSTeleop extends LinearOpMode {
     ServoImplEx wrist;
     DcMotorEx lift1;
     DcMotorEx lift2;
+    boolean canChangeLiftLevel = true;
 
     double liftInitial;
     double ticksPerRotation;
@@ -174,9 +175,9 @@ public class CSTeleop extends LinearOpMode {
     double camBarCurrentPos;
     double camInit;
     ServoImplEx cameraBar;
-    double camOutOfWay = 0.35; //pointing straight out
-    double camUsePos = 0.645;
-    double camTuckedIn = 0.95;
+    double camOutOfWay = 0.36; //pointing straight out
+    double camUsePos = 0.655;
+    double camTuckedIn = 0.9575;
     double wristCurrentPos;
     double wristInit;
     private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -187,16 +188,23 @@ public class CSTeleop extends LinearOpMode {
     private double armCurrentTime;
     private double armLastTime;
     boolean leadScrewsManual = false;
-    double armSetTo = arm1DownPos;
+    double armSetTo = 0.0;
     double wristSetTo = wristDownPos;
     double camSetTo = camTuckedIn;
     double clawUpSetTo = clawUpopen;
     double clawDownSetTo = clawDownopen;
     boolean canUseSlides = true;
     boolean isJoysticking = false;
-    double boardClickUpAmt = 0.05;
     Point pixelPos;
     boolean hasEverSeenPixel = false;
+    double pixelRowChange = 0.02;
+    double pixelRow = 0;
+    //8th row (first row is 1) is 0.217516152
+    //1st row (first row is 1)
+    double baseBoardHeightAmt = 0.05;
+    double stacksLevel = 0; //0 is pixels 1 and 2, 1 is pixels 2 and 3, 2 is pixels 3 and 4, 4 is pixels 4 and 5
+    boolean stacksLevelCanChange = true;
+
     //stacks positions: top level (pixels 4 and 5) arm is 0.905, wrist is 0.11
     //pixels 3 and 4 arm is 0.92, wrist is 0.12
     //pixels 2 and 3 arm is 0.945, wrist is 0.125
@@ -304,18 +312,20 @@ public class CSTeleop extends LinearOpMode {
         lsm2init = lsm2.getCurrentPosition()/ticksPerRotationLS;
         lsm2pos = (lsm2.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
 
-        telemetry.addData("status", "initialized");
-        telemetry.update();
-
         cameraBar.setPosition(camTuckedIn);
-
-        arm1.setPosition(arm1DownPos);
 
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
 
         for (LynxModule hub : allHubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
+
+        sleep(1000);
+        arm1.setPosition(arm1DownPos);
+        armSetTo = arm1DownPos;
+
+        telemetry.addData("status", "initialized");
+        telemetry.update();
 
         waitForStart();
 
@@ -334,6 +344,7 @@ public class CSTeleop extends LinearOpMode {
             armCurrentTime = armTimer.milliseconds();
             telemetry.addData("loop time, ms", currentTime);
             telemetry.addData("arm time, ms", armCurrentTime);
+            telemetry.addData("gamepad1.left_trigger", gamepad1.left_trigger);
             telemetry.addData("liftPos", liftPos);
             telemetry.addData("-gamepad2.left_stick_y", -gamepad2.left_stick_y);
             timer.reset();
@@ -384,10 +395,35 @@ public class CSTeleop extends LinearOpMode {
                         clawDownSetTo = clawDownclose;
                     }
                 }
-                if ((armPhase == 1) && armCurrentTime > 1500) {
+                //stacks positions: top level (pixels 4 and 5) arm is 0.905, wrist is 0.11
+                //pixels 3 and 4 arm is 0.92, wrist is 0.12
+                //pixels 2 and 3 arm is 0.945, wrist is 0.125
+                //pixels 1 and 2 are normal arm/claw levels (they're on the ground)
+                if (gamepad2.dpad_right) {
+                    stacksLevel = 3;//0 is pixels 1 and 2, 1 is pixels 2 and 3, 2 is pixels 3 and 4, 3 is pixels 4 and 5
+                    arm1.setPosition(0.905);
+                    wrist.setPosition(0.11);
+                }
+                if (gamepad2.dpad_left && stacksLevelCanChange) {
+                    stacksLevel -= 1;
+                    if (stacksLevel < 0) {stacksLevel = 0;}
+                    if (stacksLevel == 2) {
+                        arm1.setPosition(0.92);
+                        wrist.setPosition(0.12);
+                    } else if (stacksLevel == 1) {
+                        arm1.setPosition(0.945);
+                        wrist.setPosition(0.125);
+                    } else if (stacksLevel == 0) {
+                        arm1.setPosition(arm1DownPos);
+                        wrist.setPosition(wristDownPos);
+                    }
+                } else if (!gamepad2.dpad_left) {
+                    stacksLevelCanChange = true;
+                }
+                if ((armPhase == 1) && armTimer.milliseconds() > 2000) {
                     armPhase += 2;
                 }
-                if ((armPhase == 2) && armCurrentTime > 1500) {
+                if ((armPhase == 2) && armTimer.milliseconds() > 2000) {
                     armPhase += 2;
                 }
                 if (armPhase == 1) {//just starting to go up
@@ -448,6 +484,8 @@ public class CSTeleop extends LinearOpMode {
                 cameraBar.setPosition(camUsePos);
                 lift1.setPower(0);
                 lift2.setPower(0);
+                clawUp.setPosition(clawUpopen);
+                clawDown.setPosition(clawDownopen);
                 canUseClawManually = false;
                 canDriveManually = false;
                 doAutoPickup = true;
@@ -481,10 +519,32 @@ public class CSTeleop extends LinearOpMode {
                 cameraBar.setPosition(camTuckedIn);
                 gamepad1.rumble(100);
             }
+            //claw
             if (gamepad1.left_trigger < 0.1) {
                 clawStateCanChange = true;
             }
-            if (gamepad1.left_bumper) {
+            if (!doAutoScore && !doAutoPickup) {canDriveManually = true;}
+            if (canUseClawManually) {
+                if (gamepad1.right_trigger > 0.1) {
+                    //close both
+                    clawUp.setPosition(clawUpclose);
+                    clawUpSetTo = clawUpclose;
+                    clawDown.setPosition(clawDownclose);
+                    clawDownSetTo = clawDownclose;
+                }
+                if (gamepad1.left_trigger > 0.1 && clawStateCanChange) {
+                    clawStateCanChange = false;
+                    //if first one is open, open second, otherwise open first
+                    if (clawDownSetTo == clawDownopen) {
+                        clawUp.setPosition(clawUpopen);
+                        clawUpSetTo = clawUpopen;
+                    } else {
+                        clawDown.setPosition(clawDownopen);
+                        clawDownSetTo = clawDownopen;
+                    }
+                }
+            }
+            /*if (gamepad1.left_bumper) {
                 moveToDoingScore = false;
                 doAutoScore = true;
                 canUseClawManually = false;
@@ -503,9 +563,9 @@ public class CSTeleop extends LinearOpMode {
                 originalX = -odometry.getPose().getY();
                 originalY = odometry.getPose().getX();
                 headingForCV = 90*allianceMultiplier;
-                /*if (headingForCV < 360) {
-                    headingForCV += 360;
-                }*/
+                //if (headingForCV < 360) {
+                    //headingForCV += 360;
+                //}
             } else {
                 moveToDoingScore = true;
             }
@@ -515,36 +575,25 @@ public class CSTeleop extends LinearOpMode {
                 telemetry.addData("y cm", moveXYcm[1]);
                 telemetry.addData("originalX", xFromFunction);
                 telemetry.addData("originalY", yFromFunction);
-            }
-            if (!doAutoScore && !doAutoPickup) {canDriveManually = true;}
-            if (canUseClawManually) {
-                if (gamepad1.right_trigger > 0.1) {
-                    //close both
-                    clawUp.setPosition(clawUpclose);
-                    clawUpSetTo = clawUpclose;
-                    clawDown.setPosition(clawDownclose);
-                    clawDownSetTo = clawDownclose;
-                }
-                if (gamepad1.left_trigger > 0.1 && clawStateCanChange) {
-                    clawStateCanChange = false;
-                    //if first one is open, open second, otherwise open first
-                    if (clawDown.getPosition() == clawDownopen) {
-                        clawUp.setPosition(clawUpopen);
-                        clawUpSetTo = clawUpopen;
-                    } else {
-                        clawDown.setPosition(clawDownopen);
-                        clawDownSetTo = clawDownopen;
-                    }
-                }
-            }
+            }*/
             //lift manual code
             if (liftPos > 0.03) {
                 cameraBar.setPosition(camOutOfWay);
             }
 
-            if (gamepad2.y && !canDoEndgame && !isJoysticking) {
-                liftIdealPos += boardClickUpAmt;
-                liftIdealPos += boardClickUpAmt;
+            if (gamepad2.y && !canDoEndgame && !isJoysticking && canChangeLiftLevel) {
+                canChangeLiftLevel = false;
+                pixelRow++;
+                liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange;
+            } else if (!gamepad2.y) {
+                canChangeLiftLevel = true;
+            }
+            if (gamepad2.a && !canDoEndgame && !isJoysticking && canChangeLiftLevel) {
+                canChangeLiftLevel = false;
+                pixelRow--;
+                liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange;
+            } else if (!gamepad2.a) {
+                canChangeLiftLevel = true;
             }
             if (canUseSlides) {
                 double liftPower = -gamepad2.left_stick_y;
