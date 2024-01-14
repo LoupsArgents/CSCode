@@ -45,6 +45,9 @@ public class CSYorkDF extends LinearOpMode {
     DcMotorEx forwardOdo;
     DcMotorEx strafeOdo;
     DcMotorEx liftEncoder;
+    DcMotorEx lift1;
+    DcMotorEx lift2;
+
     Servo clawUp;
     Servo clawDown;
     Servo wrist;
@@ -80,8 +83,27 @@ public class CSYorkDF extends LinearOpMode {
     double armAlmostUp = 0.37;
     double armAlmostDown = 0.8;
     double arm1DownPos = 0.97;
-    double camUsePos = 0.645;
+    //stacks positions: top level (pixels 4 and 5) arm is 0.905, wrist is 0.11
+    //pixels 3 and 4 arm is 0.92, wrist is 0.12
+    //pixels 2 and 3 arm is 0.945, wrist is 0.125
+    //pixels 1 and 2 are normal arm/claw levels (they're on the ground)
+    double armStack45Pos = 0.855;
+    double armStack34Pos = 0.87;
+    double armStack23Pos = 0.895;
+    double wristStack45Pos = 0.16;
+    double wristStack34Pos = 0.15;
+    double wristStack23Pos = 0.145;
+    double camUsePos = 0.655; //was .645 before camera bar got loose and got retightened
     double camTuckedIn = 0.95;
+    double camOutOfWay = 0.35; //pointing straight out
+
+    double liftPos;
+    double liftIdealPos;
+    double liftInitial;
+    boolean liftHappyPlace = true;
+    double ticksPerRotation;
+
+
     Point pixelPos;
     public void runOpMode(){
         initializeHardware();
@@ -175,6 +197,7 @@ public class CSYorkDF extends LinearOpMode {
         double targetheading = idealHeading;
         RobotLog.aa("GoStraight", "goal heading is " + targetheading);
         while(newInchesTraveled(forwardBackStartTicks, forwardBackCurrentTicks) < inches && opModeIsActive()){
+            liftWithinLoop();
             double heading = newGetHeading();
             //RobotLog.aa("CurrentHeading", String.valueOf(heading));
             if(heading-targetheading<0){  //we need to turn left
@@ -208,6 +231,7 @@ public class CSYorkDF extends LinearOpMode {
         double targetheading = idealHeading;
         RobotLog.aa("GoBackward", "goal heading is " + targetheading);
         while(newInchesTraveled(forwardBackStartTicks, forwardBackCurrentTicks) > -inches && opModeIsActive()){
+            liftWithinLoop();
             double heading = newGetHeading();
             if(heading-targetheading < 0){ //turn to the left
                 multiplier = -.1*(heading-targetheading)+1;
@@ -246,6 +270,7 @@ public class CSYorkDF extends LinearOpMode {
         double targetheading = idealHeading;
         RobotLog.aa("StrafeRight", "goal heading is " + targetheading);
         while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) > -inches && current-startthing < 1000*timelimit && opModeIsActive()){
+            liftWithinLoop();
             double heading = newGetHeading();
             if(heading-targetheading>=0){
                 multiplier = .1*(heading-targetheading)+1;
@@ -284,6 +309,7 @@ public class CSYorkDF extends LinearOpMode {
         double targetheading = idealHeading;
         RobotLog.aa("StrafeLeft", "goal heading is " + targetheading);
         while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) < inches && current - startthing < 1000*timelimit && opModeIsActive()){
+            liftWithinLoop();
             RobotLog.aa("Inches", String.valueOf(newInchesTraveled(strafeStartTicks, strafeCurrentTicks)));
             double heading = newGetHeading();
             if(heading-targetheading>=0){
@@ -315,6 +341,7 @@ public class CSYorkDF extends LinearOpMode {
         motorFR.setPower(-power/2);
         motorBL.setPower(-power/2);
         while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) > -inches && opModeIsActive()){
+            liftWithinLoop();
             double heading = newGetHeading();
             if(heading-idealHeading >= 0){
                 multiplier = .1*(heading-idealHeading)+1;
@@ -347,6 +374,7 @@ public class CSYorkDF extends LinearOpMode {
         motorFL.setPower(-power/2);
         motorBR.setPower(-power/2);
         while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) < inches && opModeIsActive()){
+            liftWithinLoop();
             double heading = newGetHeading();
             if(heading-idealHeading >= 0){
                 multiplier = .1*(heading-idealHeading)+1;
@@ -378,6 +406,7 @@ public class CSYorkDF extends LinearOpMode {
         motorFR.setPower(power/2);
         motorBL.setPower(power/2);
         while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) < inches && opModeIsActive()){
+            liftWithinLoop();
             double heading = newGetHeading();
             if(heading-idealHeading >= 0){
                 multiplier = .1*(heading-idealHeading)+1;
@@ -410,6 +439,7 @@ public class CSYorkDF extends LinearOpMode {
         motorFL.setPower(power/2);
         motorBR.setPower(power/2);
         while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) > -inches && opModeIsActive()){
+            liftWithinLoop();
             double heading = newGetHeading();
             if(heading-idealHeading >= 0){
                 multiplier = .1*(heading-idealHeading)+1;
@@ -450,6 +480,7 @@ public class CSYorkDF extends LinearOpMode {
             double gyroinitial = newGetHeading();
             if(degrees>0){ //turn left
                 while(newGetHeading() - gyroinitial < degrees && opModeIsActive()){
+                    liftWithinLoop();
                     motorFR.setPower(power);
                     motorBL.setPower(-power);
                     motorFL.setPower(-power);
@@ -461,6 +492,7 @@ public class CSYorkDF extends LinearOpMode {
             }
             else{//turn right
                 while(newGetHeading() - gyroinitial > degrees && opModeIsActive()){
+                    liftWithinLoop();
                     motorFR.setPower(-power);
                     motorBL.setPower(power);
                     motorFL.setPower(power);
@@ -556,6 +588,11 @@ public class CSYorkDF extends LinearOpMode {
         motorBR = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
         liftEncoder = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
         motorBL = hardwareMap.get(DcMotorEx.class, "motorBLandForwardOdo");
+        lift1 = hardwareMap.get(DcMotorEx.class, "slideMotorL");
+        lift2 = hardwareMap.get(DcMotorEx.class, "slideMotorR");
+        ticksPerRotation = liftEncoder.getMotorType().getTicksPerRev();
+        liftInitial = liftEncoder.getCurrentPosition()/ticksPerRotation;
+        liftIdealPos = liftInitial;
         motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -667,6 +704,30 @@ public class CSYorkDF extends LinearOpMode {
         }
         stopMotors();
         closeClaw();
+    }
+    public void liftWithinLoop(){
+        //needed variables for proportional control:
+        //slidesTolerance
+        liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
+        double liftError = liftIdealPos - liftPos;
+        double liftTolerance = 0.05;
+        double Kp = 10;
+        if (Math.abs(liftPos - liftIdealPos) > liftTolerance) {
+            lift2.setPower(liftError*Kp);
+            lift1.setPower(-liftError*Kp);
+        }else{
+            //just trying to keep the lift up
+            if (liftPos > 0.05) {
+                lift2.setPower(0.3);
+                lift1.setPower(-0.3);
+            } else if (liftPos > 0.125) {
+                lift2.setPower(0.4);
+                lift1.setPower(-0.4);
+            } else if (liftPos > 0.20) {
+                lift2.setPower(0.5);
+                lift1.setPower(-0.5);
+            }
+        }
     }
     public double[] getAprilTagDist(String result){
         //IDs: 1 is blue left, 2 is blue center, 3 is blue right
@@ -783,21 +844,21 @@ public class CSYorkDF extends LinearOpMode {
         //75ish is center prop, ~300 is nothing there
         //String sensorResult = distResult.getSensorResult();
         String sensorResult;
-        if(leftAv > 15 && leftAv < 28){
-            sensorResult = "Left";
-        }else if(rightAv > 15 && rightAv < 28){
+        //if(leftAv > 15 && leftAv < 29){
+          //  sensorResult = "Left";
+        /*}else */if(rightAv > 15 && rightAv < 28){
             sensorResult = "Right";
         }else{
-            sensorResult = "Neither";
+            sensorResult = "Not Right";
         }
         if(ultraDist < 200){
             return "Center";
-        }else if(sensorResult.equals("Left")){
-            return "Left";
         }else if(sensorResult.equals("Right")){
             return "Right";
+        /*}else if(sensorResult.equals("Left")){
+            return "Left";*/
         }else{
-            return "Center"; //greater chance of plinkoing into right place
+            return "Left"; //ahh so much fun when only two sensors work :))))))
         }
         /*if(cameraResult.equals(sensorResult)){
             telemetry.addData("Status", "They agree, using result of " + cameraResult);

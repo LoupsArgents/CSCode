@@ -5,10 +5,15 @@ import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 
 @Autonomous
 public class CSYorkNearAuto extends CSYorkDF {
+    ArrayList<Double> rightAverages = new ArrayList<>();
+    ArrayList<Double> centerAverages = new ArrayList<>();
+    ArrayList<Double> leftAverages = new ArrayList<>();
+    int pixelsOnStack = 5;
 
     public void runOpMode(){
         doRun("Blue");
@@ -59,6 +64,9 @@ public class CSYorkNearAuto extends CSYorkDF {
                 }
                 rightAvg /= 5;
             }
+            telemetry.addData("Left", leftAvg);
+            telemetry.addData("Right", rightAvg);
+            telemetry.update();
         }
         waitForStart();
         String result = getPropResult(leftAvg, rightAvg);
@@ -84,15 +92,18 @@ public class CSYorkNearAuto extends CSYorkDF {
         wrist.setPosition(wristAlmostDown);
         doPurplePixel(result, alliance);
         doYellowPixel(result, alliance);
+        cycle(result, alliance);
     }
     public void doPurplePixel(String result, int alliance){
         if((result.equals("Left") && alliance == 1) || (result.equals("Right") && alliance == -1)){
+            double inchesMoved = 0.0;
             if(alliance == 1){
-                moveForwardLeft(.5, 10.5, 0.0);
+                inchesMoved = moveForwardLeft(.5, 10.5, 0.0);
             }else if(alliance == -1){
-                moveForwardRight(.5, 10.5, 0.0);
+                inchesMoved = moveForwardRight(.5, 10.5, 0.0);
             }
-            goStraight(.3, 3.5, 0.0);
+            RobotLog.aa("Moved", Double.toString(inchesMoved));
+            goStraight(.3, 16-inchesMoved, 0.0);
             openLowerClaw();
             sleep(500);
         }else if(result.equals("Center")){
@@ -158,16 +169,16 @@ public class CSYorkNearAuto extends CSYorkDF {
             sleep(250);
             absoluteHeading(.4, -90.0 * alliance);
             absoluteHeading(.2, -90.0 * alliance);
-            //so we want to have a net move of 5 inches strafe, 20 inches backward
+            //so we want to have a net move of 10 inches strafe, 20 inches backward
             //goBackward(.3, 20, -90.0 * alliance);
             sleep(250);
             double movedBack = 0.0;
             if(alliance == 1){
                 //strafeLeft(.35, 5, 5, -90.0*alliance);
-                movedBack = Math.abs(moveBackLeft(.5, 5, -90.0*alliance));
+                movedBack = Math.abs(moveBackLeft(.5, 10, -90.0*alliance));
             }else if(alliance == -1){
                 //strafeRight(.35, 5, 5, -90.0*alliance);
-                movedBack = Math.abs(moveBackRight(.5, 5, -90.0*alliance));
+                movedBack = Math.abs(moveBackRight(.5, 10, -90.0*alliance));
             }
             sleep(100);
             goBackward(.3, 20 - movedBack, -90.0 * alliance);
@@ -176,11 +187,11 @@ public class CSYorkNearAuto extends CSYorkDF {
     public void positionOnBackdrop(String result, int alliance){
         double[] dists = getAprilTagDist(result);
         if(result.equals("Left")){
-            //we want to be 2-3 inches left of the april tag
-            if(dists[0] - 2.5 < 0){
-                strafeRight(.35, -1 * (dists[0]-2.5), 5, -90.0*alliance);
-            }else if(dists[0] - 2.5 > 0){
-                strafeLeft(.35, dists[0]-2.5, 5, -90.0*alliance);
+            //we want to be left of the april tag
+            if(dists[0] - 1.5 < 0){
+                strafeRight(.35, -1 * (dists[0]-1.5), 5, -90.0*alliance);
+            }else if(dists[0] - 1.5 > 0){
+                strafeLeft(.35, dists[0]-1.5, 5, -90.0*alliance);
             }
         }else if(result.equals("Center")){
             //we want to be 1 inch left of the april tag
@@ -199,7 +210,7 @@ public class CSYorkNearAuto extends CSYorkDF {
                 strafeLeft(.35, dists[0]+2.5, 5, -90.0*alliance);
             }
         }
-        double inchesAway = 6.5;
+        double inchesAway = 6.25;
         if(dists[1] - inchesAway > 0){
             sleep(100);
             goBackward(.3, dists[1]-inchesAway, -90.0*alliance);
@@ -207,5 +218,101 @@ public class CSYorkNearAuto extends CSYorkDF {
             sleep(100);
             goStraight(.3, dists[1]-inchesAway, -90.0*alliance);
         }
+    }
+    public void cycle(String result, int alliance){
+        //here, result = what part of the board you're coming from
+        getToStack(result, alliance);
+        getBackToBoard(result, alliance);
+    }
+    public void getToStack(String result, int alliance){
+        //if we started on the side closest to the wall, it's 35 inches
+        //6 inches between april tags, and remember to factor in the adjustments made
+        goStraight(.4, 5, -90.0*alliance);
+        arm1.setPosition(armAlmostDown);
+        wrist.setPosition(wristAlmostDown);
+        double inchesMoved = 0.0;
+        if(result.equals("Left")){
+            if(alliance == 1){
+                strafeLeft(.4, 20, 5 ,-90.0 * alliance);
+            }else if(alliance == -1){
+                strafeRight(.4, 20, 5 ,-90.0 * alliance);
+            }
+        }else if(result.equals("Center")){
+            if(alliance == 1){
+                strafeLeft(.4, 14, 5 ,-90.0 * alliance);
+            }else if(alliance == -1){
+                strafeRight(.4, 14, 5 ,-90.0 * alliance);
+            }
+        }else if(result.equals("Right")){
+            if(alliance == 1){
+                strafeLeft(.4, 8, 5 ,-90.0 * alliance);
+            }else if(alliance == -1){
+                strafeRight(.4, 8, 5 ,-90.0 * alliance);
+            }
+        }
+        arm1.setPosition(arm1DownPos);
+        wrist.setPosition(wristDownPos);
+        if(alliance == 1){
+            inchesMoved = moveForwardLeft(.5, 12, -90.0*alliance);
+        }else if(alliance == -1){
+            inchesMoved = moveForwardRight(.5, 12, -90.0 *alliance);
+        }
+        activateFrontCamera();
+        processor.setMode(EverythingProcessor.ProcessorMode.PIXEL);
+        cameraBar.setPosition(camUsePos);
+        goStraight(.4, 40-inchesMoved, -90.0*alliance);
+        arm1.setPosition(armStack45Pos);
+        wrist.setPosition(wristStack45Pos);
+        goStraight(.4, 42, -90.0*alliance);
+        sleep(500);
+        ZonedDateTime dt = ZonedDateTime.now();
+        String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
+        portal.saveNextFrameRaw("YorkAutoNearStack " + time);
+        centerOnClosestStack(processor);
+        sleep(500);
+        pixelsOnStack -= 2;
+    }
+    public void getBackToBoard(String result, int alliance){
+        cameraBar.setPosition(camTuckedIn);
+        activateBackCamera();
+        goBackward(.4, 60, -90.0*alliance);
+        wrist.setPosition(wristAlmostDown);
+        arm1.setPosition(armAlmostUp);
+        goBackward(.4, 20, -90.0*alliance);
+        if(alliance == 1){
+            strafeRight(.4, 15, 5, -90.0*alliance);
+        }else if(alliance == -1){
+            strafeLeft(.4, 15, 5, -90.0*alliance);
+        }
+        wrist.setPosition(wristScoringPos);
+        arm1.setPosition(arm1ScoringPos);
+        if(alliance == 1){
+            positionOnBackdrop("Right", alliance);
+        }else if(alliance == -1){
+            positionOnBackdrop("Left", alliance);
+        }
+
+        openLowerClaw();
+        sleep(500);
+        liftIdealPos = .15 - liftInitial;
+        while(Math.abs(liftIdealPos - liftPos) > .05){
+            liftWithinLoop();
+        }
+        sleep(200);
+        openUpperClaw();
+        cameraBar.setPosition(camOutOfWay);
+        sleep(200);
+        closeClaw();
+        sleep(300);
+        liftIdealPos = liftInitial;
+        while(Math.abs(liftIdealPos - liftPos) > .05){
+            liftWithinLoop();
+        }
+        arm1.setPosition(armAlmostDown);
+        wrist.setPosition(wristAlmostDown);
+        sleep(1000);
+        arm1.setPosition(arm1DownPos);
+        wrist.setPosition(wristDownPos);
+
     }
 }
