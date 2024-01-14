@@ -294,7 +294,7 @@ public class CSYorkNearAuto extends CSYorkDF {
 
         openLowerClaw();
         sleep(500);
-        liftIdealPos = .15 - liftInitial;
+        liftIdealPos = .15;
         while(Math.abs(liftIdealPos - liftPos) > .05){
             liftWithinLoop();
         }
