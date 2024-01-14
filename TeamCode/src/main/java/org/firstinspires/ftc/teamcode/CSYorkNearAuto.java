@@ -239,9 +239,9 @@ public class CSYorkNearAuto extends CSYorkDF {
             }
         }else if(result.equals("Center")){
             if(alliance == 1){
-                strafeLeft(.4, 14, 5 ,-90.0 * alliance);
+                strafeLeft(.4, 12, 5 ,-90.0 * alliance);
             }else if(alliance == -1){
-                strafeRight(.4, 14, 5 ,-90.0 * alliance);
+                strafeRight(.4, 12, 5 ,-90.0 * alliance);
             }
         }else if(result.equals("Right")){
             if(alliance == 1){

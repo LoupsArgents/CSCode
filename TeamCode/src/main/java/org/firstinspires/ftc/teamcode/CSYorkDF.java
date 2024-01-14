@@ -94,9 +94,9 @@ public class CSYorkDF extends LinearOpMode {
     double wristStack34Pos = 0.12;
     double wristStack23Pos = 0.125;
     //these ^^^ may need changing -- we'll see
-    double camUsePos = 0.655; //was .645 before camera bar got loose and got retightened
-    double camTuckedIn = 0.95;
-    double camOutOfWay = 0.35; //pointing straight out
+    double camOutOfWay = 0.36; //pointing straight out
+    double camUsePos = 0.655;
+    double camTuckedIn = 0.9575;
 
     double liftPos;
     double liftIdealPos;
