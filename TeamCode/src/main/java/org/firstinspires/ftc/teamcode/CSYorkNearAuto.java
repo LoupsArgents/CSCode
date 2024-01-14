@@ -95,9 +95,12 @@ public class CSYorkNearAuto extends CSYorkDF {
         sleep(250);
         arm1.setPosition(arm1DownPos);
         sleep(500);
-        telemetry.addData("Status", "Ready");
+        cameraBar.setPosition(camUsePos);
+        sleep(500);
+        telemetry.addData("Status", "Positions set");
     }
     public void onRun(String result, int alliance){
+        cameraBar.setPosition(camOutOfWay);
         activateBackCamera();
         wrist.setPosition(wristAlmostDown);
         doPurplePixel(result, alliance);
@@ -157,6 +160,7 @@ public class CSYorkNearAuto extends CSYorkDF {
             absoluteHeading(.4, -90.0 * alliance);
             absoluteHeading(.2, -90.0 * alliance);
             goBackward(.3, 12, -90.0*alliance);
+            cameraBar.setPosition(camTuckedIn);
             if(alliance == 1){
                 //strafe left
                 strafeLeft(.35, 7, 5, -90.0 * alliance);
@@ -169,6 +173,7 @@ public class CSYorkNearAuto extends CSYorkDF {
             absoluteHeading(.4, -90.0 * alliance);
             absoluteHeading(.2, -90.0 * alliance);
             goBackward(.3, 8, -90.0*alliance);
+            cameraBar.setPosition(camTuckedIn);
             if(alliance == 1){
                 moveBackLeft(.35, 8, -90.0*alliance);
             }else{
@@ -181,6 +186,7 @@ public class CSYorkNearAuto extends CSYorkDF {
             absoluteHeading(.2, -90.0 * alliance);
             //so we want to have a net move of 10 inches strafe, 20 inches backward
             //goBackward(.3, 20, -90.0 * alliance);
+            cameraBar.setPosition(camTuckedIn);
             sleep(250);
             double movedBack = 0.0;
             if(alliance == 1){
