@@ -77,6 +77,7 @@ public class CSTeleop extends LinearOpMode {
     double multiplierBR = 1.0;
     RevColorSensorV3 clawLeftSensor;
     RevColorSensorV3 clawRightSensor;
+    RevColorSensorV3 backdropDetector;
     VisionPortal portal;
     private WebcamName backCamera;
     private WebcamName frontCamera;
@@ -149,7 +150,7 @@ public class CSTeleop extends LinearOpMode {
     double wristAlmostDown = 0.15;//for flipping the arm up
     double wristStraightUp = 0.45;
     double wristTuckedIn = 0.735;
-    double wristScoringPos = 0.54;
+    double wristScoringPos = 0.545; //was 0.54
     double error = 0.0;
 
     double previousHeading = 0;
@@ -199,15 +200,17 @@ public class CSTeleop extends LinearOpMode {
     Point pixelPos;
     boolean hasEverSeenPixel = false;
     double pixelRowChange = 0.02;
-    double pixelRow = 0;
-    //8th row (first row is 1) is 0.217516152
-    //1st row (first row is 1)
-    double baseBoardHeightAmt = 0.05;
+    double pixelRow = -1;
+    double secondPixelChange = 0.0125;
+    //8th row (first row is 0) is 0.217516152
+    //1st row (first row is 0)
+    double baseBoardHeightAmt = 0.02; //good for row 0
     double stacksLevel = 0; //0 is pixels 1 and 2, 1 is pixels 2 and 3, 2 is pixels 3 and 4, 4 is pixels 4 and 5
     boolean stacksLevelCanChange = true;
     boolean phase4JustStarted = false;
     boolean doStacks = false;
     double wristStackIdeal = wristDownPos;
+    boolean doAutoBoardDistance = false;
 
     //stacks positions: top level (pixels 4 and 5) arm is 0.905, wrist is 0.11
     //pixels 3 and 4 arm is 0.92, wrist is 0.12
@@ -256,6 +259,7 @@ public class CSTeleop extends LinearOpMode {
 
         clawLeftSensor = hardwareMap.get(RevColorSensorV3.class, "clawLeft");
         clawRightSensor = hardwareMap.get(RevColorSensorV3.class, "clawRight");
+        backdropDetector = hardwareMap.get(RevColorSensorV3.class, "backdropDetector");
 
         backCamera = hardwareMap.get(WebcamName.class, "Webcam 1");
         frontCamera = hardwareMap.get(WebcamName.class, "Webcam 2");
@@ -341,6 +345,7 @@ public class CSTeleop extends LinearOpMode {
         while (opModeIsActive()) {
             updateAnalogs(armAna, camAna, wristAna);
             double botHeading = (newGetHeading()%360) * Math.PI/180;
+            double backDistCM = backdropDetector.getDistance(DistanceUnit.CM);
             //double botHeading = Math.abs((newGetHeading()%360) * Math.PI/180);//imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
             //telemetry.addData("oldHeadingWay", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
@@ -348,20 +353,22 @@ public class CSTeleop extends LinearOpMode {
             armCurrentTime = armTimer.milliseconds();
             telemetry.addData("loop time, ms", currentTime);
             telemetry.addData("arm time, ms", armCurrentTime);
+            telemetry.addData("backdropDistance (cm)", backDistCM);
             telemetry.addData("gamepad1.left_trigger", gamepad1.left_trigger);
             telemetry.addData("liftPos", liftPos);
+            telemetry.addData("liftIdealPos", liftIdealPos);
+            telemetry.addData("pixelRow", pixelRow);
+            telemetry.addData("secondPixelChange", secondPixelChange);
+            telemetry.addData("canChangeLiftLevel", canChangeLiftLevel);
             telemetry.addData("-gamepad2.left_stick_y", -gamepad2.left_stick_y);
             timer.reset();
             telemetry.addData("armAna", armCurrentPosition);
             telemetry.addData("wristAna", wristCurrentPos);
             telemetry.addData("camAna", camBarCurrentPos);
-            //telemetry.addData("armIdeal", armIdealPosition);
-            //telemetry.addData("armPosition", armCurrentPosition);
             telemetry.addData("botHeading", botHeading);
-            //telemetry.addData("arm power", temp);
-            telemetry.addData("error", error);
-            telemetry.addData("idealAbsHeading", idealAbsHeading);
-            telemetry.addData("processedError", Math.min(error, 2*Math.PI - error));
+            //telemetry.addData("error", error);
+            //telemetry.addData("idealAbsHeading", idealAbsHeading);
+            //telemetry.addData("processedError", Math.min(error, 2*Math.PI - error));
             telemetry.addData("doAutoScore", doAutoScore);
             telemetry.addData("armPhase", armPhase);
             telemetry.addData("inEndgame", canDoEndgame);
@@ -388,7 +395,7 @@ public class CSTeleop extends LinearOpMode {
                     armTimer.reset();
                     doStacks = false;
                 }
-                if (gamepad2.dpad_down) {
+                if (gamepad2.dpad_down && liftPos < 0.01) {
                     doStacks = false;
                     activateFrontCamera();
                     armIdealPosition = arm1DownPos;
@@ -550,6 +557,9 @@ public class CSTeleop extends LinearOpMode {
                 cameraBar.setPosition(camTuckedIn);
                 gamepad1.rumble(100);
             }
+            if (gamepad1.left_bumper) {
+                doAutoBoardDistance = true;
+            }
             //claw
             if (gamepad1.left_trigger < 0.1) {
                 clawStateCanChange = true;
@@ -569,72 +579,50 @@ public class CSTeleop extends LinearOpMode {
                     if (clawDownSetTo == clawDownopen) {
                         clawUp.setPosition(clawUpopen);
                         clawUpSetTo = clawUpopen;
-                        pixelRow = 0;
+                        pixelRow = -1;
+                        secondPixelChange = 0;
                     } else {
                         clawDown.setPosition(clawDownopen);
                         clawDownSetTo = clawDownopen;
+                        secondPixelChange = 0.015;
+                        if (armSetTo == arm1ScoringPos && Math.abs(liftPos - liftIdealPos) < 0.01) {
+                            liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange + secondPixelChange;
+                        }
                     }
                 }
             }
-            /*if (gamepad1.left_bumper) {
-                moveToDoingScore = false;
-                doAutoScore = true;
-                canUseClawManually = false;
-                canDriveManually = false;
-                double[] originalDistances = getAprilTagDist("Right");
-                xFromFunction = originalDistances[0];
-                yFromFunction = originalDistances[1];
-                moveXYcm = new double[2];
-                if (allianceMultiplier == -1) { //blue alliance
-                    moveXYcm[1] = (2.54 * originalDistances[0]);
-                    moveXYcm[0] = (-2.54 * originalDistances[1] + cmDistanceFromBoard);
-                } else {
-                    moveXYcm[1] = (-2.54 * originalDistances[0]);
-                    moveXYcm[0] = (2.54 * originalDistances[1] - cmDistanceFromBoard);
-                }
-                originalX = -odometry.getPose().getY();
-                originalY = odometry.getPose().getX();
-                headingForCV = 90*allianceMultiplier;
-                //if (headingForCV < 360) {
-                    //headingForCV += 360;
-                //}
-            } else {
-                moveToDoingScore = true;
-            }
-            if (doAutoScore && moveToDoingScore) {
-                doAutoScore = !(placeAndHeading(originalX + moveXYcm[0], originalY + moveXYcm[1], headingForCV, 0.5, 0.5, 0.5));
-                telemetry.addData("x cm", moveXYcm[0]);
-                telemetry.addData("y cm", moveXYcm[1]);
-                telemetry.addData("originalX", xFromFunction);
-                telemetry.addData("originalY", yFromFunction);
-            }*/
+
             //lift manual code
-            if (liftPos > 0.03) {
+            if (liftPos > 0.01) {
                 cameraBar.setPosition(camOutOfWay);
             }
 
             if (gamepad2.y && !canDoEndgame && !isJoysticking && canChangeLiftLevel) {
                 canChangeLiftLevel = false;
                 pixelRow++;
-                liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange;
-            } else if (!gamepad2.y) {
+                liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange + secondPixelChange;
+            } else if (!gamepad2.y && !gamepad2.a) {
                 canChangeLiftLevel = true;
             }
             if (gamepad2.a && !canDoEndgame && !isJoysticking && canChangeLiftLevel) {
                 canChangeLiftLevel = false;
                 pixelRow--;
-                liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange;
-            } else if (!gamepad2.a) {
+                if (pixelRow < 0) {pixelRow = 0;}
+                liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange + secondPixelChange;
+            } else if (!gamepad2.a && !gamepad2.y) {
                 canChangeLiftLevel = true;
             }
             if (canUseSlides) {
+                if (liftIdealPos > 0.22) {
+                    liftIdealPos = 0.22;
+                }
                 double liftPower = -gamepad2.left_stick_y;
                 if (liftPower < 0) { //we're trying to go down
                     liftPower *= 0.25;
                 }
                 double liftError = liftIdealPos - liftPos;
-                double liftTolerance = 0.05;
-                double Kp = 10;
+                double liftTolerance = 0.005;
+                double Kp = 50;
                 if (Math.abs(liftError) < liftTolerance) {
                     liftHappyPlace = true;
                 } else {
