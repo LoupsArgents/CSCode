@@ -30,6 +30,7 @@ public class CSYorkNearAuto extends CSYorkDF {
     public String onInit(int alliance){ //returns the team prop result
         initializeHardware();
         processor.setAlliance(-alliance);
+        processor.setIsStackMode(true);
         processor.setMode(EverythingProcessor.ProcessorMode.PROP);
         ArrayList<Double> rightAverages = new ArrayList<>();
         ArrayList<Double> leftAverages = new ArrayList<>();
@@ -127,7 +128,7 @@ public class CSYorkNearAuto extends CSYorkDF {
                 inchesMoved = moveForwardRight(.5, 10.5, 0.0);
             }
             RobotLog.aa("Moved", Double.toString(inchesMoved));
-            goStraight(.3, 16-inchesMoved, 0.0);
+            goStraight(.4, 16-inchesMoved, 0.0);
             openLowerClaw();
             sleep(500);
         }else if(result.equals("Center")){
@@ -139,7 +140,7 @@ public class CSYorkNearAuto extends CSYorkDF {
                 toSubtract = moveForwardRight(.55, 4, 0.0);
             }
             RobotLog.aa("HeadingAfterDiagonal", String.valueOf(newGetHeading()));
-            goStraight(.3, 25-toSubtract, 0.0);
+            goStraight(.4, 25-toSubtract, 0.0);
             openLowerClaw();
             sleep(500);
         }else if((result.equals("Right") && alliance == 1) || (result.equals("Left") && alliance == -1)){
@@ -167,10 +168,10 @@ public class CSYorkNearAuto extends CSYorkDF {
     }
     public void getToBackdrop(String result, int alliance){
         if((result.equals("Left") && alliance == 1) || (result.equals("Right") && alliance == -1)){
-            goBackward(.3, 3, 0.0 * alliance);
+            goBackward(.4, 3, 0.0 * alliance);
             absoluteHeading(.4, -90.0 * alliance);
             absoluteHeading(.2, -90.0 * alliance);
-            goBackward(.3, 12, -90.0*alliance);
+            goBackward(.4, 12, -90.0*alliance);
             cameraBar.setPosition(camTuckedIn);
             if(alliance == 1){
                 //strafe left
@@ -180,10 +181,10 @@ public class CSYorkNearAuto extends CSYorkDF {
                 strafeRight(.35, 7, 5, -90.0 * alliance);
             }
         }else if(result.equals("Center")){
-            goBackward(.3, 5, 0.0);
+            goBackward(.4, 5, 0.0);
             absoluteHeading(.4, -90.0 * alliance);
             absoluteHeading(.2, -90.0 * alliance);
-            goBackward(.3, 8, -90.0*alliance);
+            goBackward(.4, 8, -90.0*alliance);
             cameraBar.setPosition(camTuckedIn);
             if(alliance == 1){
                 moveBackLeft(.35, 8, -90.0*alliance);
@@ -191,7 +192,7 @@ public class CSYorkNearAuto extends CSYorkDF {
                 moveBackRight(.35, 8, -90.0*alliance);
             }
         }else if((result.equals("Right") && alliance == 1) || (result.equals("Left") && alliance == -1)){
-            goBackward(.3, 6, -45.0*alliance);
+            goBackward(.4, 6, -45.0*alliance);
             sleep(250);
             absoluteHeading(.4, -90.0 * alliance);
             absoluteHeading(.2, -90.0 * alliance);
@@ -208,7 +209,7 @@ public class CSYorkNearAuto extends CSYorkDF {
                 movedBack = Math.abs(moveBackRight(.5, 10, -90.0*alliance));
             }
             sleep(100);
-            goBackward(.3, 20 - movedBack, -90.0 * alliance);
+            goBackward(.4, 20 - movedBack, -90.0 * alliance);
         }
     }
     public void positionOnBackdrop(String result, int alliance){
@@ -266,9 +267,9 @@ public class CSYorkNearAuto extends CSYorkDF {
             }
         }else if(result.equals("Center")){
             if(alliance == 1){
-                strafeLeft(.4, 8, 5 ,-90.0 * alliance);
+                strafeLeft(.4, 10, 5 ,-90.0 * alliance);
             }else if(alliance == -1){
-                strafeRight(.4, 8, 5 ,-90.0 * alliance);
+                strafeRight(.4, 10, 5 ,-90.0 * alliance);
             }
         }else if(result.equals("Right")){
             if(alliance == 1){
@@ -277,20 +278,27 @@ public class CSYorkNearAuto extends CSYorkDF {
                 strafeRight(.4, 4, 5 ,-90.0 * alliance);
             }
         }
+        activateFrontCamera();
         arm1.setPosition(arm1DownPos);
         wrist.setPosition(wristDownPos);
         if(alliance == 1){
             inchesMoved = moveForwardLeft(.5, 12, -90.0*alliance);
-        }else if(alliance == -1){
-            inchesMoved = moveForwardRight(.5, 12, -90.0 *alliance);
+        }else if(alliance == -1) {
+            inchesMoved = moveForwardRight(.5, 12, -90.0 * alliance);
         }
-        activateFrontCamera();
         processor.setMode(EverythingProcessor.ProcessorMode.PIXEL);
         cameraBar.setPosition(camUsePos);
-        goStraight(.4, 40-inchesMoved, -90.0*alliance);
+        goStraight(.4, 50-inchesMoved, -90.0*alliance);
+        wrist.setPosition(wristAlmostDown);
         arm1.setPosition(armStack45Pos);
+       // inchesMoved = 0.0;
+        //if(alliance == 1){
+          //  inchesMoved = moveForwardRight(.6, 3, -90.0*alliance);
+        //}else if(alliance == -1){
+          //  inchesMoved = moveForwardLeft(.6, 3, -90.0*alliance);
+        //}
+        goStraight(.4, 32, -90.0*alliance);
         wrist.setPosition(wristStack45Pos);
-        goStraight(.4, 42, -90.0*alliance);
         sleep(500);
         ZonedDateTime dt = ZonedDateTime.now();
         String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
@@ -301,15 +309,15 @@ public class CSYorkNearAuto extends CSYorkDF {
     }
     public void getBackToBoard(String result, int alliance){
         cameraBar.setPosition(camTuckedIn);
+        goBackward(.4, 70, -90.0*alliance);
         activateBackCamera();
-        goBackward(.4, 60, -90.0*alliance);
         wrist.setPosition(wristAlmostDown);
         arm1.setPosition(armAlmostUp);
-        goBackward(.4, 20, -90.0*alliance);
+        goBackward(.4, 15, -90.0*alliance);
         if(alliance == 1){
-            strafeRight(.4, 15, 5, -90.0*alliance);
+            strafeRight(.4, 20, 5, -90.0*alliance);
         }else if(alliance == -1){
-            strafeLeft(.4, 15, 5, -90.0*alliance);
+            strafeLeft(.4, 20, 5, -90.0*alliance);
         }
         wrist.setPosition(wristScoringPos);
         arm1.setPosition(arm1ScoringPos);
@@ -318,7 +326,6 @@ public class CSYorkNearAuto extends CSYorkDF {
         }else if(alliance == -1){
             positionOnBackdrop("Left", alliance);
         }
-
         openLowerClaw();
         sleep(500);
         liftIdealPos = .15;

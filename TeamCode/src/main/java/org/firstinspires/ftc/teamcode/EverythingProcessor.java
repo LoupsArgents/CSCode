@@ -29,6 +29,7 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
     String updates = "";
     double leftVal;
     double rightVal;
+    boolean isStackMode = false;
     double centerVal;
     int alliance; //1 is red, -1 is blue
     int setting; //0 is team prop, 1 is wing pixel
@@ -133,6 +134,9 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         if (mat.empty()) {
             return frame;
         }
+        if(!(opModeIsActive() || opModeInInit())){
+            return null;
+        }
         Scalar lowPurpleHSV = new Scalar(117, 40, 80); //purple pixels; brightness used to be 20
         Scalar highPurpleHSV = new Scalar(150, 255, 255); //120-150 should do for hue for starters
         Scalar lowYellowHSV = new Scalar(14, 100, 80); //changed lower brightness threshold b/c it saw the field as yellow lol
@@ -142,7 +146,7 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         Scalar highGreenHSV = new Scalar(75, 255, 255);
         Scalar lowWhiteHSV = new Scalar(0,0,180); //last was 180 - updated 11/4/23 for PP offseason bot different camera angle
         //moved lower brightness threshold back down from 200 for CS bot
-        Scalar highWhiteHSV = new Scalar(180, 20, 255);
+        Scalar highWhiteHSV = new Scalar(180, 40, 255); //saturation was 20
         Mat purpleThresh = new Mat();
         Mat yellowThresh = new Mat();
         Mat greenThresh = new Mat();
@@ -156,9 +160,13 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         //currentTime = System.currentTimeMillis();
         //RobotLog.aa("Status", "Filtered, time taken " + (currentTime - oldTime) + "ms");
         Mat testOutput = new Mat();
-        Core.bitwise_or(purpleThresh, yellowThresh, testOutput);
-        Core.bitwise_or(testOutput, greenThresh, testOutput);
-        Core.bitwise_or(testOutput, whiteThresh, testOutput); //combine the black and white images into one black and white image of things that are game elements
+        if(!isStackMode) {
+            Core.bitwise_or(purpleThresh, yellowThresh, testOutput);
+            Core.bitwise_or(testOutput, greenThresh, testOutput);
+            Core.bitwise_or(testOutput, whiteThresh, testOutput); //combine the black and white images into one black and white image of things that are game elements
+        }else{
+            whiteThresh.copyTo(testOutput);
+        }
         //well, it also includes things that are close in color to game elements, but that's not an issue.
         //oldTime = currentTime;
         //currentTime = System.currentTimeMillis();
@@ -181,6 +189,9 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         Imgproc.blur(masked, masked, new Size(6, 6)); //was 5, 5
         Imgproc.Canny(masked, cannyOutput, threshold, threshold * 2); //edge detection wizardry copied from OpenCV tutorials - works great.
         Imgproc.blur(cannyOutput, cannyOutput, new Size(5, 5));
+        if(!(opModeIsActive() || opModeInInit())){
+            return null;
+        }
         //oldTime = currentTime;
         //currentTime = System.currentTimeMillis();
         //RobotLog.aa("Status", "Canny edge detection complete, time taken " + (currentTime - oldTime) + "ms");
@@ -194,6 +205,9 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         Rect[] boundRect = new Rect[contours.size()];
         //Point[] centers = new Point[contours.size()];
         //float[][] radius = new float[contours.size()][1];
+        if(!(opModeIsActive() || opModeInInit())){
+            return null;
+        }
         for (int i = 0; i < contours.size(); i++) {
             contoursPoly[i] = new MatOfPoint2f();
             Imgproc.approxPolyDP(new MatOfPoint2f(contours.get(i).toArray()), contoursPoly[i], 3, true);
@@ -201,6 +215,9 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
             boundRect[i] = Imgproc.boundingRect(new MatOfPoint(contoursPoly[i].toArray()));
             //centers[i] = new Point();
             //Imgproc.minEnclosingCircle(contoursPoly[i], centers[i], radius[i]);
+        }
+        if(!(opModeIsActive() || opModeInInit())){
+            return null;
         }
         //oldTime = currentTime;
         //currentTime = System.currentTimeMillis();
@@ -225,7 +242,13 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         //give me the bounding box with highest y???
         Rect maxRect = new Rect(0,0,10,10);
         double minDistance = Double.MAX_VALUE;
+        if(!(opModeIsActive() || opModeInInit())){
+            return null;
+        }
         for(Rect r : boundRect){
+            if(!(opModeIsActive() || opModeInInit())){
+                return null;
+            }
             Scalar color = new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
             if(r.area() > minPixelBoxArea){
                 Imgproc.rectangle(masked, r.tl(), r.br(), color, 2);
@@ -311,5 +334,8 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
     @Override
     public void runOpMode() throws InterruptedException {
 
+    }
+    public void setIsStackMode(boolean b){
+        this.isStackMode = b;
     }
 }
