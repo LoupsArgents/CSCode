@@ -18,7 +18,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
-@Autonomous
+@Disabled
 /*
 *
 * This is no longer the most updated thing used for the team prop

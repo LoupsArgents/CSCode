@@ -4,8 +4,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 @Autonomous
 
-public class CSYorkNearAutoBlue extends CSYorkNearAuto{
+public class CSYorkNearAutoBlue extends CSYorkAuto {
     public void runOpMode(){
-        doRun("Blue");
+        doRun("Blue", true);
     }
 }

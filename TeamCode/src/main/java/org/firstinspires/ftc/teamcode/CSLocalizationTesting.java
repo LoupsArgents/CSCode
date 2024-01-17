@@ -8,6 +8,7 @@ import com.arcrobotics.ftclib.kinematics.wpilibkinematics.MecanumDriveOdometry;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Blinker;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -21,7 +22,8 @@ import com.arcrobotics.ftclib.hardware.motors.Motor.Encoder;
 
 import java.util.List;
 
-@Autonomous
+@Disabled
+
 public class CSLocalizationTesting extends LinearOpMode {
     Blinker control_Hub;
     DcMotor motorFR;

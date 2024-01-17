@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -9,25 +10,25 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 
-@Autonomous
-public class CSYorkNearAuto extends CSYorkDF {
+@Disabled
+public class CSYorkAuto extends CSYorkDF {
     ArrayList<Double> rightAverages = new ArrayList<>();
     ArrayList<Double> centerAverages = new ArrayList<>();
     ArrayList<Double> leftAverages = new ArrayList<>();
+    boolean parkingNearWall = false;
+
     int pixelsOnStack = 5;
 
-    public void runOpMode(){
-        doRun("Blue");
-    }
-    public void doRun(String alliance){ //1 is blue, -1 is red
+    public void runOpMode(){}
+    public void doRun(String alliance, boolean isNear){ //1 is blue, -1 is red
         int allianceNum = 1;
         if(alliance.equals("Blue")) allianceNum = 1;
         if(alliance.equals("Red")) allianceNum = -1;
-        String result = onInit(allianceNum);
+        String result = onInit(allianceNum, isNear);
         //waitForStart();
-        onRun(result, allianceNum);
+        onRun(result, allianceNum, isNear);
     }
-    public String onInit(int alliance){ //returns the team prop result
+    public String onInit(int alliance, boolean isNear){ //returns the team prop result
         initializeHardware();
         processor.setAlliance(-alliance);
         processor.setIsStackMode(true);
@@ -42,6 +43,18 @@ public class CSYorkNearAuto extends CSYorkDF {
         setInitialPositions();
         boolean doneTheThing = false;
         while(opModeInInit()){
+            if(isNear){
+                if(!parkingNearWall){
+                    telemetry.addData("Parking", "Away from wall");
+                    telemetry.addLine("Press X on Gamepad 1 to switch to parking near wall");
+                }else{
+                    telemetry.addData("Parking", "Near wall");
+                    telemetry.addLine("Press B on Gamepad 1 to switch to parking away from wall");
+                }
+            }
+            telemetry.addData("Alliance", alliance);
+            if(gamepad1.x) parkingNearWall = true;
+            if(gamepad1.b) parkingNearWall = false;
             if(portal.getCameraState() == VisionPortal.CameraState.STREAMING && !doneTheThing){
                 ZonedDateTime dt = ZonedDateTime.now();
                 String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
@@ -92,6 +105,7 @@ public class CSYorkNearAuto extends CSYorkDF {
         String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
         portal.saveNextFrameRaw("YorkAutoPropFinal " + time);
         String result = getPropResult(leftAvg, rightAvg, processor.getResult(camLeftInitial, camCenterInitial, camRightInitial));
+        sleep(1000);
         return result;
     }
     public void setInitialPositions(){
@@ -111,13 +125,17 @@ public class CSYorkNearAuto extends CSYorkDF {
         sleep(500);
         telemetry.addData("Status", "Positions set");
     }
-    public void onRun(String result, int alliance){
+    public void onRun(String result, int alliance, boolean isNear){
         cameraBar.setPosition(camOutOfWay);
-        activateBackCamera();
         wrist.setPosition(wristAlmostDown);
         doPurplePixel(result, alliance);
-        doYellowPixel(result, alliance);
-        cycle(result, alliance);
+        if(isNear) {
+            doYellowPixel(result, alliance);
+            park(alliance, result, parkingNearWall); //once I get this figured out
+        }
+         //left out because cycling is incomplete
+         //cycle(result, alliance);
+
     }
     public void doPurplePixel(String result, int alliance){
         if((result.equals("Left") && alliance == 1) || (result.equals("Right") && alliance == -1)){
@@ -127,8 +145,9 @@ public class CSYorkNearAuto extends CSYorkDF {
             }else if(alliance == -1){
                 inchesMoved = moveForwardRight(.5, 10.5, 0.0);
             }
+            activateBackCamera();
             RobotLog.aa("Moved", Double.toString(inchesMoved));
-            goStraight(.4, 16-inchesMoved, 0.0);
+            goStraight(.3, 16-inchesMoved, 0.0);
             openLowerClaw();
             sleep(500);
         }else if(result.equals("Center")){
@@ -139,32 +158,35 @@ public class CSYorkNearAuto extends CSYorkDF {
             }else if(alliance == -1){
                 toSubtract = moveForwardRight(.55, 4, 0.0);
             }
+            RobotLog.aa("Subtracting", String.valueOf(toSubtract));
+            activateBackCamera();
             RobotLog.aa("HeadingAfterDiagonal", String.valueOf(newGetHeading()));
-            goStraight(.4, 25-toSubtract, 0.0);
+            goStraight(.4, 22.5-toSubtract, 0.0); //used to be 25-toSubtract
             openLowerClaw();
             sleep(500);
         }else if((result.equals("Right") && alliance == 1) || (result.equals("Left") && alliance == -1)){
             goStraight(.4, 13, 0.0);
+            activateBackCamera();
             absoluteHeading(.4, -45.0*alliance);
             absoluteHeading(.2, -45.0*alliance);
             goStraight(.4, 1, -45.0*alliance);
             openLowerClaw();
             sleep(500);
         }
+    }
+    public void doYellowPixel(String result, int alliance) {
         wrist.setPosition(wristAlmostDown);
         sleep(100);
         arm1.setPosition(armAlmostUp);
-    }
-    public void doYellowPixel(String result, int alliance) {
-       getToBackdrop(result, alliance);
-       arm1.setPosition(arm1ScoringPos);
-       wrist.setPosition(wristScoringPos);
-       absoluteHeading(.2, -90.0*alliance);
-       sleep(500);
-       positionOnBackdrop(result, alliance);
-       sleep(500);
-       openUpperClaw();
-       sleep(1000);
+        getToBackdrop(result, alliance);
+        arm1.setPosition(arm1ScoringPos);
+        wrist.setPosition(wristScoringPos);
+        absoluteHeading(.2, -90.0*alliance);
+        sleep(500);
+        positionOnBackdrop(result, alliance);
+        sleep(500);
+        openUpperClaw();
+        sleep(500);
     }
     public void getToBackdrop(String result, int alliance){
         if((result.equals("Left") && alliance == 1) || (result.equals("Right") && alliance == -1)){
@@ -291,11 +313,11 @@ public class CSYorkNearAuto extends CSYorkDF {
         goStraight(.4, 50-inchesMoved, -90.0*alliance);
         wrist.setPosition(wristAlmostDown);
         arm1.setPosition(armStack45Pos);
-       // inchesMoved = 0.0;
+        // inchesMoved = 0.0;
         //if(alliance == 1){
-          //  inchesMoved = moveForwardRight(.6, 3, -90.0*alliance);
+        //  inchesMoved = moveForwardRight(.6, 3, -90.0*alliance);
         //}else if(alliance == -1){
-          //  inchesMoved = moveForwardLeft(.6, 3, -90.0*alliance);
+        //  inchesMoved = moveForwardLeft(.6, 3, -90.0*alliance);
         //}
         goStraight(.4, 32, -90.0*alliance);
         wrist.setPosition(wristStack45Pos);
@@ -347,6 +369,57 @@ public class CSYorkNearAuto extends CSYorkDF {
         sleep(1000);
         arm1.setPosition(arm1DownPos);
         wrist.setPosition(wristDownPos);
-
+    }
+    public void park(int alliance, String result, boolean parkingNearWall){
+        RobotLog.aa("Status", "Started parking");
+        arm1.setPosition(armAlmostDown);
+        wrist.setPosition(wristAlmostDown);
+        if(alliance == -1){
+            if(parkingNearWall){
+                //~20 inches from the closest to the wall
+                RobotLog.aa("Status", "Parking near wall");
+                if(result.equals("Left")){
+                    strafeLeft(.4, 28, 5, -90.0*alliance);
+                }else if(result.equals("Center")){
+                    strafeLeft(.4, 21, 5, -90.0*alliance);
+                }else{
+                    strafeLeft(.4, 15, 5, -90.0*alliance);
+                }
+            }else{
+                RobotLog.aa("Status", "Parking away from wall");
+                if(result.equals("Left")){
+                    strafeRight(.4, 14, 5, -90.0*alliance);
+                }else if(result.equals("Center")){
+                    strafeRight(.4, 22, 5, -90.0*alliance);
+                }else{
+                    strafeRight(.4, 30, 5, -90.0*alliance);
+                }
+            }
+        }else if(alliance == 1){
+            RobotLog.aa("Status", "Hey we're on the blue alliance");
+            if(parkingNearWall){
+                //~20 inches from the closest to the wall
+                RobotLog.aa("Status", "Parking near wall");
+                if(result.equals("Left")){
+                    strafeRight(.4, 15, 5, -90.0*alliance);
+                }else if(result.equals("Center")){
+                    strafeRight(.4, 21, 5, -90.0*alliance);
+                }else{
+                    strafeRight(.4, 28, 5, -90.0*alliance);
+                }
+            }else{
+                RobotLog.aa("Status", "Parking away from wall");
+                if(result.equals("Left")){
+                    strafeLeft(.4, 30, 5, -90.0*alliance);
+                }else if(result.equals("Center")){
+                    strafeLeft(.4, 22, 5, -90.0*alliance);
+                }else{
+                    strafeLeft(.4, 14, 5, -90.0*alliance);
+                }
+            }
+        }
+        arm1.setPosition(arm1DownPos);
+        wrist.setPosition(wristDownPos);
+        sleep(1000);
     }
 }

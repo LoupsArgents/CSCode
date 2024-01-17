@@ -1,12 +1,14 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 
-@Autonomous
+@Disabled
+
 public class BasicScrimmageAuto extends PPBotCSDF {
     String result = "Center";
     public void runOpMode(){

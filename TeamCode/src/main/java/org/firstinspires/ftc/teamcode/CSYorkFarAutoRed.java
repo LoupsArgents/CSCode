@@ -4,8 +4,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 @Autonomous
 
-public class CSYorkNearAutoRed extends CSYorkAuto {
+public class CSYorkFarAutoRed extends CSYorkAuto {
     public void runOpMode(){
-        doRun("Red", true);
+        doRun("Red", false);
     }
 }
