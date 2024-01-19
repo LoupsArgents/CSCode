@@ -258,12 +258,12 @@ public class CSYorkAuto extends CSYorkDF {
             }
         }else if(result.equals("Right")){
             //we want to be 2-3 inches right of the april tag
-            if(dists[0] + 2.5 < 0){
-                RobotLog.aa("Strafing", (-1*(dists[0] + 2.5)) + " inches robot-right, board-left");
-                strafeRight(.35, -1 * (dists[0]+2.5), 5, -90.0*alliance);
+            if(dists[0] + 1.5 < 0){
+                RobotLog.aa("Strafing", (-1*(dists[0] + 1.5)) + " inches robot-right, board-left");
+                strafeRight(.35, -1 * (dists[0]+1.5), 5, -90.0*alliance);
             }else if(dists[0] - 2.5 > 0){
-                RobotLog.aa("Strafing", (dists[0] + 2.5) + "inches robot-left, board-right");
-                strafeLeft(.35, dists[0]+2.5, 5, -90.0*alliance);
+                RobotLog.aa("Strafing", (dists[0] + 1.5) + "inches robot-left, board-right");
+                strafeLeft(.35, dists[0]+1.5, 5, -90.0*alliance);
             }
         }
         double inchesAway = 6.25;
