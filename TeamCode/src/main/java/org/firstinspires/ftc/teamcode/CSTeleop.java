@@ -211,6 +211,7 @@ public class CSTeleop extends LinearOpMode {
     boolean doStacks = false;
     double wristStackIdeal = wristDownPos;
     boolean doAutoBoardDistance = false;
+    boolean endgameCanChange = true;
 
     //stacks positions: top level (pixels 4 and 5) arm is 0.905, wrist is 0.11
     //pixels 3 and 4 arm is 0.92, wrist is 0.12
@@ -607,8 +608,11 @@ public class CSTeleop extends LinearOpMode {
             if (gamepad2.a && !canDoEndgame && !isJoysticking && canChangeLiftLevel) {
                 canChangeLiftLevel = false;
                 pixelRow--;
-                if (pixelRow < 0) {pixelRow = 0;}
-                liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange + secondPixelChange;
+                if (pixelRow < 0) {
+                    liftIdealPos = 0;
+                } else {
+                    liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange + secondPixelChange;
+                }
             } else if (!gamepad2.a && !gamepad2.y) {
                 canChangeLiftLevel = true;
             }
@@ -755,6 +759,9 @@ public class CSTeleop extends LinearOpMode {
 
             if (gamepad2.guide) {
                 canDoEndgame = true;
+                endgameCanChange = false;
+            } else {
+                endgameCanChange = true;
             }
             //endgame code
             if (canDoEndgame) {
