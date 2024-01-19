@@ -213,9 +213,9 @@ public class CSTeleop extends LinearOpMode {
     double wristStackIdeal = wristDownPos;
     boolean doAutoBoardDistance = false;
     boolean endgameCanChange = true;
-    double droneInitial;
-    double droneFire;
-    double lss1Launch;
+    double droneInitial; //the position we want the drone launcher servo to be at when it's not trying to launch the drone
+    double droneFire; //the position for the drone launcher servo that will launch the drone
+    double lss1Launch; //the position we want for the left lead screw to be at when the drone is launching
     double lss1SetTo = lss1DownPos;
 
     //stacks positions: top level (pixels 4 and 5) arm is 0.905, wrist is 0.11

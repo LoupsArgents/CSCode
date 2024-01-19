@@ -8,6 +8,7 @@ public class TestAutoPickup extends CSYorkDF {
         initializeHardware();
         openClaw();
         processor.setMode(EverythingProcessor.ProcessorMode.PIXEL);
+        cameraBar.setPosition(camUsePos);
         waitForStart();
         centerOnClosestStack(processor);
         while(opModeIsActive()){}

@@ -76,10 +76,11 @@ public class ServoPositionsTest extends LinearOpMode {
     boolean change1 = true;
     boolean change2 = true;
     public void runOpMode() {
+        String servo1Name = "leftLeadScrewServo";
+        String servo2Name = "droneRelease";
 
-
-        servo1 = hardwareMap.get(Servo.class, "leftLeadScrewServo");
-        servo2 = hardwareMap.get(Servo.class, "droneRelease");
+        servo1 = hardwareMap.get(Servo.class, servo1Name);
+        servo2 = hardwareMap.get(Servo.class, servo2Name);
         //on broken scrimmagebot configurations: claw is part of wrist rotation, poleGuide is v4b
         s1p1 = 0.5;
         s1p2 = 0.5;
@@ -92,6 +93,8 @@ public class ServoPositionsTest extends LinearOpMode {
 
         waitForStart();
         while (opModeIsActive()) {
+            telemetry.addData("gamepad 1 controls the servo called", servo1Name);
+            telemetry.addData("gamepad 2 controls the servo called", servo2Name);
             telemetry.addData("controls", "left trigger to decrease by 0.1, right trigger to decrease by 0.01, left bumper to increase by 0.1, right bumper to increase by 0.01");
             telemetry.addData("controls part 2", "dpad up is set position 1, dpad down is set position 2");
             telemetry.addData("controls part 3", "back button to move all to position 1, start button to move all to position 2");

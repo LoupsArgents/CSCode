@@ -128,7 +128,7 @@ public class CSYorkAuto extends CSYorkDF {
     public void onRun(String result, int alliance, boolean isNear){
         cameraBar.setPosition(camOutOfWay);
         wrist.setPosition(wristAlmostDown);
-        doPurplePixel(result, alliance);
+        doPurplePixel(result, alliance, isNear);
         if(isNear) {
             doYellowPixel(result, alliance);
             park(alliance, result, parkingNearWall); //once I get this figured out
@@ -137,12 +137,12 @@ public class CSYorkAuto extends CSYorkDF {
          //cycle(result, alliance);
 
     }
-    public void doPurplePixel(String result, int alliance){
-        if((result.equals("Left") && alliance == 1) || (result.equals("Right") && alliance == -1)){
+    public void doPurplePixel(String result, int alliance, boolean isNear){
+        if((result.equals("Left") && ((alliance == 1 && isNear) || (alliance == -1 && !isNear))) || (result.equals("Right") && ((alliance == -1 && isNear) || (alliance == 1 && !isNear)))){
             double inchesMoved = 0.0;
-            if(alliance == 1){
+            if(result.equals("Left")){
                 inchesMoved = moveForwardLeft(.5, 10.5, 0.0);
-            }else if(alliance == -1){
+            }else if(result.equals("Right")){
                 inchesMoved = moveForwardRight(.5, 10.5, 0.0);
             }
             activateBackCamera();
@@ -153,9 +153,9 @@ public class CSYorkAuto extends CSYorkDF {
         }else if(result.equals("Center")){
             //it is roughly 25 inches to the spike mark, so.
             double toSubtract = 0.0;
-            if(alliance == 1){
+            if((alliance == 1 && isNear) || (alliance == -1 && !isNear)){
                 toSubtract = moveForwardLeft(.55, 4, 0.0);
-            }else if(alliance == -1){
+            }else if((alliance == -1 && isNear) || (alliance == 1 && !isNear)){
                 toSubtract = moveForwardRight(.55, 4, 0.0);
             }
             RobotLog.aa("Subtracting", String.valueOf(toSubtract));
@@ -164,12 +164,18 @@ public class CSYorkAuto extends CSYorkDF {
             goStraight(.4, 22.5-toSubtract, 0.0); //used to be 25-toSubtract
             openLowerClaw();
             sleep(500);
-        }else if((result.equals("Right") && alliance == 1) || (result.equals("Left") && alliance == -1)){
+        }else if((result.equals("Right") && ((alliance == 1 && isNear) || (alliance == -1 && !isNear))) || (result.equals("Left") && ((alliance == -1 && isNear) || (alliance == 1 && !isNear)))){
             goStraight(.4, 15, 0.0);
             activateBackCamera();
-            absoluteHeading(.4, -45.0*alliance);
-            absoluteHeading(.2, -45.0*alliance);
-            goStraight(.4, 2, -45.0*alliance);
+            double heading;
+            if(isNear){
+                heading = -45.0 * alliance;
+            }else{
+                heading = 45.0*alliance;
+            }
+            absoluteHeading(.4, heading);
+            absoluteHeading(.2, heading);
+            goStraight(.4, 2, heading);
             openLowerClaw();
             sleep(500);
         }
