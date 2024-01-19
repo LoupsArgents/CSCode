@@ -7,5 +7,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 public class CSYorkFarAutoRed extends CSYorkAuto {
     public void runOpMode(){
         doRun("Red", false);
+        sleep(1000);
     }
 }
