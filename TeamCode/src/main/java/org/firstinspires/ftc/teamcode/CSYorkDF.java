@@ -840,7 +840,8 @@ public class CSYorkDF extends LinearOpMode {
 
     public String getPropResult(double leftAv, double rightAv, String processorResult){
         String cameraResult = processorResult;
-        double ultraDist = getUltraDistance();
+        return cameraResult;
+        /*double ultraDist = getUltraDistance();
         RobotLog.aa("Ultrasonic", String.valueOf(ultraDist));
         RobotLog.aa("LeftAvg", String.valueOf(leftAv));
         RobotLog.aa("RightAvg", String.valueOf(rightAv));
@@ -862,7 +863,7 @@ public class CSYorkDF extends LinearOpMode {
             //we trust the camera
             RobotLog.aa("Status", "We trust the camera; " + cameraResult.toLowerCase());
             return cameraResult;
-        }
+        }*/
         //DistanceSensorResult distResult = getDistances();
         //75ish is center prop, ~300 is nothing there
         //String sensorResult = distResult.getSensorResult();
@@ -901,6 +902,7 @@ public class CSYorkDF extends LinearOpMode {
             telemetry.update();
             return cameraResult;
         }*/
+
     }
     public double getUltraDistance(){
         double volt = ultra.getVoltage();

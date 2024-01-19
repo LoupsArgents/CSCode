@@ -676,6 +676,8 @@ public class CSTeleop extends LinearOpMode {
             } else if (gamepad1.b) { //90 degrees = pi/2 radians
                 idealAbsHeading = Math.PI*1.5;
                 doAbsHeading = true;
+            } else {
+                doAbsHeading = false;
             }
 
             //mecanum drive code
