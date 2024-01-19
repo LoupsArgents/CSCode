@@ -100,6 +100,7 @@ public class CSTeleop extends LinearOpMode {
     DcMotorEx liftEncoder;
     ServoImplEx arm1;
     ServoImplEx arm2;
+    Servo droneRelease;
     double arm1ScoringPos = 0.2675;
     double armAlmostUp = 0.37;
     double armAlmostDown = 0.8;
@@ -212,6 +213,10 @@ public class CSTeleop extends LinearOpMode {
     double wristStackIdeal = wristDownPos;
     boolean doAutoBoardDistance = false;
     boolean endgameCanChange = true;
+    double droneInitial;
+    double droneFire;
+    double lss1Launch;
+    double lss1SetTo = lss1DownPos;
 
     //stacks positions: top level (pixels 4 and 5) arm is 0.905, wrist is 0.11
     //pixels 3 and 4 arm is 0.92, wrist is 0.12
@@ -252,6 +257,8 @@ public class CSTeleop extends LinearOpMode {
         cameraBar = hardwareMap.get(ServoImplEx.class, "frontCamera");
         lift1 = hardwareMap.get(DcMotorEx.class, "slideMotorL");
         lift2 = hardwareMap.get(DcMotorEx.class, "slideMotorR");
+
+        droneRelease = hardwareMap.get(Servo.class, "droneRelease");
 
         motorFLenc = new MotorEx(hardwareMap, "motorFLandStrafeOdo");
         motorFRenc = new MotorEx(hardwareMap, "motorFRandForwardEncoder"); //also has right odometer
@@ -760,21 +767,32 @@ public class CSTeleop extends LinearOpMode {
             }
 
             if (gamepad2.guide) {
-                canDoEndgame = true;
+                droneRelease.setPosition(droneInitial);
+                canDoEndgame = !canDoEndgame;
                 endgameCanChange = false;
             } else {
                 endgameCanChange = true;
             }
             //endgame code
             if (canDoEndgame) {
+                //drone launcher
+                if (gamepad2.left_trigger > 0.05) {
+                    lss1.setPosition(lss1Launch);
+                    lss1SetTo = lss1Launch;
+                }
+                if (gamepad2.right_trigger > 0.05 && lss1SetTo == lss1Launch) {
+                    droneRelease.setPosition(droneFire);
+                }
                 //lead screw code
                 if (gamepad2.y) {
                     lss1.setPosition(lss1UpPos);
+                    lss1SetTo = lss1UpPos;
                     lss2.setPosition(lss2UpPos);
                 } else if (gamepad2.a) {
                     cameraBar.setPosition(camTuckedIn);
                     camSetTo = camTuckedIn;
                     lss1.setPosition(lss1DownPos);
+                    lss1SetTo = lss1DownPos;
                     lss2.setPosition(lss2DownPos);
                 }
                 /*if (gamepad2.guide && lsStateCanChange) {
