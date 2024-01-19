@@ -772,6 +772,8 @@ public class CSTeleop extends LinearOpMode {
                     lss1.setPosition(lss1UpPos);
                     lss2.setPosition(lss2UpPos);
                 } else if (gamepad2.a) {
+                    cameraBar.setPosition(camTuckedIn);
+                    camSetTo = camTuckedIn;
                     lss1.setPosition(lss1DownPos);
                     lss2.setPosition(lss2DownPos);
                 }

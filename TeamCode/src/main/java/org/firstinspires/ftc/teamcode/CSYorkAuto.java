@@ -165,11 +165,11 @@ public class CSYorkAuto extends CSYorkDF {
             openLowerClaw();
             sleep(500);
         }else if((result.equals("Right") && alliance == 1) || (result.equals("Left") && alliance == -1)){
-            goStraight(.4, 13, 0.0);
+            goStraight(.4, 15, 0.0);
             activateBackCamera();
             absoluteHeading(.4, -45.0*alliance);
             absoluteHeading(.2, -45.0*alliance);
-            goStraight(.4, 1, -45.0*alliance);
+            goStraight(.4, 2, -45.0*alliance);
             openLowerClaw();
             sleep(500);
         }
