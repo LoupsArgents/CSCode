@@ -253,7 +253,7 @@ public class CSYorkAuto extends CSYorkDF {
             //we want to be 1 inch left of the april tag
             if(dists[0] - 1 < 0){
                 strafeRight(.35, -1 * (dists[0]-1), 5, -90.0*alliance);
-            }else if(dists[0] - 2.5 > 0){
+            }else if(dists[0] - 1 > 0){
                 strafeLeft(.35, dists[0]-1, 5, -90.0*alliance);
             }
         }else if(result.equals("Right")){
@@ -261,7 +261,7 @@ public class CSYorkAuto extends CSYorkDF {
             if(dists[0] + 1.5 < 0){
                 RobotLog.aa("Strafing", (-1*(dists[0] + 1.5)) + " inches robot-right, board-left");
                 strafeRight(.35, -1 * (dists[0]+1.5), 5, -90.0*alliance);
-            }else if(dists[0] - 2.5 > 0){
+            }else if(dists[0] + 1.5 > 0){
                 RobotLog.aa("Strafing", (dists[0] + 1.5) + "inches robot-left, board-right");
                 strafeLeft(.35, dists[0]+1.5, 5, -90.0*alliance);
             }

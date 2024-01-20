@@ -213,10 +213,10 @@ public class CSTeleop extends LinearOpMode {
     double wristStackIdeal = wristDownPos;
     boolean doAutoBoardDistance = false;
     boolean endgameCanChange = true;
-    double droneInitial; //the position we want the drone launcher servo to be at when it's not trying to launch the drone
-    double droneFire; //the position for the drone launcher servo that will launch the drone
-    double lss1Launch; //the position we want for the left lead screw to be at when the drone is launching
-    double lss1SetTo = lss1DownPos;
+    double droneInitial = 0.72; //the position we want the drone launcher servo to be at when it's not trying to launch the drone
+    double droneFire = 0; //the position for the drone launcher servo that will launch the drone
+    double lss2Launch = 0.455; //the position we want for the left lead screw to be at when the drone is launching, down is 0.52
+    double lss2SetTo = lss2DownPos;
 
     //stacks positions: top level (pixels 4 and 5) arm is 0.905, wrist is 0.11
     //pixels 3 and 4 arm is 0.92, wrist is 0.12
@@ -777,22 +777,22 @@ public class CSTeleop extends LinearOpMode {
             if (canDoEndgame) {
                 //drone launcher
                 if (gamepad2.left_trigger > 0.05) {
-                    lss1.setPosition(lss1Launch);
-                    lss1SetTo = lss1Launch;
+                    lss2.setPosition(lss2Launch);
+                    lss2SetTo = lss2Launch;
                 }
-                if (gamepad2.right_trigger > 0.05 && lss1SetTo == lss1Launch) {
+                if (gamepad2.right_trigger > 0.05 && lss2SetTo == lss2Launch) {
                     droneRelease.setPosition(droneFire);
                 }
                 //lead screw code
                 if (gamepad2.y) {
                     lss1.setPosition(lss1UpPos);
-                    lss1SetTo = lss1UpPos;
+                    lss2SetTo = lss2UpPos;
                     lss2.setPosition(lss2UpPos);
                 } else if (gamepad2.a) {
                     cameraBar.setPosition(camTuckedIn);
                     camSetTo = camTuckedIn;
                     lss1.setPosition(lss1DownPos);
-                    lss1SetTo = lss1DownPos;
+                    lss2SetTo = lss2DownPos;
                     lss2.setPosition(lss2DownPos);
                 }
                 /*if (gamepad2.guide && lsStateCanChange) {
