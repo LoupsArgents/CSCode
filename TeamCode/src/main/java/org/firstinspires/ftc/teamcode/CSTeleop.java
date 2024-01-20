@@ -215,7 +215,8 @@ public class CSTeleop extends LinearOpMode {
     boolean endgameCanChange = true;
     double droneInitial = 0.72; //the position we want the drone launcher servo to be at when it's not trying to launch the drone
     double droneFire = 0; //the position for the drone launcher servo that will launch the drone
-    double lss2Launch = 0.455; //the position we want for the left lead screw to be at when the drone is launching, down is 0.52
+    double lss2Launch = 0.4625; //the position we want for the left lead screw to be at when the drone is launching, down is 0.52, old was 0.55
+    //0.46 works, 0.465 is a bit too high
     double lss2SetTo = lss2DownPos;
 
     //stacks positions: top level (pixels 4 and 5) arm is 0.905, wrist is 0.11
@@ -766,11 +767,11 @@ public class CSTeleop extends LinearOpMode {
                 motorBR.setPower(backRightPower);
             }
 
-            if (gamepad2.guide) {
+            if (gamepad2.guide && endgameCanChange) {
                 droneRelease.setPosition(droneInitial);
                 canDoEndgame = !canDoEndgame;
                 endgameCanChange = false;
-            } else {
+            } else if (!gamepad2.guide) {
                 endgameCanChange = true;
             }
             //endgame code

@@ -127,6 +127,7 @@ public class CSYorkAuto extends CSYorkDF {
     }
     public void onRun(String result, int alliance, boolean isNear){
         cameraBar.setPosition(camOutOfWay);
+        sleep(500);
         wrist.setPosition(wristAlmostDown);
         doPurplePixel(result, alliance, isNear);
         if(isNear) {
