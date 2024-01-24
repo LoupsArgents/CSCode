@@ -11,7 +11,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 
 @Disabled
-public class CSYorkAuto extends CSYorkDF {
+public class CSPhillyAuto extends CSYorkDF {
     ArrayList<Double> rightAverages = new ArrayList<>();
     ArrayList<Double> centerAverages = new ArrayList<>();
     ArrayList<Double> leftAverages = new ArrayList<>();
@@ -132,10 +132,11 @@ public class CSYorkAuto extends CSYorkDF {
         doPurplePixel(result, alliance, isNear);
         if(isNear) {
             doYellowPixel(result, alliance);
-            park(alliance, result, parkingNearWall); //once I get this figured out
+            cycle(result, alliance);
+            //park(alliance, result, parkingNearWall); //once I get this figured out
         }
-         //left out because cycling is incomplete
-         //cycle(result, alliance);
+        //left out because cycling is incomplete
+        //cycle(result, alliance);
 
     }
     public void doPurplePixel(String result, int alliance, boolean isNear){
@@ -148,7 +149,7 @@ public class CSYorkAuto extends CSYorkDF {
             }
             activateBackCamera();
             RobotLog.aa("Moved", Double.toString(inchesMoved));
-            goStraight(.3, 16-inchesMoved, 0.0);
+            goStraight(.4, 16-inchesMoved, 0.0); //power was .3
             openLowerClaw();
             sleep(500);
         }else if(result.equals("Center")){
@@ -182,9 +183,6 @@ public class CSYorkAuto extends CSYorkDF {
         }
     }
     public void doYellowPixel(String result, int alliance) {
-        /*wrist.setPosition(wristAlmostDown);
-        sleep(100);
-        arm1.setPosition(armAlmostUp);*/
         getToBackdrop(result, alliance);
         arm1.setPosition(arm1ScoringPos);
         wrist.setPosition(wristScoringPos);
@@ -198,37 +196,37 @@ public class CSYorkAuto extends CSYorkDF {
     }
     public void getToBackdrop(String result, int alliance){
         if((result.equals("Left") && alliance == 1) || (result.equals("Right") && alliance == -1)){
-            goBackward(.4, 3, 0.0 * alliance);
+            goBackward(.5, 3, 0.0 * alliance);
             closeLowerClaw();
             wrist.setPosition(wristAlmostDown);
             absoluteHeading(.4, -90.0 * alliance);
             absoluteHeading(.2, -90.0 * alliance);
             arm1.setPosition(armAlmostUp);
-            goBackward(.4, 12, -90.0*alliance);
+            goBackward(.5, 12, -90.0*alliance);
             cameraBar.setPosition(camTuckedIn);
             if(alliance == 1){
                 //strafe left
-                strafeLeft(.35, 7, 5, -90.0 * alliance);
+                strafeLeft(.55, 7, 5, -90.0 * alliance);
             }else if(alliance == -1){
                 //strafe right
-                strafeRight(.35, 7, 5, -90.0 * alliance);
+                strafeRight(.55, 7, 5, -90.0 * alliance);
             }
         }else if(result.equals("Center")){
-            goBackward(.4, 5, 0.0);
+            goBackward(.5, 5, 0.0);
             closeLowerClaw();
             wrist.setPosition(wristAlmostDown);
             absoluteHeading(.4, -90.0 * alliance);
             absoluteHeading(.2, -90.0 * alliance);
             arm1.setPosition(armAlmostUp);
-            goBackward(.4, 8, -90.0*alliance);
+            goBackward(.5, 8, -90.0*alliance);
             cameraBar.setPosition(camTuckedIn);
             if(alliance == 1){
-                moveBackLeft(.35, 8, -90.0*alliance);
+                moveBackLeft(.55, 8, -90.0*alliance);
             }else{
-                moveBackRight(.35, 8, -90.0*alliance);
+                moveBackRight(.55, 8, -90.0*alliance);
             }
         }else if((result.equals("Right") && alliance == 1) || (result.equals("Left") && alliance == -1)){
-            goBackward(.4, 6, -45.0*alliance);
+            goBackward(.5, 6, -45.0*alliance);
             closeLowerClaw();
             wrist.setPosition(wristAlmostDown);
             sleep(250);
@@ -242,13 +240,13 @@ public class CSYorkAuto extends CSYorkDF {
             double movedBack = 0.0;
             if(alliance == 1){
                 //strafeLeft(.35, 5, 5, -90.0*alliance);
-                movedBack = Math.abs(moveBackLeft(.5, 10, -90.0*alliance));
+                movedBack = Math.abs(moveBackLeft(.55, 10, -90.0*alliance));
             }else if(alliance == -1){
                 //strafeRight(.35, 5, 5, -90.0*alliance);
-                movedBack = Math.abs(moveBackRight(.5, 10, -90.0*alliance));
+                movedBack = Math.abs(moveBackRight(.55, 10, -90.0*alliance));
             }
             sleep(100);
-            goBackward(.4, 20 - movedBack, -90.0 * alliance);
+            goBackward(.5, 20 - movedBack, -90.0 * alliance);
         }
     }
     public void positionOnBackdrop(String result, int alliance){
@@ -294,40 +292,40 @@ public class CSYorkAuto extends CSYorkDF {
     public void getToStack(String result, int alliance){
         //if we started on the side closest to the wall, it's 35 inches
         //6 inches between april tags, and remember to factor in the adjustments made
-        goStraight(.4, 5, -90.0*alliance);
+        goStraight(.55, 5, -90.0*alliance); //power was .4
         arm1.setPosition(armAlmostDown);
         wrist.setPosition(wristAlmostDown);
         double inchesMoved = 0.0;
         if(result.equals("Left")){
             if(alliance == 1){
-                strafeLeft(.4, 18, 5 ,-90.0 * alliance);
+                strafeLeft(.6, 18, 5 ,-90.0 * alliance);
             }else if(alliance == -1){
-                strafeRight(.4, 18, 5 ,-90.0 * alliance);
+                strafeRight(.6, 18, 5 ,-90.0 * alliance); //powers on these were .4
             }
         }else if(result.equals("Center")){
             if(alliance == 1){
-                strafeLeft(.4, 10, 5 ,-90.0 * alliance);
+                strafeLeft(.6, 10, 5 ,-90.0 * alliance);
             }else if(alliance == -1){
-                strafeRight(.4, 10, 5 ,-90.0 * alliance);
+                strafeRight(.6, 10, 5 ,-90.0 * alliance); //powers were .4
             }
         }else if(result.equals("Right")){
             if(alliance == 1){
-                strafeLeft(.4, 4, 5 ,-90.0 * alliance);
+                strafeLeft(.6, 4, 5 ,-90.0 * alliance);
             }else if(alliance == -1){
-                strafeRight(.4, 4, 5 ,-90.0 * alliance);
+                strafeRight(.6, 4, 5 ,-90.0 * alliance); //powers were .4
             }
         }
         activateFrontCamera();
         arm1.setPosition(arm1DownPos);
         wrist.setPosition(wristDownPos);
         if(alliance == 1){
-            inchesMoved = moveForwardLeft(.5, 12, -90.0*alliance);
+            inchesMoved = moveForwardLeft(.65, 12, -90.0*alliance);
         }else if(alliance == -1) {
-            inchesMoved = moveForwardRight(.5, 12, -90.0 * alliance);
+            inchesMoved = moveForwardRight(.65, 12, -90.0 * alliance); //powers were .5
         }
         processor.setMode(EverythingProcessor.ProcessorMode.PIXEL);
         cameraBar.setPosition(camUsePos);
-        goStraight(.4, 50-inchesMoved, -90.0*alliance);
+        goStraight(.6, 50-inchesMoved, -90.0*alliance); //power was .4
         wrist.setPosition(wristAlmostDown);
         arm1.setPosition(armStack45Pos);
         // inchesMoved = 0.0;
@@ -336,7 +334,7 @@ public class CSYorkAuto extends CSYorkDF {
         //}else if(alliance == -1){
         //  inchesMoved = moveForwardLeft(.6, 3, -90.0*alliance);
         //}
-        goStraight(.4, 32, -90.0*alliance);
+        goStraight(.6, 32, -90.0*alliance); //power was .4
         wrist.setPosition(wristStack45Pos);
         sleep(500);
         ZonedDateTime dt = ZonedDateTime.now();
@@ -396,20 +394,20 @@ public class CSYorkAuto extends CSYorkDF {
                 //~20 inches from the closest to the wall
                 RobotLog.aa("Status", "Parking near wall");
                 if(result.equals("Left")){
-                    strafeLeft(.4, 31, 5, -90.0*alliance);
+                    strafeLeft(.6, 31, 5, -90.0*alliance);
                 }else if(result.equals("Center")){
-                    strafeLeft(.4, 24, 5, -90.0*alliance);
+                    strafeLeft(.6, 24, 5, -90.0*alliance);
                 }else{
-                    strafeLeft(.4, 18, 5, -90.0*alliance);
+                    strafeLeft(.6, 18, 5, -90.0*alliance);
                 }
             }else{
                 RobotLog.aa("Status", "Parking away from wall");
                 if(result.equals("Left")){
-                    strafeRight(.4, 14, 5, -90.0*alliance);
+                    strafeRight(.6, 14, 5, -90.0*alliance);
                 }else if(result.equals("Center")){
-                    strafeRight(.4, 22, 5, -90.0*alliance);
+                    strafeRight(.6, 22, 5, -90.0*alliance);
                 }else{
-                    strafeRight(.4, 30, 5, -90.0*alliance);
+                    strafeRight(.6, 30, 5, -90.0*alliance);
                 }
             }
         }else if(alliance == 1){
@@ -418,20 +416,20 @@ public class CSYorkAuto extends CSYorkDF {
                 //~20 inches from the closest to the wall
                 RobotLog.aa("Status", "Parking near wall");
                 if(result.equals("Left")){
-                    strafeRight(.4, 18, 5, -90.0*alliance);
+                    strafeRight(.6, 18, 5, -90.0*alliance);
                 }else if(result.equals("Center")){
-                    strafeRight(.4, 24, 5, -90.0*alliance);
+                    strafeRight(.6, 24, 5, -90.0*alliance);
                 }else{
-                    strafeRight(.4, 31, 5, -90.0*alliance);
+                    strafeRight(.6, 31, 5, -90.0*alliance);
                 }
             }else{
                 RobotLog.aa("Status", "Parking away from wall");
                 if(result.equals("Left")){
-                    strafeLeft(.4, 30, 5, -90.0*alliance);
+                    strafeLeft(.6, 30, 5, -90.0*alliance);
                 }else if(result.equals("Center")){
-                    strafeLeft(.4, 22, 5, -90.0*alliance);
+                    strafeLeft(.6, 22, 5, -90.0*alliance);
                 }else{
-                    strafeLeft(.4, 14, 5, -90.0*alliance);
+                    strafeLeft(.6, 14, 5, -90.0*alliance);
                 }
             }
         }
