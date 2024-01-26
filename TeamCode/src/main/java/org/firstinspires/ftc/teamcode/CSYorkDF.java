@@ -83,16 +83,16 @@ public class CSYorkDF extends LinearOpMode {
     double armAlmostUp = 0.37;
     double armAlmostDown = 0.8;
     double arm1DownPos = 0.97;
-    //stacks positions: top level (pixels 4 and 5) arm is 0.905, wrist is 0.11
-    //pixels 3 and 4 arm is 0.92, wrist is 0.12
-    //pixels 2 and 3 arm is 0.945, wrist is 0.125
+    //stacks positions: top level (pixels 4 and 5) arm is 0.935, wrist is 0.12
+    //pixels 3 and 4 arm is 0.945, wrist is 0.12
+    //pixels 2 and 3 arm is 0.955, wrist is 0.13
     //pixels 1 and 2 are normal arm/claw levels (they're on the ground)
-    double armStack45Pos = 0.91;
-    double armStack34Pos = 0.925;
-    double armStack23Pos = 0.95;
-    double wristStack45Pos = 0.11;
+    double armStack45Pos = 0.935;
+    double armStack34Pos = 0.945;
+    double armStack23Pos = 0.955;
+    double wristStack45Pos = 0.12;
     double wristStack34Pos = 0.12;
-    double wristStack23Pos = 0.125;
+    double wristStack23Pos = 0.13;
     //these ^^^ may need changing -- we'll see
     double camOutOfWay = 0.36; //pointing straight out
     double camUsePos = 0.655;
