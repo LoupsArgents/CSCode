@@ -388,6 +388,13 @@ public class CSTeleop extends LinearOpMode {
             while (botHeading > 2*Math.PI && opModeIsActive()) {
                 botHeading -= 2*Math.PI;
             }
+
+            //safety
+            if (armSetTo == arm1DownPos) {
+                liftIdealPos = 0.0;
+                pixelRow = -1;
+            }
+
             //manual camera bar code
             if (gamepad2.left_bumper) {
                 cameraBar.setPosition(camTuckedIn);
@@ -405,6 +412,7 @@ public class CSTeleop extends LinearOpMode {
                     doStacks = false;
                 }
                 if (gamepad2.dpad_down && liftPos < 0.01) {
+                    pixelRow = -1;
                     doStacks = false;
                     activateFrontCamera();
                     armIdealPosition = arm1DownPos;
@@ -416,15 +424,30 @@ public class CSTeleop extends LinearOpMode {
                         clawDown.setPosition(clawDownclose);
                         clawDownSetTo = clawDownclose;
                     }
+                } else if (gamepad2.dpad_down) { //put everything all the way down
+                    doStacks = false;
+                    activateFrontCamera();
+                    armIdealPosition = arm1DownPos;
+                    armPhase = 2;
+                    armTimer.reset();
+                    liftIdealPos = 0.0;
+                    if (clawUpSetTo != clawUpclose || clawDownSetTo != clawDownclose) {
+                        clawUp.setPosition(clawUpclose);
+                        clawUpSetTo = clawUpclose;
+                        clawDown.setPosition(clawDownclose);
+                        clawDownSetTo = clawDownclose;
+                    }
                 }
-                //stacks positions: top level (pixels 4 and 5) arm is 0.905, wrist is 0.11
-                //pixels 3 and 4 arm is 0.92, wrist is 0.12
-                //pixels 2 and 3 arm is 0.945, wrist is 0.125
+                //stacks positions: top level (pixels 4 and 5) arm is 0.935, wrist is 0.12
+                //pixels 3 and 4 arm is 0.945, wrist is 0.12
+                //pixels 2 and 3 arm is 0.955, wrist is 0.13
                 //pixels 1 and 2 are normal arm/claw levels (they're on the ground)
                 if (gamepad2.dpad_right) {
                     stacksLevel = 3;//0 is pixels 1 and 2, 1 is pixels 2 and 3, 2 is pixels 3 and 4, 3 is pixels 4 and 5
-                    arm1.setPosition(0.905);
-                    //wrist.setPosition(0.11);
+                    arm1.setPosition(0.935);
+                    armSetTo = 0.935;
+                    //wrist.setPosition(0.12);
+                    wrist.setPosition(wristAlmostDown);
                     wristStackIdeal = 0.11;
                     wristTimer.reset();
                     doStacks = true;
@@ -435,87 +458,92 @@ public class CSTeleop extends LinearOpMode {
                     stacksLevel -= 1;
                     if (stacksLevel < 0) {stacksLevel = 0;}
                     if (stacksLevel == 2) {
-                        arm1.setPosition(0.92);
+                        arm1.setPosition(0.945);
+                        armSetTo = 0.945;
                         //wrist.setPosition(0.12);
                         wristStackIdeal = 0.12;
                     } else if (stacksLevel == 1) {
-                        arm1.setPosition(0.945);
+                        arm1.setPosition(0.955);
+                        armSetTo = 0.965; //was 0.955
                         //wrist.setPosition(0.125);
-                        wristStackIdeal = 0.125;
+                        wristStackIdeal = 0.13;
                     } else if (stacksLevel == 0) {
                         arm1.setPosition(arm1DownPos);
+                        armSetTo = arm1DownPos;
                         //wrist.setPosition(wristDownPos);
                         wristStackIdeal = wristDownPos;
                     }
                 } else if (!gamepad2.dpad_left) {
                     stacksLevelCanChange = true;
                 }
-                if (doStacks && wristTimer.milliseconds() > 1000) {
+                if (doStacks && wristTimer.milliseconds() > 750) {
                     if (wristSetTo != wristStackIdeal) {
                         wrist.setPosition(wristStackIdeal);
                         wristSetTo = wristStackIdeal;
                     }
                 }
-                if (armPhase == 4 && wristTimer.milliseconds() > 500) {
+                /*if (&& armPhase == 4 && wristTimer.milliseconds() > 500) {
                     if (!(wristSetTo == wristDownPos)) {
                         wrist.setPosition(wristDownPos);
                         wristSetTo = wristDownPos;
                     }
                     wristSetTo = wristDownPos;
-                }
-                if ((armPhase == 1) && armTimer.milliseconds() > 1000) { //was 2000, then 1500, 1100 worked
-                    armPhase += 2;
-                }
-                if ((armPhase == 2) && armTimer.milliseconds() > 1000) { //was 2000
-                    armPhase += 2;
-                }
-                if (armPhase == 1) {//just starting to go up
-                    if (!(armSetTo == armAlmostUp)) {
-                        arm1.setPosition(armAlmostUp);
-                        armSetTo = armAlmostUp;
+                }*/
+                if (!doStacks) {
+                    if ((armPhase == 1) && armTimer.milliseconds() > 1000) { //was 2000, then 1500, 1100 worked
+                        armPhase += 2;
                     }
-                    if (!(wristSetTo == wristAlmostDown)) {
-                        wrist.setPosition(wristAlmostDown);
-                        wristSetTo = wristAlmostDown;
+                    if ((armPhase == 2) && armTimer.milliseconds() > 1000) { //was 2000
+                        armPhase += 2;
                     }
-                    if (clawUpSetTo != clawUpclose || clawDownSetTo != clawDownclose) {
-                        clawUp.setPosition(clawUpclose);
-                        clawUpSetTo = clawUpclose;
-                        clawDown.setPosition(clawDownclose);
-                        clawDownSetTo = clawDownclose;
-                    }
-                } else if (armPhase == 2) { //just starting to go down
-                    phase4JustStarted = true;
-                    if (!(armSetTo == armAlmostDown)) {
-                        arm1.setPosition(armAlmostDown);
-                        armSetTo = armAlmostDown;
-                    }
-                    if (!(wristSetTo == wristAlmostDown)) {
-                        wrist.setPosition(wristAlmostDown);
-                        wristSetTo = wristAlmostDown;
-                    }
-                } else if (armPhase == 3) { //rest of the way up
-                    if (!(armSetTo == arm1ScoringPos)) {
-                        arm1.setPosition(arm1ScoringPos);
-                        armSetTo = arm1ScoringPos;
-                    }
-                    if (!(wristSetTo == wristScoringPos)) {
-                        wrist.setPosition(wristScoringPos);
-                        wristSetTo = wristScoringPos;
-                    }
-                } else if (armPhase == 4) { //rest of the way down
-                    if (phase4JustStarted) {
-                        wristTimer.reset();
-                    }
-                    phase4JustStarted = false;
-                    if (!(armSetTo == arm1DownPos)) {
-                        arm1.setPosition(arm1DownPos);
-                        armSetTo = arm1DownPos;
-                    }
+                    if (armPhase == 1) {//just starting to go up
+                        if (!(armSetTo == armAlmostUp)) {
+                            arm1.setPosition(armAlmostUp);
+                            armSetTo = armAlmostUp;
+                        }
+                        if (!(wristSetTo == wristAlmostDown)) {
+                            wrist.setPosition(wristAlmostDown);
+                            wristSetTo = wristAlmostDown;
+                        }
+                        if (clawUpSetTo != clawUpclose || clawDownSetTo != clawDownclose) {
+                            clawUp.setPosition(clawUpclose);
+                            clawUpSetTo = clawUpclose;
+                            clawDown.setPosition(clawDownclose);
+                            clawDownSetTo = clawDownclose;
+                        }
+                    } else if (armPhase == 2) { //just starting to go down
+                        phase4JustStarted = true;
+                        if (!(armSetTo == armAlmostDown)) {
+                            arm1.setPosition(armAlmostDown);
+                            armSetTo = armAlmostDown;
+                        }
+                        if (!(wristSetTo == wristAlmostDown)) {
+                            wrist.setPosition(wristAlmostDown);
+                            wristSetTo = wristAlmostDown;
+                        }
+                    } else if (armPhase == 3) { //rest of the way up
+                        if (!(armSetTo == arm1ScoringPos)) {
+                            arm1.setPosition(arm1ScoringPos);
+                            armSetTo = arm1ScoringPos;
+                        }
+                        if (!(wristSetTo == wristScoringPos)) {
+                            wrist.setPosition(wristScoringPos);
+                            wristSetTo = wristScoringPos;
+                        }
+                    } else if (armPhase == 4) { //rest of the way down
+                        if (phase4JustStarted) {
+                            wristTimer.reset();
+                        }
+                        phase4JustStarted = false;
+                        if (!(armSetTo == arm1DownPos)) {
+                            arm1.setPosition(arm1DownPos);
+                            armSetTo = arm1DownPos;
+                        }
                     /*if (!(wristSetTo == wristDownPos)) {
                         wrist.setPosition(wristDownPos);
                         wristSetTo = wristDownPos;
                     }*/
+                    }
                 }
             }
 
@@ -642,6 +670,9 @@ public class CSTeleop extends LinearOpMode {
                     liftHappyPlace = false;
                 }
                 if (!isJoysticking && !liftHappyPlace) {
+                    if (liftError < 0) { //going down
+                        Kp = 30;
+                    }
                     lift2.setPower(liftError*Kp);
                     lift1.setPower(-liftError*Kp);
                 } else if (isJoysticking == false) { //liftHappyPlace == true
