@@ -430,6 +430,7 @@ public class CSTeleop extends LinearOpMode {
                     doStacks = true;
                 }
                 if (gamepad2.dpad_left && stacksLevelCanChange) {
+                    stacksLevelCanChange = false;
                     doStacks = true;
                     stacksLevel -= 1;
                     if (stacksLevel < 0) {stacksLevel = 0;}
@@ -462,10 +463,10 @@ public class CSTeleop extends LinearOpMode {
                     }
                     wristSetTo = wristDownPos;
                 }
-                if ((armPhase == 1) && armTimer.milliseconds() > 2000) {
+                if ((armPhase == 1) && armTimer.milliseconds() > 1000) { //was 2000, then 1500, 1100 worked
                     armPhase += 2;
                 }
-                if ((armPhase == 2) && armTimer.milliseconds() > 2000) {
+                if ((armPhase == 2) && armTimer.milliseconds() > 1000) { //was 2000
                     armPhase += 2;
                 }
                 if (armPhase == 1) {//just starting to go up
