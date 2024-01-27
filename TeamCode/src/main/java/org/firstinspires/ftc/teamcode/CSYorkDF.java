@@ -87,9 +87,9 @@ public class CSYorkDF extends LinearOpMode {
     //pixels 3 and 4 arm is 0.945, wrist is 0.12
     //pixels 2 and 3 arm is 0.955, wrist is 0.13
     //pixels 1 and 2 are normal arm/claw levels (they're on the ground)
-    double armStack45Pos = 0.935;
-    double armStack34Pos = 0.945;
-    double armStack23Pos = 0.955;
+    double armStack45Pos = 0.93; //was .935
+    double armStack34Pos = 0.94; //was .945
+    double armStack23Pos = 0.95; //was .955
     double wristStack45Pos = 0.12;
     double wristStack34Pos = 0.12;
     double wristStack23Pos = 0.13;
@@ -711,8 +711,8 @@ public class CSYorkDF extends LinearOpMode {
         //slidesTolerance
         liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
         double liftError = liftIdealPos - liftPos;
-        double liftTolerance = 0.05;
-        double Kp = 10;
+        double liftTolerance = 0.005;
+        double Kp = 50;
         if (Math.abs(liftPos - liftIdealPos) > liftTolerance) {
             lift2.setPower(liftError*Kp);
             lift1.setPower(-liftError*Kp);
@@ -734,6 +734,12 @@ public class CSYorkDF extends LinearOpMode {
         //IDs: 1 is blue left, 2 is blue center, 3 is blue right
         //4 is red left, 5 is red center, 6 is red right
         List<AprilTagDetection> currentDetections = ATProcessor.getDetections();
+        if(currentDetections.size() == 0){
+            currentDetections = ATProcessor.getDetections();
+            if(currentDetections.size() == 0){
+                currentDetections = ATProcessor.getDetections();
+            }
+        }
         double[] dists = new double[2];
         double frontDistAvg = 0.0;
         double[] leftCenterRightXDists = new double[3];
