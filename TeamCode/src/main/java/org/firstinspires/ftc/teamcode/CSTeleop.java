@@ -146,7 +146,7 @@ public class CSTeleop extends LinearOpMode {
     double clawDownclose = 0.47;
     boolean doAbsHeading = false;
     double idealAbsHeading = 0.0;
-    double turningConst = 0.575;
+    double turningConst = 0.575; //was 0.575
     double wristDownPos = 0.135;
     double wristAlmostDown = 0.15;//for flipping the arm up
     double wristStraightUp = 0.45;
@@ -209,6 +209,8 @@ public class CSTeleop extends LinearOpMode {
     double stacksLevel = 0; //0 is pixels 1 and 2, 1 is pixels 2 and 3, 2 is pixels 3 and 4, 4 is pixels 4 and 5
     boolean stacksLevelCanChange = true;
     boolean phase4JustStarted = false;
+    boolean armJustDown = false;
+    boolean camInUsePos = false;
     boolean doStacks = false;
     double wristStackIdeal = wristDownPos;
     boolean doAutoBoardDistance = false;
@@ -330,6 +332,7 @@ public class CSTeleop extends LinearOpMode {
         lsm2pos = (lsm2.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
 
         cameraBar.setPosition(camTuckedIn);
+        camInUsePos = false;
 
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
 
@@ -360,6 +363,7 @@ public class CSTeleop extends LinearOpMode {
             //telemetry.addData("oldHeadingWay", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
             currentTime = timer.milliseconds();
             armCurrentTime = armTimer.milliseconds();
+            telemetry.addData("wristSetTo", wristSetTo);
             telemetry.addData("loop time, ms", currentTime);
             telemetry.addData("arm time, ms", armCurrentTime);
             telemetry.addData("backdropDistance (cm)", backDistCM);
@@ -398,8 +402,10 @@ public class CSTeleop extends LinearOpMode {
             //manual camera bar code
             if (gamepad2.left_bumper) {
                 cameraBar.setPosition(camTuckedIn);
+                camInUsePos = false;
             } else if (gamepad2.right_bumper) {
                 cameraBar.setPosition(camOutOfWay);
+                camInUsePos = false;
             }
             //arm manual code
             if (Math.abs(cameraBar.getPosition() - camTuckedIn) < 0.05 || Math.abs(cameraBar.getPosition() - camOutOfWay) < 0.05) { //we're allowed to move the arm
@@ -513,6 +519,7 @@ public class CSTeleop extends LinearOpMode {
                         }
                     } else if (armPhase == 2) { //just starting to go down
                         phase4JustStarted = true;
+                        armJustDown = true;
                         if (!(armSetTo == armAlmostDown)) {
                             arm1.setPosition(armAlmostDown);
                             armSetTo = armAlmostDown;
@@ -539,6 +546,19 @@ public class CSTeleop extends LinearOpMode {
                             arm1.setPosition(arm1DownPos);
                             armSetTo = arm1DownPos;
                         }
+                        if (armJustDown && armTimer.milliseconds() > 2000) {
+                            armJustDown = false;
+                            cameraBar.setPosition(camUsePos);
+                            clawUp.setPosition(clawUpopen);
+                            clawUpSetTo = clawUpopen;
+                            clawDown.setPosition(clawDownopen);
+                            clawDownSetTo = clawDownopen;
+                            camInUsePos = true;
+                        }
+                        if (wristTimer.milliseconds() > 500) {
+                            wrist.setPosition(wristDownPos);
+                            wristSetTo = wristDownPos;
+                        }
                     /*if (!(wristSetTo == wristDownPos)) {
                         wrist.setPosition(wristDownPos);
                         wristSetTo = wristDownPos;
@@ -557,7 +577,9 @@ public class CSTeleop extends LinearOpMode {
             telemetry.update();
             //claw stuff
             if (gamepad1.right_bumper && armSetTo == arm1DownPos) {
-                cameraBar.setPosition(camUsePos);
+                if (!camInUsePos) {
+                    cameraBar.setPosition(camUsePos);
+                }
                 lift1.setPower(0);
                 lift2.setPower(0);
                 clawUp.setPosition(clawUpopen);
@@ -568,11 +590,13 @@ public class CSTeleop extends LinearOpMode {
                 hasEverSeenPixel = false;
                 camBarTimer.reset();
             }
-            if (doAutoPickup && camBarTimer.milliseconds() > 1000 && (processor.getIsSeeingPixel() || clawSeesPixels() || hasEverSeenPixel)) {
+            if (doAutoPickup && (camBarTimer.milliseconds() > 1000 || camInUsePos) && (processor.getIsSeeingPixel() || clawSeesPixels() || hasEverSeenPixel)) {
                 doAutoPickup = !closestStackInnerFunction(processor); //true = keep going, false = stop
+                camInUsePos = true;
                 if (!doAutoPickup) {
                     clawUp.setPosition(clawUpclose);
                     clawUpSetTo = clawUpclose;
+                    cameraBar.setPosition(camTuckedIn);
                     clawDown.setPosition(clawDownclose);
                     clawDownSetTo = clawDownclose;
                     gamepad1.rumble(500);
@@ -587,12 +611,14 @@ public class CSTeleop extends LinearOpMode {
                     canUseClawManually = true;
                     canDriveManually = true;
                     cameraBar.setPosition(camTuckedIn);
+                    camInUsePos = false;
                 }
             } else if (doAutoPickup && camBarTimer.milliseconds() > 1000 && !(processor.getIsSeeingPixel() || clawSeesPixels() || hasEverSeenPixel)) {
                 doAutoPickup = false;
                 canUseClawManually = true;
                 canDriveManually = true;
                 cameraBar.setPosition(camTuckedIn);
+                camInUsePos = false;
                 gamepad1.rumble(100);
             }
             if (gamepad1.left_bumper) {
@@ -610,6 +636,8 @@ public class CSTeleop extends LinearOpMode {
                     clawUpSetTo = clawUpclose;
                     clawDown.setPosition(clawDownclose);
                     clawDownSetTo = clawDownclose;
+                    cameraBar.setPosition(camTuckedIn);
+                    camInUsePos = false;
                 }
                 if (gamepad1.left_trigger > 0.1 && clawStateCanChange) {
                     clawStateCanChange = false;
@@ -633,6 +661,7 @@ public class CSTeleop extends LinearOpMode {
             //lift manual code
             if (liftPos > 0.01) {
                 cameraBar.setPosition(camOutOfWay);
+                camInUsePos = false;
             }
 
             if (gamepad2.y && !canDoEndgame && !isJoysticking && canChangeLiftLevel) {
@@ -722,17 +751,39 @@ public class CSTeleop extends LinearOpMode {
 
             //mecanum drive code
             if (canDriveManually) {
-                imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+                botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
                 double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
                 double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
                 double rx = gamepad1.right_stick_x;
-                // Rotate the movement direction counter to the bot's rotation
-                double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
-                double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
-                rotX = rotX * 1.1;  // Counteract imperfect strafing
                 //double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
                 //double botHeading = 0;
                 if (Math.abs(rx) < 0.05) {rx = 0;}
+                if (gamepad1.left_bumper) {
+                    //backDistCM
+                    double idealDistCM = 4.6;
+                    double errorCM = backDistCM - idealDistCM;
+                    double tolCM = 0.4;
+                    double cmConst = 0.1; //was 0.25
+                    if (Math.abs(botHeading - Math.PI/2) < Math.min(Math.abs(botHeading - 3 * Math.PI/2), Math.abs(botHeading + Math.PI/2))) { //on blue alliance - left is towards board
+                        if (errorCM < 0 && Math.abs(errorCM) > tolCM) { //get further from board-- x = positive
+                            x = cmConst * errorCM;
+                        } else if (errorCM > 0 && Math.abs(errorCM) > tolCM) { //make x be negative
+                            x = cmConst * errorCM;
+                        } else {
+                            x = 0;
+                        }
+                    } else { //right is towards board
+                        if (errorCM < 0 && Math.abs(errorCM) > tolCM) { //get further from board - x = negative
+                            x = cmConst * errorCM * -1;
+                        } else if (errorCM > 0 && Math.abs(errorCM) > tolCM) { //make x be positive
+                            x = cmConst * errorCM * -1;
+                        } else {
+                            x = 0;
+                        }
+                    }
+                    if (x > 0.5) {x = 0.5;}
+                    if (x < -0.5) {x = -0.5;}
+                }
                 //really hope the math here works
                 if (doAbsHeading) {
                     //change rx to something that will accomplish our goal
@@ -748,7 +799,7 @@ public class CSTeleop extends LinearOpMode {
                     error = Math.abs((botHeading - idealAbsHeading))%(2*Math.PI);
                     error = Math.min(error, 2*Math.PI - error);
                     double sign = 0;
-                    if (error < 0.03) {
+                    if (error < 0.03) { //was < 0.03, 0.025 was shaky
                         rx = 0;
                         doAbsHeading = false;
                     } else {
@@ -779,12 +830,19 @@ public class CSTeleop extends LinearOpMode {
                         }
                         //rx = error*turningConst; //old function with turningConst of 0.4
                         rx = turningConst*(error - Math.PI/2) + 1;
-                        if (rx < 0.2) {rx = 0.2;}
+                        if (rx < 0.15) {rx = 0.15;} //was 0.2
                         if (rx > 1) {rx = 1;}
                         rx *= sign;
                     }
                 }
-
+                botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+                //rotate the movement counter to the bot's heading
+                double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
+                double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
+                rotX = rotX * 1.1;  // Counteract imperfect strafing
+                //double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+                //double botHeading = 0;
+                if (Math.abs(rx) < 0.05) {rx = 0;}
                 // Denominator is the largest motor power (absolute value) or 1
                 // This ensures all the powers maintain the same ratio,
                 // but only if at least one is out of the range [-1, 1]
@@ -824,6 +882,7 @@ public class CSTeleop extends LinearOpMode {
                 } else if (gamepad2.a) {
                     cameraBar.setPosition(camTuckedIn);
                     camSetTo = camTuckedIn;
+                    camInUsePos = false;
                     lss1.setPosition(lss1DownPos);
                     lss2SetTo = lss2DownPos;
                     lss2.setPosition(lss2DownPos);
@@ -1100,7 +1159,7 @@ public class CSTeleop extends LinearOpMode {
         boolean isThereAPixel = leftSensorPos < 2 || rightSensorPos < 2;
         if(!isThereAPixel){ //y threshold was 300
             //RobotLog.aa("DistanceFromCenter", String.valueOf(Math.abs(pixelPos.x - 320)));
-            double power = .35;
+            double power = .35; //was 0.35, .5 was too fast
             double multiplier = 1;
             double proportionalConstant = -.02;
             // used to be -.5, then -.3, then -.03, then -.01, then -.015, then -.03, then -0.025, then new camera
