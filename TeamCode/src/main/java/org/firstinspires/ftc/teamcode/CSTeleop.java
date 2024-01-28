@@ -873,6 +873,7 @@ public class CSTeleop extends LinearOpMode {
             }
             //endgame code
             if (canDoEndgame) {
+                canUseSlides = false;
                 //drone launcher
                 if (gamepad2.left_trigger > 0.05) {
                     lss2.setPosition(lss2Launch);

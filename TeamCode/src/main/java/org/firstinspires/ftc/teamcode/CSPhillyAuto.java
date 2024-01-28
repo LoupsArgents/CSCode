@@ -373,12 +373,12 @@ public class CSPhillyAuto extends CSYorkDF {
         String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
         portal.saveNextFrameRaw("YorkAutoNearStack " + time);
         centerOnClosestStack(processor);
+        cameraBar.setPosition(camTuckedIn);
         sleep(500);
         arm1.setPosition(armStack45Pos - .1);
         pixelsOnStack -= 2;
     }
     public void getBackToBoard(String result, int alliance){
-        cameraBar.setPosition(camTuckedIn);
         activateBackCamera();
         goBackward(.8, 65, -90.0*alliance); //power was .6, then .7; distance was 70 but became too close for apriltags
         wrist.setPosition(wristAlmostDown);
