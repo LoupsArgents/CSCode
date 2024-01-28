@@ -763,12 +763,14 @@ public class CSTeleop extends LinearOpMode {
                 //double botHeading = 0;
                 if (Math.abs(rx) < 0.05) {rx = 0;}
                 if (gamepad1.left_bumper) {
+                    doAbsHeading = true;
                     //backDistCM
                     double idealDistCM = 4.6;
                     double errorCM = backDistCM - idealDistCM;
                     double tolCM = 0.4;
                     double cmConst = 0.1; //was 0.25
                     if (Math.abs(botHeading - Math.PI/2) < Math.min(Math.abs(botHeading - 3 * Math.PI/2), Math.abs(botHeading + Math.PI/2))) { //on blue alliance - left is towards board
+                        idealAbsHeading = Math.PI/2;
                         if (errorCM < 0 && Math.abs(errorCM) > tolCM) { //get further from board-- x = positive
                             x = cmConst * errorCM;
                         } else if (errorCM > 0 && Math.abs(errorCM) > tolCM) { //make x be negative
@@ -777,6 +779,7 @@ public class CSTeleop extends LinearOpMode {
                             x = 0;
                         }
                     } else { //right is towards board
+                        idealAbsHeading = 3*Math.PI/2;
                         if (errorCM < 0 && Math.abs(errorCM) > tolCM) { //get further from board - x = negative
                             x = cmConst * errorCM * -1;
                         } else if (errorCM > 0 && Math.abs(errorCM) > tolCM) { //make x be positive
