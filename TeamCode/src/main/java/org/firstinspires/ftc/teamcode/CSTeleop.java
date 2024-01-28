@@ -142,8 +142,8 @@ public class CSTeleop extends LinearOpMode {
     boolean clawStateCanChange = true;
     double clawUpopen = 0.51;
     double clawUpclose = 0.355;
-    double clawDownopen = 0.58;
-    double clawDownclose = 0.47;
+    double clawDownopen = 0.53; //was .58 before servo broke
+    double clawDownclose = 0.42; //was .47 before servo broke
     boolean doAbsHeading = false;
     double idealAbsHeading = 0.0;
     double turningConst = 0.575; //was 0.575
@@ -582,6 +582,10 @@ public class CSTeleop extends LinearOpMode {
                 }
                 lift1.setPower(0);
                 lift2.setPower(0);
+                motorFR.setPower(0);
+                motorFL.setPower(0);
+                motorBR.setPower(0);
+                motorBL.setPower(0);
                 clawUp.setPosition(clawUpopen);
                 clawDown.setPosition(clawDownopen);
                 canUseClawManually = false;

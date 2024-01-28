@@ -72,8 +72,12 @@ public class CSYorkDF extends LinearOpMode {
     double multiplierBR = 1.0;
     double clawUpOpen = 0.51;
     double clawUpClose = 0.355;
-    double clawDownOpen = 0.58;
-    double clawDownClose = 0.47;
+
+    //diference should be ~.11
+    //if closed posiition is .42
+    //then that puts open position at ~.53
+    double clawDownOpen = 0.53;
+    double clawDownClose = 0.42;
     double wristDownPos = 0.135;
     double wristAlmostDown = 0.15;//for flipping the arm up
     double wristStraightUp = 0.45;
@@ -87,9 +91,9 @@ public class CSYorkDF extends LinearOpMode {
     //pixels 3 and 4 arm is 0.945, wrist is 0.12
     //pixels 2 and 3 arm is 0.955, wrist is 0.13
     //pixels 1 and 2 are normal arm/claw levels (they're on the ground)
-    double armStack45Pos = 0.93; //was .935
-    double armStack34Pos = 0.94; //was .945
-    double armStack23Pos = 0.95; //was .955
+    double armStack45Pos = 0.937; //was .935 then .93
+    double armStack34Pos = 0.947; //was .945
+    double armStack23Pos = 0.955; //was .955, then .96, then .957
     double wristStack45Pos = 0.12;
     double wristStack34Pos = 0.12;
     double wristStack23Pos = 0.13;
