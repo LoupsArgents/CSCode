@@ -108,6 +108,7 @@ public class CSPhillyAuto extends CSYorkDF {
     }
     public void setInitialPositions(){
         //wrist slightly up, arm slightly up, flip wrist, arm down
+        endStop.setPosition(endStopOutOfWayPos);
         cameraBar.setPosition(camTuckedIn);
         closeClaw();
         sleep(400);
@@ -310,8 +311,17 @@ public class CSPhillyAuto extends CSYorkDF {
         //if we started on the side closest to the wall, it's 35 inches
         //6 inches between april tags, and remember to factor in the adjustments made
         double armPosForCycle;
-        if(pixelsOnStack == 5) armPosForCycle = armStack45Pos;
-        else armPosForCycle = armStack23Pos;
+        double endStopPosForCycle;
+        double wristPosForCycle;
+        if(pixelsOnStack == 5){
+            armPosForCycle = armStack45Pos;
+            endStopPosForCycle = endStop45Pos;
+            wristPosForCycle = wristStack45Pos;
+        }else{
+            armPosForCycle = armStack23Pos;
+            endStopPosForCycle = endStop23Pos;
+            wristPosForCycle = wristStack23Pos;
+        }
         goStraight(.75, 7, -90.0*alliance); //power was .4, then .55, then .65; increased distance from 5
         //all the put arm/slides down stuff
         //if(pixelsOnStack == 3){
@@ -359,23 +369,26 @@ public class CSPhillyAuto extends CSYorkDF {
         cameraBar.setPosition(camUsePos);
         wrist.setPosition(wristAlmostDown);
         arm1.setPosition(armPosForCycle);
+        endStop.setPosition(endStopPosForCycle);
         // inchesMoved = 0.0;
         //if(alliance == 1){
         //  inchesMoved = moveForwardRight(.6, 3, -90.0*alliance);
         //}else if(alliance == -1){
         //  inchesMoved = moveForwardLeft(.6, 3, -90.0*alliance);
         //}
-        goStraight(.8, 25, -90.0*alliance); //power was .4, then .6, then .7; inches was 32 but became too much
-        wrist.setPosition(wristStack45Pos);
+        goStraight(.8, 22, -90.0*alliance); //power was .4, then .6, then .7; inches was 32, then 25, but became too much
+        wrist.setPosition(wristPosForCycle);
         sleep(500);
-        arm1.setPosition(armPosForCycle); //to make sure it stays there
+        arm1.setPosition(armStallAgainstStopPos); //to make sure it stays there
         ZonedDateTime dt = ZonedDateTime.now();
         String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
         portal.saveNextFrameRaw("YorkAutoNearStack " + time);
         centerOnClosestStack(processor);
         cameraBar.setPosition(camTuckedIn);
-        sleep(500);
-        arm1.setPosition(armStack45Pos - .1);
+        sleep(750);
+        sleep(3000);
+        arm1.setPosition(armStack45Pos - .01);
+        endStop.setPosition(endStopOutOfWayPos);
         pixelsOnStack -= 2;
     }
     public void getBackToBoard(String result, int alliance){

@@ -53,6 +53,7 @@ public class CSYorkDF extends LinearOpMode {
     Servo wrist;
     ServoImplEx arm1;
     ServoImplEx cameraBar;
+    Servo endStop;
     VisionPortal portal;
     Rev2mDistanceSensor leftDistance;
     Rev2mDistanceSensor rightDistance;
@@ -91,9 +92,17 @@ public class CSYorkDF extends LinearOpMode {
     //pixels 3 and 4 arm is 0.945, wrist is 0.12
     //pixels 2 and 3 arm is 0.955, wrist is 0.13
     //pixels 1 and 2 are normal arm/claw levels (they're on the ground)
+    //.64 for end stop out of way pos
+    //.5 for stack 4/5 pos
+    //1.0 for stall-arm-against-end-stop-for-stack pos
+    //.56 for stack 2/3 pos
     double armStack45Pos = 0.937; //was .935 then .93
     double armStack34Pos = 0.947; //was .945
     double armStack23Pos = 0.955; //was .955, then .96, then .957
+    double armStallAgainstStopPos = 1.0;
+    double endStopOutOfWayPos = .64;
+    double endStop45Pos = .5;
+    double endStop23Pos = .58;
     double wristStack45Pos = 0.12;
     double wristStack34Pos = 0.12;
     double wristStack23Pos = 0.13;
@@ -611,6 +620,7 @@ public class CSYorkDF extends LinearOpMode {
         arm1 = hardwareMap.get(ServoImplEx.class, "arm3"); //this is the one that DOES have an encoder
         wrist = hardwareMap.get(Servo.class, "wrist");
         cameraBar = hardwareMap.get(ServoImplEx.class, "frontCamera");
+        endStop = hardwareMap.get(Servo.class, "endStop");
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
@@ -739,9 +749,25 @@ public class CSYorkDF extends LinearOpMode {
         //4 is red left, 5 is red center, 6 is red right
         List<AprilTagDetection> currentDetections = ATProcessor.getDetections();
         if(currentDetections.size() == 0){
+            sleep(100);
             currentDetections = ATProcessor.getDetections();
             if(currentDetections.size() == 0){
+                sleep(100);
                 currentDetections = ATProcessor.getDetections();
+                if(currentDetections.size() == 0){
+                    RobotLog.aa("Status", "April tag failed; waiting a long time");
+                    liftIdealPos = liftInitial;
+                    goStraight(.4, 3);
+                    while(Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()){
+                      liftWithinLoop();
+                    }
+                    arm1.setPosition(armAlmostDown);
+                    wrist.setPosition(wristAlmostDown);
+                    sleep(1000);
+                    arm1.setPosition(arm1DownPos);
+                    wrist.setPosition(wristDownPos);
+                    sleep(30000);
+                }
             }
         }
         double[] dists = new double[2];
