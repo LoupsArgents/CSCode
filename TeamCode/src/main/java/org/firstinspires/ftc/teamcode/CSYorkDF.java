@@ -102,7 +102,7 @@ public class CSYorkDF extends LinearOpMode {
     double armStallAgainstStopPos = 1.0;
     double endStopOutOfWayPos = .64;
     double endStop45Pos = .5;
-    double endStop23Pos = .58;
+    double endStop23Pos = .5925; //was .58
     double wristStack45Pos = 0.12;
     double wristStack34Pos = 0.12;
     double wristStack23Pos = 0.13;

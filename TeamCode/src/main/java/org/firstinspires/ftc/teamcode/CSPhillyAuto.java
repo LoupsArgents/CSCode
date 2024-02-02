@@ -202,7 +202,7 @@ public class CSPhillyAuto extends CSYorkDF {
         arm1.setPosition(arm1ScoringPos);
         wrist.setPosition(wristScoringPos);
         openLowerClaw();
-        absoluteHeading(.2, -90.0*alliance);
+        //absoluteHeading(.2, -90.0*alliance);
         sleep(700);
         positionOnBackdrop(result, alliance);
         sleep(500);
@@ -270,10 +270,10 @@ public class CSPhillyAuto extends CSYorkDF {
         double[] dists = getAprilTagDist(result);
         if(result.equals("Left")){
             //we want to be left of the april tag
-            if(dists[0] - 1.5 < 0){
-                strafeRight(.35, -1 * (dists[0]-1.5), 5, -90.0*alliance); //powers were .35
-            }else if(dists[0] - 1.5 > 0){
-                strafeLeft(.35, dists[0]-1.5, 5, -90.0*alliance);
+            if(dists[0] + 2 < 0){ // used to be -1.5
+                strafeRight(.35, -1 * (dists[0] + 2), 5, -90.0*alliance); //powers were .35
+            }else if(dists[0] + 2 > 0){
+                strafeLeft(.35, dists[0] + 2, 5, -90.0*alliance);
             }
         }else if(result.equals("Center")){
             //we want to be 1 inch left of the april tag
@@ -285,12 +285,12 @@ public class CSPhillyAuto extends CSYorkDF {
         }else if(result.equals("Right")){
             //we want to be 2-3 inches right of the april tag
             //thing added used to be 1.5; that was too much
-            if(dists[0] + 1.25 < 0){
-                RobotLog.aa("Strafing", (-1*(dists[0] + 1.25)) + " inches robot-right, board-left");
-                strafeRight(.35, -1 * (dists[0]+1.25), 5, -90.0*alliance);
-            }else if(dists[0] + 1.5 > 0){
-                RobotLog.aa("Strafing", (dists[0] + 1.25) + "inches robot-left, board-right");
-                strafeLeft(.35, dists[0]+1.25, 5, -90.0*alliance);
+            if(dists[0] - 2 < 0){ //used to be +1.25
+                RobotLog.aa("Strafing", (-1*(dists[0] - 2)) + " inches robot-right, board-left");
+                strafeRight(.35, -1 * (dists[0] - 2), 5, -90.0*alliance);
+            }else if(dists[0] - 2 > 0){
+                RobotLog.aa("Strafing", (dists[0] - 2) + "inches robot-left, board-right");
+                strafeLeft(.35, dists[0] - 2, 5, -90.0*alliance);
             }
         }
         double inchesAway = 6; //used to be 6.25
@@ -335,9 +335,9 @@ public class CSPhillyAuto extends CSYorkDF {
         double inchesMoved = 0.0;
         if(result.equals("Left")){
             if(alliance == 1){
-                strafeLeft(.8, 18, 5 ,-90.0 * alliance);
+                strafeLeft(.8, 14.75, 5 ,-90.0 * alliance);
             }else if(alliance == -1){
-                strafeRight(.8, 18, 5 ,-90.0 * alliance); //powers on these were .4, then .6, then .7
+                strafeRight(.8, 14.75, 5 ,-90.0 * alliance); //powers on these were .4, then .6, then .7
             }
         }else if(result.equals("Center")){
             if(alliance == 1){
@@ -347,9 +347,9 @@ public class CSPhillyAuto extends CSYorkDF {
             }
         }else if(result.equals("Right")){
             if(alliance == 1){
-                strafeLeft(.8, 4, 5 ,-90.0 * alliance);
+                strafeLeft(.8, 7.5, 5 ,-90.0 * alliance);
             }else if(alliance == -1){
-                strafeRight(.8, 4, 5 ,-90.0 * alliance); //powers were .4, then .6, then .7
+                strafeRight(.8, 7.5, 5 ,-90.0 * alliance); //powers were .4, then .6, then .7
             }
         }
         arm1.setPosition(armAlmostDown);
@@ -386,7 +386,7 @@ public class CSPhillyAuto extends CSYorkDF {
         centerOnClosestStack(processor);
         cameraBar.setPosition(camTuckedIn);
         sleep(750);
-        sleep(3000);
+        //sleep(3000);
         arm1.setPosition(armStack45Pos - .01);
         endStop.setPosition(endStopOutOfWayPos);
         pixelsOnStack -= 2;
@@ -416,9 +416,10 @@ public class CSPhillyAuto extends CSYorkDF {
             liftWithinLoop();
         }*/
         openLowerClaw();
-        //sleep(500);
+        sleep(500);
         //sleep(200);
         liftIdealPos = .11;
+        goStraight(.35, .5, -90.0*alliance);
         while(Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()){
             liftWithinLoop();
         }
