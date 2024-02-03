@@ -23,8 +23,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 //@Disabled
 public class CSOdoFunctions extends LinearOpMode {
 
-    public static final double TRACKWIDTH = 30.04;
-    public static final double CENTER_WHEEL_OFFSET = -17.75; //was -19.943815, then -18
+    public static final double TRACKWIDTH = 29.9; //30.04 is too high, 25 is too low, 28 is too low, 29 is too low, 29.52 is slightly too low, 29.7 is slightly too low (0.01 error on a 90 degree turn), 29.8 is slightly low
+    public static final double CENTER_WHEEL_OFFSET = -23.5;
+    //^was -19.943815 (x error of 10, heading of 0.02)
+    //-18 (x error of 12, y error of 2, heading error of 0.02-ish)
+    //-22 (x error of 5.26, y error of -2, heading error of -0.002)
+    //-24 (x is -4, y is -2, heading error is very small)
+    //-23 had (x is 6.5, y is 0.8, heading error is tiny)
     public static final double WHEEL_DIAMETER = 3.5;
     public static final double TICKS_PER_REV = 8192;
     public static final double DISTANCE_PER_PULSE = Math.PI * WHEEL_DIAMETER / TICKS_PER_REV;
@@ -51,15 +56,15 @@ public class CSOdoFunctions extends LinearOpMode {
         double currentTime = timer.milliseconds();
         double oldTime;
 
-        motorFLenc = new MotorEx(hardwareMap, "motorFLandForwardOdo");
+        motorFLenc = new MotorEx(hardwareMap, "motorFLandStrafeOdo");
         motorFRenc = new MotorEx(hardwareMap, "motorFRandForwardEncoder"); //also has right odometer
-        motorBLenc = new MotorEx(hardwareMap, "motorBLandStrafeOdo");
+        motorBLenc = new MotorEx(hardwareMap, "motorBLandForwardOdo");
         motorBRenc = new MotorEx(hardwareMap, "motorBRandLiftEncoder");
 
         motorFR = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
-        motorFL = hardwareMap.get(DcMotorEx.class, "motorFLandForwardOdo");
+        motorFL = hardwareMap.get(DcMotorEx.class, "motorFLandStrafeOdo");
         motorBR = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
-        motorBL = hardwareMap.get(DcMotorEx.class, "motorBLandStrafeOdo");
+        motorBL = hardwareMap.get(DcMotorEx.class, "motorBLandForwardOdo");
 
         motorFL.setDirection(DcMotorEx.Direction.REVERSE);
         motorBL.setDirection(DcMotorEx.Direction.REVERSE);
@@ -68,9 +73,9 @@ public class CSOdoFunctions extends LinearOpMode {
         motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        leftOdometer = motorFLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+        leftOdometer = motorBLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
         rightOdometer = motorFRenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
-        centerOdometer = motorBLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
+        centerOdometer = motorFLenc.encoder.setDistancePerPulse(DISTANCE_PER_PULSE);
 
         rightOdometer.setDirection(Motor.Direction.REVERSE);
 
@@ -109,6 +114,8 @@ public class CSOdoFunctions extends LinearOpMode {
 
         while (opModeIsActive() && !isStopRequested()) {
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            telemetry.addData("loop time (ms)", timer.milliseconds());
+            timer.reset();
             telemetry.addData("X", -odometry.getPose().getY());
             telemetry.addData("Y", -odometry.getPose().getX());
             telemetry.addData("odoHeading", odometry.getPose().getHeading());
@@ -161,7 +168,7 @@ public class CSOdoFunctions extends LinearOpMode {
                 motorBR.setPower(backRightPower);
             } else {
                 if (canRun) {
-                    temp = placeAndHeading(startedAtX + 20, startedAtY + 20, 0, 0.5, 1, 0.5);
+                    temp = placeAndHeading(startedAtX, startedAtY + 100, 0, 0.5, 1, 0.5);
                 }
                 if (!gamepad1.b) {
                     temp = false;
