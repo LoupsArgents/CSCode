@@ -254,11 +254,10 @@ public class CSYorkAuto extends CSYorkDF {
     public void positionOnBackdrop(String result, int alliance){
         double[] dists = getAprilTagDist(result);
         if(result.equals("Left")){
-            //we want to be left of the april tag
-            if(dists[0] - 1.5 < 0){
-                strafeRight(.35, -1 * (dists[0]-1.5), 5, -90.0*alliance);
-            }else if(dists[0] - 1.5 > 0){
-                strafeLeft(.35, dists[0]-1.5, 5, -90.0*alliance);
+            if(dists[0] < 0){
+                strafeRight(.35, -1 * (dists[0]), 5, -90.0*alliance);
+            }else if(dists[0] > 0){
+                strafeLeft(.35, dists[0], 5, -90.0*alliance);
             }
         }else if(result.equals("Center")){
             //we want to be 1 inch left of the april tag
@@ -269,12 +268,12 @@ public class CSYorkAuto extends CSYorkDF {
             }
         }else if(result.equals("Right")){
             //we want to be 2-3 inches right of the april tag
-            if(dists[0] + 1.5 < 0){
-                RobotLog.aa("Strafing", (-1*(dists[0] + 1.5)) + " inches robot-right, board-left");
-                strafeRight(.35, -1 * (dists[0]+1.5), 5, -90.0*alliance);
-            }else if(dists[0] + 1.5 > 0){
-                RobotLog.aa("Strafing", (dists[0] + 1.5) + "inches robot-left, board-right");
-                strafeLeft(.35, dists[0]+1.5, 5, -90.0*alliance);
+            if(dists[0] - 2 < 0){
+                RobotLog.aa("Strafing", (-1*(dists[0] - 2)) + " inches robot-right, board-left");
+                strafeRight(.35, -1 * (dists[0]-2), 5, -90.0*alliance);
+            }else if(dists[0] - 2 > 0){
+                RobotLog.aa("Strafing", (dists[0] - 2) + "inches robot-left, board-right");
+                strafeLeft(.35, dists[0] - 2, 5, -90.0*alliance);
             }
         }
         double inchesAway = 6.25;
@@ -283,7 +282,7 @@ public class CSYorkAuto extends CSYorkDF {
             goBackward(.3, dists[1]-inchesAway, -90.0*alliance);
         }else if(dists[1] - inchesAway < 0){
             sleep(100);
-            goStraight(.3, dists[1]-inchesAway, -90.0*alliance);
+            goStraight(.3, -1 * (dists[1]-inchesAway), -90.0*alliance);
         }
     }
     public void cycle(String result, int alliance){

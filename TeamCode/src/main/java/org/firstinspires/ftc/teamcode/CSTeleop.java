@@ -101,6 +101,7 @@ public class CSTeleop extends LinearOpMode {
     ServoImplEx arm1;
     ServoImplEx arm2;
     Servo droneRelease;
+    Servo endStop;
     double arm1ScoringPos = 0.2675;
     double armAlmostUp = 0.37;
     double armAlmostDown = 0.8;
@@ -220,6 +221,8 @@ public class CSTeleop extends LinearOpMode {
     double lss2Launch = 0.4625; //the position we want for the left lead screw to be at when the drone is launching, down is 0.52, old was 0.55
     //0.46 works, 0.465 is a bit too high
     double lss2SetTo = lss2DownPos;
+    double endStopOutOfWayPos = .64;
+
 
     //stacks positions: top level (pixels 4 and 5) arm is 0.905, wrist is 0.11
     //pixels 3 and 4 arm is 0.92, wrist is 0.12
@@ -258,6 +261,7 @@ public class CSTeleop extends LinearOpMode {
         lsm2 = hardwareMap.get(DcMotorEx.class, "leadScrewLeft");
         wrist = hardwareMap.get(ServoImplEx.class, "wrist");
         cameraBar = hardwareMap.get(ServoImplEx.class, "frontCamera");
+        endStop = hardwareMap.get(Servo.class, "endStop");
         lift1 = hardwareMap.get(DcMotorEx.class, "slideMotorL");
         lift2 = hardwareMap.get(DcMotorEx.class, "slideMotorR");
 
@@ -343,6 +347,7 @@ public class CSTeleop extends LinearOpMode {
         sleep(1000);
         arm1.setPosition(arm1DownPos);
         armSetTo = arm1DownPos;
+        endStop.setPosition(endStopOutOfWayPos);
 
         telemetry.addData("status", "initialized");
         telemetry.update();

@@ -148,7 +148,7 @@ public class CSYorkDF extends LinearOpMode {
             telemetry.addData("Ultrasonic", getUltraDistance());
             //telemetry.addData("LeftClaw", clawLeftSensor.getDistance(DistanceUnit.INCH));
             //telemetry.addData("RightClaw", clawRightSensor.getDistance(DistanceUnit.INCH));
-            double leftCurrent = leftDistance.getDistance(DistanceUnit.INCH);
+            double leftCurrent = 2580; //leftDistance.getDistance(DistanceUnit.INCH);
             if(leftCurrent > 0){
                 leftAverages.add(0, leftCurrent);
                 if(leftAverages.size() > 5){
@@ -633,7 +633,7 @@ public class CSYorkDF extends LinearOpMode {
         }*/
         backCamera = hardwareMap.get(WebcamName.class, "Webcam 1");
         frontCamera = hardwareMap.get(WebcamName.class, "Webcam 2");
-        leftDistance = hardwareMap.get(Rev2mDistanceSensor.class, "leftProp");
+        //leftDistance = hardwareMap.get(Rev2mDistanceSensor.class, "leftProp");
         rightDistance = hardwareMap.get(Rev2mDistanceSensor.class, "rightProp");
         ultra = hardwareMap.analogInput.get("ultrasonic");
         //centerDistance = hardwareMap.get(Rev2mDistanceSensor.class, "centerDistance");
