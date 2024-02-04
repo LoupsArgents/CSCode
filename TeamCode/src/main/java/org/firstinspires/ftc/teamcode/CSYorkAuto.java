@@ -68,7 +68,7 @@ public class CSYorkAuto extends CSYorkDF {
                 doneTheThing = true;
             }
             if(doneTheThing) telemetry.addData("Status", "Now you can put the prop down");
-            double leftCurrent = leftDistance.getDistance(DistanceUnit.INCH);
+            double leftCurrent = 2580;//leftDistance.getDistance(DistanceUnit.INCH);
             if(leftCurrent > 0){
                 leftAverages.add(0, leftCurrent);
                 if(leftAverages.size() > 5){

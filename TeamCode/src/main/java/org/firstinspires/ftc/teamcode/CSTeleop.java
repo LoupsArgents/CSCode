@@ -222,7 +222,7 @@ public class CSTeleop extends LinearOpMode {
     //0.46 works, 0.465 is a bit too high
     double lss2SetTo = lss2DownPos;
     double endStopOutOfWayPos = .64;
-
+    boolean breakGlassMode = false;
 
     //stacks positions: top level (pixels 4 and 5) arm is 0.905, wrist is 0.11
     //pixels 3 and 4 arm is 0.92, wrist is 0.12
@@ -335,8 +335,10 @@ public class CSTeleop extends LinearOpMode {
         lsm2init = lsm2.getCurrentPosition()/ticksPerRotationLS;
         lsm2pos = (lsm2.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
 
-        cameraBar.setPosition(camTuckedIn);
+        cameraBar.setPosition(camOutOfWay); //used to be camTuckedIn
         camInUsePos = false;
+        clawUp.setPosition(clawUpclose);
+        clawDown.setPosition(clawDownclose);
 
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
 
@@ -606,6 +608,7 @@ public class CSTeleop extends LinearOpMode {
                     clawUp.setPosition(clawUpclose);
                     clawUpSetTo = clawUpclose;
                     cameraBar.setPosition(camTuckedIn);
+                    camInUsePos = false;
                     clawDown.setPosition(clawDownclose);
                     clawDownSetTo = clawDownclose;
                     gamepad1.rumble(500);
@@ -690,6 +693,35 @@ public class CSTeleop extends LinearOpMode {
                 }
             } else if (!gamepad2.a && !gamepad2.y) {
                 canChangeLiftLevel = true;
+            }
+            if (gamepad2.back) {
+                breakGlassMode = true;
+                canUseSlides = false;
+                arm1.setPosition(armAlmostDown);
+                wrist.setPosition(wristAlmostDown);
+                cameraBar.setPosition(camOutOfWay);
+                camInUsePos = false;
+            }
+            if (breakGlassMode) {
+                double liftPower = -gamepad2.left_stick_y;
+                if (liftPower < 0) { //we're trying to go down
+                    liftPower *= 0.25;
+                }
+                isJoysticking = true;
+                liftHappyPlace = true;
+                liftIdealPos = liftPos;
+                lift2.setPower(liftPower);
+                lift1.setPower(-liftPower);
+                if (gamepad2.start) {
+                    arm1.setPosition(arm1DownPos);
+                    wrist.setPosition(wristDownPos);
+                    liftInitial = liftEncoder.getCurrentPosition()/ticksPerRotation;
+                    liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
+                    breakGlassMode = false;
+                    isJoysticking = false;
+                    liftIdealPos = liftPos;
+                    canUseSlides = true;
+                }
             }
             if (canUseSlides) {
                 if (liftIdealPos > 0.22) {
