@@ -338,6 +338,7 @@ public class CSTeleop extends LinearOpMode {
         lsm2pos = (lsm2.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
 
         cameraBar.setPosition(camOutOfWay); //used to be camTuckedIn
+        camSetTo = camOutOfWay;
         camInUsePos = false;
         clawUp.setPosition(clawUpclose);
         clawDown.setPosition(clawDownclose);
@@ -365,9 +366,13 @@ public class CSTeleop extends LinearOpMode {
 
         while (opModeIsActive()) {
             updateAnalogs(armAna, camAna, wristAna);
-            double botHeading = (newGetHeading()%360) * Math.PI/180;
-            double backDistCM = backdropDetector.getDistance(DistanceUnit.CM);
-            //double botHeading = Math.abs((newGetHeading()%360) * Math.PI/180);//imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            double imuRadians = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            double nghIMU = (newGetHeadingUsesRadians(imuRadians)%360) * Math.PI/180;
+            double botHeading = nghIMU;
+            double backDistCM = 5;
+            if (armSetTo == arm1ScoringPos) {
+                backDistCM = backdropDetector.getDistance(DistanceUnit.CM);
+            }
 
             //telemetry.addData("oldHeadingWay", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
             currentTime = timer.milliseconds();
@@ -411,9 +416,11 @@ public class CSTeleop extends LinearOpMode {
             //manual camera bar code
             if (gamepad2.left_bumper) {
                 cameraBar.setPosition(camTuckedIn);
+                camSetTo = camTuckedIn;
                 camInUsePos = false;
             } else if (gamepad2.right_bumper) {
                 cameraBar.setPosition(camOutOfWay);
+                camSetTo = camOutOfWay;
                 camInUsePos = false;
             }
             //arm manual code
@@ -558,6 +565,7 @@ public class CSTeleop extends LinearOpMode {
                         if (armJustDown && armTimer.milliseconds() > 2000) {
                             armJustDown = false;
                             cameraBar.setPosition(camUsePos);
+                            camSetTo = camUsePos;
                             clawUp.setPosition(clawUpopen);
                             clawUpSetTo = clawUpopen;
                             clawDown.setPosition(clawDownopen);
@@ -588,6 +596,7 @@ public class CSTeleop extends LinearOpMode {
             if (gamepad1.right_bumper && armSetTo == arm1DownPos) {
                 if (!camInUsePos) {
                     cameraBar.setPosition(camUsePos);
+                    camSetTo = camUsePos;
                 }
                 lift1.setPower(0);
                 lift2.setPower(0);
@@ -610,6 +619,7 @@ public class CSTeleop extends LinearOpMode {
                     clawUp.setPosition(clawUpclose);
                     clawUpSetTo = clawUpclose;
                     cameraBar.setPosition(camTuckedIn);
+                    camSetTo = camTuckedIn;
                     camInUsePos = false;
                     clawDown.setPosition(clawDownclose);
                     clawDownSetTo = clawDownclose;
@@ -625,6 +635,7 @@ public class CSTeleop extends LinearOpMode {
                     canUseClawManually = true;
                     canDriveManually = true;
                     cameraBar.setPosition(camTuckedIn);
+                    camSetTo = camTuckedIn;
                     camInUsePos = false;
                 }
             } else if (doAutoPickup && camBarTimer.milliseconds() > 1000 && !(processor.getIsSeeingPixel() || clawSeesPixels() || hasEverSeenPixel)) {
@@ -632,6 +643,7 @@ public class CSTeleop extends LinearOpMode {
                 canUseClawManually = true;
                 canDriveManually = true;
                 cameraBar.setPosition(camTuckedIn);
+                camSetTo = camTuckedIn;
                 camInUsePos = false;
                 gamepad1.rumble(100);
             }
@@ -651,6 +663,7 @@ public class CSTeleop extends LinearOpMode {
                     clawDown.setPosition(clawDownclose);
                     clawDownSetTo = clawDownclose;
                     cameraBar.setPosition(camTuckedIn);
+                    camSetTo = camTuckedIn;
                     camInUsePos = false;
                 }
                 if (gamepad1.left_trigger > 0.1 && clawStateCanChange) {
@@ -674,7 +687,10 @@ public class CSTeleop extends LinearOpMode {
 
             //lift manual code
             if (liftPos > 0.01) {
-                cameraBar.setPosition(camOutOfWay);
+                if (camSetTo != camOutOfWay) {
+                    cameraBar.setPosition(camOutOfWay);
+                    camSetTo = camOutOfWay;
+                }
                 camInUsePos = false;
             }
 
@@ -702,6 +718,7 @@ public class CSTeleop extends LinearOpMode {
                 arm1.setPosition(armAlmostDown);
                 wrist.setPosition(wristAlmostDown);
                 cameraBar.setPosition(camOutOfWay);
+                camSetTo = camOutOfWay;
                 camInUsePos = false;
             }
             if (breakGlassMode) {
@@ -794,12 +811,10 @@ public class CSTeleop extends LinearOpMode {
 
             //mecanum drive code
             if (canDriveManually) {
-                botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+                botHeading = imuRadians;
                 double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
                 double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
                 double rx = gamepad1.right_stick_x;
-                //double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-                //double botHeading = 0;
                 if (Math.abs(rx) < 0.05) {rx = 0;}
                 if (gamepad1.left_bumper) {
                     doAbsHeading = true;
@@ -834,8 +849,7 @@ public class CSTeleop extends LinearOpMode {
                 if (doAbsHeading) {
                     //change rx to something that will accomplish our goal
                     //if (botHeading < 0) {botHeading += 2*Math.PI;}
-                    //botHeading = Math.abs(newGetHeading() * (Math.PI/180));
-                    botHeading = (newGetHeading()%360) * Math.PI/180;
+                    botHeading = nghIMU;
                     while (botHeading < 0 && opModeIsActive()) {
                         botHeading += 2*Math.PI;
                     }
@@ -881,13 +895,11 @@ public class CSTeleop extends LinearOpMode {
                         rx *= sign;
                     }
                 }
-                botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+                botHeading = imuRadians;
                 //rotate the movement counter to the bot's heading
                 double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
                 double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
                 rotX = rotX * 1.1;  // Counteract imperfect strafing
-                //double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-                //double botHeading = 0;
                 if (Math.abs(rx) < 0.05) {rx = 0;}
                 // Denominator is the largest motor power (absolute value) or 1
                 // This ensures all the powers maintain the same ratio,
@@ -1044,7 +1056,7 @@ public class CSTeleop extends LinearOpMode {
         //update wrist position
         wristCurrentPos = (wristAna.getVoltage() / 3.3 * 360) - wristInit;
         //update all odo encoders
-        odometry.updatePose(); //I think???
+        //odometry.updatePose(); //I think???
         //update lift encoder
         liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
     }
@@ -1190,6 +1202,18 @@ public class CSTeleop extends LinearOpMode {
     }
     public double newGetHeading(){
         double currentHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+        double headingChange = currentHeading - previousHeading;
+        if(headingChange < -180){
+            headingChange += 360;
+        }else if(headingChange > 180){
+            headingChange -= 360;
+        }
+        processedHeading += headingChange;
+        previousHeading = currentHeading;
+        return processedHeading;
+    }
+    public double newGetHeadingUsesRadians(double radianHeading) {
+        double currentHeading = radianHeading * (180/Math.PI);
         double headingChange = currentHeading - previousHeading;
         if(headingChange < -180){
             headingChange += 360;
