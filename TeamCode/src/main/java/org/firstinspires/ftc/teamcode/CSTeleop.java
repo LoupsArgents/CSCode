@@ -377,6 +377,7 @@ public class CSTeleop extends LinearOpMode {
             //telemetry.addData("oldHeadingWay", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
             currentTime = timer.milliseconds();
             armCurrentTime = armTimer.milliseconds();
+            telemetry.addData("broken lead screw", lsm2.getCurrentPosition());
             telemetry.addData("wristSetTo", wristSetTo);
             telemetry.addData("loop time, ms", currentTime);
             telemetry.addData("arm time, ms", armCurrentTime);
@@ -924,6 +925,8 @@ public class CSTeleop extends LinearOpMode {
             }
             //endgame code
             if (canDoEndgame) {
+                telemetry.addData("right lead screw", lsm1pos);
+                telemetry.addData("left lead screw", lsm2pos);
                 canUseSlides = false;
                 //drone launcher
                 if (gamepad2.left_trigger > 0.05) {
