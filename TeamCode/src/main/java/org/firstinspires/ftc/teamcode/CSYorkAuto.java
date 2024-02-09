@@ -120,7 +120,7 @@ public class CSYorkAuto extends CSYorkDF {
         wrist.setPosition(wristTuckedIn);
         sleep(250);
         arm1.setPosition(arm1DownPos);
-        sleep(500);
+        sleep(1000);
         cameraBar.setPosition(camUsePos);
         sleep(500);
         telemetry.addData("Status", "Positions set");

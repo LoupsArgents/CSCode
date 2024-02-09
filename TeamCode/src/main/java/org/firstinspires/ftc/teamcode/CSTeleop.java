@@ -134,9 +134,9 @@ public class CSTeleop extends LinearOpMode {
     boolean canDoEndgame = false;
     private IMU imu;
     double lss1UpPos = 0.575;
-    double lss2UpPos = 0.395;
+    double lss2UpPos = 0.34; //was 0.395
     double lss1DownPos = 0.575 - 0.125;
-    double lss2DownPos = 0.395 + 0.125;
+    double lss2DownPos = 0.46; //was 0.395  +0.125 on other servo
     boolean useLeadScrews = false;
     boolean leadScrewsDownEnd = false;
     boolean lsStateCanChange = true;
@@ -218,8 +218,10 @@ public class CSTeleop extends LinearOpMode {
     boolean endgameCanChange = true;
     double droneInitial = 0.72; //the position we want the drone launcher servo to be at when it's not trying to launch the drone
     double droneFire = 0; //the position for the drone launcher servo that will launch the drone
-    double lss2Launch = 0.4625; //the position we want for the left lead screw to be at when the drone is launching, down is 0.52, old was 0.55
-    //0.46 works, 0.465 is a bit too high
+    double lss2Launch = .3925; //0.4075; //the position we want for the left lead screw to be at when the drone is launching, down is 0.52, old was 0.55
+    //old launch position was 0.4625
+    //old bot up was 0.395, old bot down was 0.52
+    //new up is 0.34, new down is 0.46
     double lss2SetTo = lss2DownPos;
     double endStopOutOfWayPos = .64;
     boolean breakGlassMode = false;

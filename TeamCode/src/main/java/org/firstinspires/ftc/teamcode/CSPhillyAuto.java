@@ -119,7 +119,7 @@ public class CSPhillyAuto extends CSYorkDF {
         wrist.setPosition(wristTuckedIn);
         sleep(250);
         arm1.setPosition(arm1DownPos);
-        sleep(500);
+        sleep(1000);
         cameraBar.setPosition(camUsePos);
         sleep(500);
         telemetry.addData("Status", "Positions set");
@@ -403,6 +403,7 @@ public class CSPhillyAuto extends CSYorkDF {
         //}
         goStraight(.8, 24, -90.0*alliance); //power was .4, then .6, then .7; inches was 32, then 25, but became too much
         wrist.setPosition(wristPosForCycle);
+        absoluteHeading(.2, -90.0*alliance);
         sleep(500);
         arm1.setPosition(armStallAgainstStopPos); //to make sure it stays there
         ZonedDateTime dt = ZonedDateTime.now();
