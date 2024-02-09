@@ -33,6 +33,7 @@ public class CSPhillyAuto extends CSYorkDF {
         processor.setMode(EverythingProcessor.ProcessorMode.PROP);
         ArrayList<Double> rightAverages = new ArrayList<>();
         ArrayList<Double> leftAverages = new ArrayList<>();
+        boolean cycle = false;
         double leftAvg = 0.0;
         double rightAvg = 0.0;
         double camLeftInitial = 0.0;
@@ -50,6 +51,15 @@ public class CSPhillyAuto extends CSYorkDF {
                     telemetry.addLine("Press B on Gamepad 1 to switch to parking away from wall");
                 }
             }
+            if(cycle){
+                telemetry.addData("Cycling", "True");
+                telemetry.addLine("Press Y on Gamepad 1 to switch to not cycling");
+            }else{
+                telemetry.addData("Cycling", "False");
+                telemetry.addLine("Press A on Gamepad 1 to switch to cycling");
+            }
+            if(gamepad1.a) cycle = true;
+            if(gamepad1.y) cycle = false;
             telemetry.addData("Alliance", alliance);
             if(gamepad1.x) parkingNearWall = true;
             if(gamepad1.b) parkingNearWall = false;
@@ -155,9 +165,9 @@ public class CSPhillyAuto extends CSYorkDF {
         if((result.equals("Left") && ((alliance == 1 && isNear) || (alliance == -1 && !isNear))) || (result.equals("Right") && ((alliance == -1 && isNear) || (alliance == 1 && !isNear)))){
             double inchesMoved = 0.0;
             if(result.equals("Left")){
-                inchesMoved = moveForwardLeft(.8, 10, 0.0); //power was .5, then .6
+                inchesMoved = moveForwardLeft(.8, 9, 0.0); //power was .5, then .6; was 10 inches
             }else if(result.equals("Right")){
-                inchesMoved = moveForwardRight(.8, 10, 0.0);
+                inchesMoved = moveForwardRight(.8, 9, 0.0);
             }
             wrist.setPosition(wristAlmostDown);
             activateBackCamera();
@@ -204,7 +214,9 @@ public class CSPhillyAuto extends CSYorkDF {
         openLowerClaw();
         //absoluteHeading(.2, -90.0*alliance);
         sleep(500);
-        positionOnBackdrop(result, alliance);
+        positionOnBackdrop(result, alliance, 1);
+        sleep(500);
+        positionOnBackdrop(result, alliance, 2);
         //sleep(500);
         openUpperClaw();
         sleep(500);
@@ -274,17 +286,21 @@ public class CSPhillyAuto extends CSYorkDF {
             goBackward(.7, 18 - movedBack, -90.0 * alliance); //power was .5, then .6; inches was 20*/
         }
     }
-    public void positionOnBackdrop(String result, int alliance){
+    public void positionOnBackdrop(String result, int alliance, int attempt){ //attempt 1 is initial pass, attempt 2 is second pass
         ZonedDateTime dt = ZonedDateTime.now();
         String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
         portal.saveNextFrameRaw("PhillyAutoNearBoard " + time);
         double[] dists = getAprilTagDist(result);
+        if(attempt == 2 && dists[0] == 0.0 && dists[1] == 0.0){
+            goBackward(.3, 3, -90.0*alliance);
+            return;
+        }
         if(result.equals("Left")){
             //we want to be left of the april tag
-            if(dists[0] < 0){ // used to be -1.5, then +2
-                strafeRight(.35, -1 * (dists[0]), 5, -90.0*alliance); //powers were .35
-            }else if(dists[0] > 0){
-                strafeLeft(.35, dists[0], 5, -90.0*alliance);
+            if(dists[0] + 1 < 0){ // used to be -1.5, then +2
+                strafeRight(.35, -1 * (dists[0] + 1), 5, -90.0*alliance); //powers were .35
+            }else if(dists[0] + 1 > 0){
+                strafeLeft(.35, dists[0] + 1, 5, -90.0*alliance);
             }
         }else if(result.equals("Center")){
             //we want to be 1 inch left of the april tag
@@ -296,15 +312,18 @@ public class CSPhillyAuto extends CSYorkDF {
         }else if(result.equals("Right")){
             //we want to be 2-3 inches right of the april tag
             //thing added used to be 1.5; that was too much
-            if(dists[0] - 2 < 0){ //used to be +1.25
-                RobotLog.aa("Strafing", (-1*(dists[0] - 2)) + " inches robot-right, board-left");
-                strafeRight(.35, -1 * (dists[0] - 2), 5, -90.0*alliance);
-            }else if(dists[0] - 2 > 0){
-                RobotLog.aa("Strafing", (dists[0] - 2) + " inches robot-left, board-right");
-                strafeLeft(.35, dists[0] - 2, 5, -90.0*alliance);
+            //used to be -2
+            if(dists[0] - 1 < 0){ //used to be +1.25
+                RobotLog.aa("Strafing", (-1*(dists[0] - 1)) + " inches robot-right, board-left");
+                strafeRight(.35, -1 * (dists[0] - 1), 5, -90.0*alliance);
+            }else if(dists[0] - 1 > 0){
+                RobotLog.aa("Strafing", (dists[0] - 1) + " inches robot-left, board-right");
+                strafeLeft(.35, dists[0] - 1, 5, -90.0*alliance);
             }
         }
-        double inchesAway = 6; //used to be 6.25
+        double inchesAway; //used to be 6.25
+        if(attempt == 1) inchesAway = 12;
+        else inchesAway = 6;
         if(dists[1] - inchesAway > 0){
             sleep(100);
             RobotLog.aa("GoingBackward", (dists[1]-inchesAway) + " inches");
@@ -359,12 +378,14 @@ public class CSPhillyAuto extends CSYorkDF {
                 strafeRight(.8, 7.5, 5 ,-90.0 * alliance); //powers were .4, then .6, then .7
             }
         }*/
+        inchesMoved = 0.0;
         if((result.equals("Left") && alliance == 1) || (result.equals("Right") && alliance == -1)){
             if(alliance == 1){
-                inchesMoved = moveForwardLeft(.85, 23.75, -90.0*alliance);
+                strafeLeft(.6, 25, 5, -90.0*alliance); //was 23.75 as a diagonal movement
             }else if(alliance == -1){
-                inchesMoved = moveForwardRight(.85, 23.75, -90.0*alliance); //powers on these were .4, then .6, then .7
+                strafeRight(.6, 25, 5, -90.0*alliance); //powers on these were .4, then .6, then .7
             }
+            sleep(500);
         }else if(result.equals("Center")){
             if(alliance == 1){
                 inchesMoved = moveForwardLeft(.85, 21, -90.0*alliance);
@@ -401,7 +422,9 @@ public class CSPhillyAuto extends CSYorkDF {
         //}else if(alliance == -1){
         //  inchesMoved = moveForwardLeft(.6, 3, -90.0*alliance);
         //}
-        goStraight(.8, 24, -90.0*alliance); //power was .4, then .6, then .7; inches was 32, then 25, but became too much
+        goStraight(.8, 10, -90.0*alliance); //power was .4, then .6, then .7; inches was 32, then 25, but became too much
+        goStraight(.6, 6, -90.0*alliance);
+        goStraight(.4, 6, -90.0*alliance);
         wrist.setPosition(wristPosForCycle);
         absoluteHeading(.2, -90.0*alliance);
         sleep(500);
@@ -434,9 +457,14 @@ public class CSPhillyAuto extends CSYorkDF {
         arm1.setPosition(arm1ScoringPos);
         sleep(500);
         if(alliance == 1){
-            positionOnBackdrop("Right", alliance);
+            positionOnBackdrop("Right", alliance, 1);
+            sleep(500);
+            positionOnBackdrop("Right", alliance, 2);
+
         }else if(alliance == -1){
-            positionOnBackdrop("Left", alliance);
+            positionOnBackdrop("Left", alliance, 1);
+            sleep(500);
+            positionOnBackdrop("Left", alliance, 2);
         }
         /*liftIdealPos = .07;
         while(Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()){
