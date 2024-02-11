@@ -281,7 +281,7 @@ public class CSTeleop extends LinearOpMode {
         cameraBar = hardwareMap.get(ServoImplEx.class, "frontCamera");
         endStop = hardwareMap.get(Servo.class, "endStop");
         lift1 = hardwareMap.get(DcMotorEx.class, "slideMotorL");
-        lift2 = hardwareMap.get(DcMotorEx.class, "slideMotorRAndLSEnc");
+        lift2 = hardwareMap.get(DcMotorEx.class, "slideMotorR");
         lsm2enc = hardwareMap.get(DcMotorEx.class, "leadScrewLeft");
 
         droneRelease = hardwareMap.get(Servo.class, "droneRelease");
