@@ -634,7 +634,7 @@ public class CSYorkDF extends LinearOpMode {
         backCamera = hardwareMap.get(WebcamName.class, "Webcam 1");
         frontCamera = hardwareMap.get(WebcamName.class, "Webcam 2");
         //leftDistance = hardwareMap.get(Rev2mDistanceSensor.class, "leftProp");
-        rightDistance = hardwareMap.get(Rev2mDistanceSensor.class, "rightProp");
+        //rightDistance = hardwareMap.get(Rev2mDistanceSensor.class, "rightProp");
         ultra = hardwareMap.analogInput.get("ultrasonic");
         //centerDistance = hardwareMap.get(Rev2mDistanceSensor.class, "centerDistance");
         clawLeftSensor = hardwareMap.get(RevColorSensorV3.class, "clawLeft");
