@@ -79,6 +79,7 @@ public class CSYorkDF extends LinearOpMode {
     //then that puts open position at ~.53
     double clawDownOpen = 0.53;
     double clawDownClose = 0.42;
+    double clawDownSemiClose = 0.44;
     double wristDownPos = 0.135;
     double wristAlmostDown = 0.15;//for flipping the arm up
     double wristStraightUp = 0.45;
@@ -148,51 +149,6 @@ public class CSYorkDF extends LinearOpMode {
             telemetry.addData("Ultrasonic", getUltraDistance());
             //telemetry.addData("LeftClaw", clawLeftSensor.getDistance(DistanceUnit.INCH));
             //telemetry.addData("RightClaw", clawRightSensor.getDistance(DistanceUnit.INCH));
-            double leftCurrent = 2580; //leftDistance.getDistance(DistanceUnit.INCH);
-            if(leftCurrent > 0){
-                leftAverages.add(0, leftCurrent);
-                if(leftAverages.size() > 5){
-                    leftAverages.remove(5);
-                }
-            }
-            if(leftAverages.size() == 5){
-                leftAvg = 0.0;
-                for(double d : leftAverages){
-                    leftAvg += d;
-                }
-                leftAvg /= 5;
-            }
-            double centerCurrent = 0;//centerDistance.getDistance(DistanceUnit.INCH);
-            if(centerCurrent > 0){
-                centerAverages.add(0, centerCurrent);
-                if(centerAverages.size() > 5){
-                    centerAverages.remove(5);
-                }
-            }
-            if(centerAverages.size() == 5){
-                centerAvg = 0.0;
-                for(double d : centerAverages){
-                    centerAvg += d;
-                }
-                centerAvg /= 5;
-            }
-            double rightCurrent = rightDistance.getDistance(DistanceUnit.INCH);
-            if(rightCurrent > 0){
-                rightAverages.add(0, rightCurrent);
-                if(rightAverages.size() > 5){
-                    rightAverages.remove(5);
-                }
-            }
-            if(rightAverages.size() == 5){
-                rightAvg = 0.0;
-                for(double d : rightAverages){
-                    rightAvg += d;
-                }
-                rightAvg /= 5;
-            }
-            telemetry.addData("Left", leftAvg);
-            telemetry.addData("Center", centerAvg);
-            telemetry.addData("Right", rightAvg);
             //30 inches is seeing the truss
             telemetry.update();
         }
@@ -856,7 +812,7 @@ public class CSYorkDF extends LinearOpMode {
         dists[1] = frontDistAvg;
         return dists;
     }
-    public DistanceSensorResult getDistances(){
+   /* public DistanceSensorResult getDistances(){
         double leftResult = readDistanceSensor(leftDistance);
         double centerResult = 0.0; //readDistanceSensor(centerDistance);
         double rightResult = readDistanceSensor(rightDistance);
@@ -872,7 +828,7 @@ public class CSYorkDF extends LinearOpMode {
             }
         }
         return total / 5;
-    }
+    }*/
 
     public String getPropResult(double leftAv, double rightAv, String processorResult){
         String cameraResult = processorResult;

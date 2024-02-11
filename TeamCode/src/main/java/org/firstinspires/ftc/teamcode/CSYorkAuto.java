@@ -68,36 +68,6 @@ public class CSYorkAuto extends CSYorkDF {
                 doneTheThing = true;
             }
             if(doneTheThing) telemetry.addData("Status", "Now you can put the prop down");
-            double leftCurrent = 2580;//leftDistance.getDistance(DistanceUnit.INCH);
-            if(leftCurrent > 0){
-                leftAverages.add(0, leftCurrent);
-                if(leftAverages.size() > 5){
-                    leftAverages.remove(5);
-                }
-            }
-            if(leftAverages.size() == 5){
-                leftAvg = 0.0;
-                for(double d : leftAverages){
-                    leftAvg += d;
-                }
-                leftAvg /= 5;
-            }
-            double rightCurrent = rightDistance.getDistance(DistanceUnit.INCH);
-            if(rightCurrent > 0){
-                rightAverages.add(0, rightCurrent);
-                if(rightAverages.size() > 5){
-                    rightAverages.remove(5);
-                }
-            }
-            if(rightAverages.size() == 5){
-                rightAvg = 0.0;
-                for(double d : rightAverages){
-                    rightAvg += d;
-                }
-                rightAvg /= 5;
-            }
-            telemetry.addData("Left", leftAvg);
-            telemetry.addData("Right", rightAvg);
             telemetry.update();
         }
         waitForStart();
@@ -199,7 +169,7 @@ public class CSYorkAuto extends CSYorkDF {
     public void getToBackdrop(String result, int alliance){
         if((result.equals("Left") && alliance == 1) || (result.equals("Right") && alliance == -1)){
             goBackward(.4, 3, 0.0 * alliance);
-            closeLowerClaw();
+            clawDown.setPosition(clawDownSemiClose);
             wrist.setPosition(wristAlmostDown);
             absoluteHeading(.4, -90.0 * alliance);
             absoluteHeading(.2, -90.0 * alliance);
@@ -215,7 +185,7 @@ public class CSYorkAuto extends CSYorkDF {
             }
         }else if(result.equals("Center")){
             goBackward(.4, 5, 0.0);
-            closeLowerClaw();
+            clawDown.setPosition(clawDownSemiClose);
             wrist.setPosition(wristAlmostDown);
             absoluteHeading(.4, -90.0 * alliance);
             absoluteHeading(.2, -90.0 * alliance);
@@ -229,7 +199,7 @@ public class CSYorkAuto extends CSYorkDF {
             }
         }else if((result.equals("Right") && alliance == 1) || (result.equals("Left") && alliance == -1)){
             goBackward(.4, 6, -45.0*alliance);
-            closeLowerClaw();
+            clawDown.setPosition(clawDownSemiClose);
             wrist.setPosition(wristAlmostDown);
             sleep(250);
             arm1.setPosition(armAlmostUp);
