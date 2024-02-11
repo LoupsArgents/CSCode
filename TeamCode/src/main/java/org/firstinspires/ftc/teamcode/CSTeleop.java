@@ -112,6 +112,7 @@ public class CSTeleop extends LinearOpMode {
     Servo lss2;
     DcMotorEx lsm1;
     DcMotorEx lsm2;
+    DcMotorEx lsm2enc;
     ServoImplEx wrist;
     DcMotorEx lift1;
     DcMotorEx lift2;
@@ -280,7 +281,8 @@ public class CSTeleop extends LinearOpMode {
         cameraBar = hardwareMap.get(ServoImplEx.class, "frontCamera");
         endStop = hardwareMap.get(Servo.class, "endStop");
         lift1 = hardwareMap.get(DcMotorEx.class, "slideMotorL");
-        lift2 = hardwareMap.get(DcMotorEx.class, "slideMotorR");
+        lift2 = hardwareMap.get(DcMotorEx.class, "slideMotorRAndLSEnc");
+        lsm2enc = hardwareMap.get(DcMotorEx.class, "leadScrewLeft");
 
         droneRelease = hardwareMap.get(Servo.class, "droneRelease");
 
@@ -349,8 +351,8 @@ public class CSTeleop extends LinearOpMode {
         ticksPerRotationLS = lsm1.getMotorType().getTicksPerRev();
         lsm1init = lsm1.getCurrentPosition()/ticksPerRotationLS;
         lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
-        lsm2init = lsm2.getCurrentPosition()/ticksPerRotationLS;
-        lsm2pos = (lsm2.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
+        lsm2init = lsm2enc.getCurrentPosition()/ticksPerRotationLS;
+        lsm2pos = (lsm2enc.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
 
         cameraBar.setPosition(camOutOfWay); //used to be camTuckedIn
         camSetTo = camOutOfWay;
@@ -388,11 +390,18 @@ public class CSTeleop extends LinearOpMode {
             if (armSetTo == arm1ScoringPos) {
                 backDistCM = backdropDetector.getDistance(DistanceUnit.CM);
             }
+            lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
+            lsm2pos = (lsm2enc.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
 
             //telemetry.addData("oldHeadingWay", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
             currentTime = timer.milliseconds();
             armCurrentTime = armTimer.milliseconds();
-            telemetry.addData("broken lead screw", lsm2.getCurrentPosition());
+            telemetry.addData("broken lead screw", lsm2enc.getCurrentPosition()); //lsm 2 is the broken one
+            telemetry.addData("right lead screw", lsm1.getCurrentPosition());
+            //lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
+            telemetry.addData("ticksPerRotationLS", ticksPerRotationLS);
+            telemetry.addData("lsm1init", lsm1init);
+            telemetry.addData("(lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init", (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init);
             telemetry.addData("wristSetTo", wristSetTo);
             telemetry.addData("loop time, ms", currentTime);
             telemetry.addData("arm time, ms", armCurrentTime);
@@ -1060,8 +1069,8 @@ public class CSTeleop extends LinearOpMode {
                 } else if (useLeadScrews) {
                     telemetry.addData("right lead screw", lsm1pos);
                     telemetry.addData("left lead screw", lsm2pos);
-                    lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
-                    lsm2pos = (lsm2.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
+                    //lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
+                    //lsm2pos = (lsm2enc.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
 
                     if (!leadScrewsManual) {
                         //extend them to safe extension position (1.21), do NOT let them get higher than 1.23
@@ -1096,8 +1105,8 @@ public class CSTeleop extends LinearOpMode {
                 } else if (leadScrewsDownEnd) {
                     telemetry.addData("right lead screw", lsm1pos);
                     telemetry.addData("left lead screw", lsm2pos);
-                    lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
-                    lsm2pos = (lsm2.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
+                    //lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
+                    //lsm2pos = (lsm2enc.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
                     //put them down to 0.3 or something
                     //maybe at the end set the powers to -0. something so that the bot stays up?
                     double error1 = Math.abs(lsm1pos - 0.5);
