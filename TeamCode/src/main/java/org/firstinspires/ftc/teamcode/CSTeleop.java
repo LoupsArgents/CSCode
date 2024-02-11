@@ -391,12 +391,12 @@ public class CSTeleop extends LinearOpMode {
                 backDistCM = backdropDetector.getDistance(DistanceUnit.CM);
             }
             lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
-            lsm2pos = (lsm2enc.getCurrentPosition()/ticksPerRotationLS)-lsm2init;
+            lsm2pos = (lsm2.getCurrentPosition()/ticksPerRotationLS)-lsm2init; //was lsm2enc
 
             //telemetry.addData("oldHeadingWay", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
             currentTime = timer.milliseconds();
             armCurrentTime = armTimer.milliseconds();
-            telemetry.addData("broken lead screw", lsm2enc.getCurrentPosition()); //lsm 2 is the broken one
+            telemetry.addData("broken lead screw", lsm2.getCurrentPosition()); //lsm 2 is the broken one. was lsm2enc
             telemetry.addData("right lead screw", lsm1.getCurrentPosition());
             //lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
             telemetry.addData("ticksPerRotationLS", ticksPerRotationLS);
