@@ -1,10 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.util.RobotLog;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.VisionPortal;
 
 import java.time.ZonedDateTime;
@@ -126,6 +124,14 @@ public class CSPhillyAuto extends CSYorkDF {
             arm1.setPosition(arm1DownPos);
             wrist.setPosition(wristDownPos);
             //park(alliance, result, parkingNearWall); //once I get this figured out
+        }else{
+            getToBoardFromFar(result, alliance);
+            goStraight(.5, 3, -90.0*alliance);
+            arm1.setPosition(armAlmostDown);
+            wrist.setPosition(wristAlmostDown);
+            sleep(1000);
+            arm1.setPosition(arm1DownPos);
+            wrist.setPosition(wristDownPos);
         }
         //left out because cycling is incomplete
         //cycle(result, alliance);
@@ -194,7 +200,7 @@ public class CSPhillyAuto extends CSYorkDF {
     public void getToBackdrop(String result, int alliance){
         if((result.equals("Left") && alliance == 1) || (result.equals("Right") && alliance == -1)){
             goBackward(.6, 3, 0.0 * alliance); //power was .5
-            clawDown.setPosition(clawDownSemiClose);
+            closeLowerClaw();
             wrist.setPosition(wristAlmostDown);
             absoluteHeading(.4, -90.0 * alliance);
             absoluteHeading(.2, -90.0 * alliance);
@@ -214,7 +220,7 @@ public class CSPhillyAuto extends CSYorkDF {
             cameraBar.setPosition(camTuckedIn);
         }else if(result.equals("Center")){
             goBackward(.7, 3, 0.0); //power was .5, then .6; was 5 inches
-            clawDown.setPosition(clawDownSemiClose);
+            closeLowerClaw();
             wrist.setPosition(wristAlmostDown);
             absoluteHeading(.4, -90.0 * alliance);
             absoluteHeading(.2, -90.0 * alliance);
@@ -229,7 +235,7 @@ public class CSPhillyAuto extends CSYorkDF {
         }else if((result.equals("Right") && alliance == 1) || (result.equals("Left") && alliance == -1)){
             //total ~25 inches back?
             goBackward(.7, 6, -90.0 * alliance);
-            clawDown.setPosition(clawDownSemiClose);
+            closeLowerClaw();
             wrist.setPosition(wristAlmostDown);
             arm1.setPosition(armAlmostUp);
             goBackward(.7, 15, -90.0*alliance); //was 19
@@ -260,7 +266,15 @@ public class CSPhillyAuto extends CSYorkDF {
         ZonedDateTime dt = ZonedDateTime.now();
         String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
         portal.saveNextFrameRaw("PhillyAutoNearBoard " + time);
-        double[] dists = getAprilTagDist(result);
+        String res = "";
+        if(result.equals("LeftCenter")){
+            res = "Left";
+        }else if(result.equals("CenterCenter")){
+            res = "Center";
+        }else if(result.equals("RightCenter")){
+            res = "Right";
+        }
+        double[] dists = getAprilTagDist(res);
         if(attempt == 2 && dists[0] == 0.0 && dists[1] == 0.0){
             goBackward(.3, 3, -90.0*alliance);
             return;
@@ -289,6 +303,26 @@ public class CSPhillyAuto extends CSYorkDF {
             }else if(dists[0] - 1 > 0){
                 RobotLog.aa("Strafing", (dists[0] - 1) + " inches robot-left, board-right");
                 strafeLeft(.35, dists[0] - 1, 5, -90.0*alliance);
+            }
+        }else if(result.equals("LeftCenter")){
+            if(dists[0] < 0){
+                strafeRight(.35, -1 * (dists[0]), 5, -90.0*alliance); //powers were .35
+            }else if(dists[0] > 0){
+                strafeLeft(.35, dists[0], 5, -90.0*alliance);
+            }
+        }else if(result.equals("CenterCenter")){
+            if(dists[0] < 0){
+                strafeRight(.35, -1 * (dists[0]), 5, -90.0*alliance);
+            }else if(dists[0] > 0){
+                strafeLeft(.35, dists[0], 5, -90.0*alliance);
+            }
+        }else if(result.equals("RightCenter")){
+            if(dists[0] < 0){
+                RobotLog.aa("Strafing", (-1*(dists[0])) + " inches robot-right, board-left");
+                strafeRight(.35, -1 * (dists[0]), 5, -90.0*alliance);
+            }else if(dists[0] - 1 > 0){
+                RobotLog.aa("Strafing", (dists[0]) + " inches robot-left, board-right");
+                strafeLeft(.35, dists[0], 5, -90.0*alliance);
             }
         }
         double inchesAway; //used to be 6.25
@@ -410,6 +444,42 @@ public class CSPhillyAuto extends CSYorkDF {
         goBackward(.4, .5,-90.0*alliance);
         endStop.setPosition(endStopOutOfWayPos);
         pixelsOnStack -= 2;
+    }
+    public void getToBoardFromFar(String result, int alliance){
+        if((result.equals("Left") && alliance == 1) || (result.equals("Right") || alliance == -1)){
+            goBackward(.5, 4, 90.0 * alliance);
+            closeLowerClaw();
+            sleep(500);
+            if(alliance == 1){
+                strafeRight(.6, 18, 5, 90.0*alliance);
+            }else if(alliance == -1){
+                strafeLeft(.6, 18, 5, 90.0*alliance);
+            }
+            absoluteHeading(.4, -90.0*alliance);
+            absoluteHeading(.2, -90.0*alliance);
+            goBackward(.6, 50, -90.0*alliance);
+            double inchesMoved = 0.0;
+            wrist.setPosition(wristAlmostDown);
+            arm1.setPosition(armAlmostUp);
+            if(alliance == 1){
+                strafeRight(.6, 20, 5, -90.0*alliance);
+            }else if(alliance == -1){
+                strafeLeft(.6, 20, 5, -90.0*alliance);
+            }
+            wrist.setPosition(wristScoringPos);
+            arm1.setPosition(arm1ScoringPos);
+            liftIdealPos = liftYellowPixelPos;
+            sleep(500);
+            goBackward(.6, 25, -90.0*alliance);
+            positionOnBackdrop("LeftCenter", alliance, 1);
+            sleep(500);
+            positionOnBackdrop("LeftCenter", alliance, 2);
+            openLowerClaw();
+        }else if(result.equals("Center")){
+
+        }else if((result.equals("Right") && alliance == 1) || (result.equals("Left") || alliance == -1)){
+
+        }
     }
     public void getBackToBoard(String result, int alliance){
         activateBackCamera();

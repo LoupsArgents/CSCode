@@ -113,6 +113,7 @@ public class CSYorkDF extends LinearOpMode {
     double camTuckedIn = 0.9575;
 
     double liftPos;
+    double liftYellowPixelPos = 0.0262024407753051;
     double liftIdealPos;
     double liftInitial;
     boolean liftHappyPlace = true;
