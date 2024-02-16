@@ -309,13 +309,36 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         RobotLog.aa("LeftDiff", String.valueOf(leftDiff));
         RobotLog.aa("CenterDiff", String.valueOf(centerDiff));
         RobotLog.aa("RightDiff", String.valueOf(rightDiff));
-        if(leftDiff > rightDiff && leftDiff > centerDiff){
+        /*
+        Moving prop from center to left:
+        LeftDiff: 46.49, 46.59, 47.67
+        CenterDiff: -22.13, -20.93, -21.31
+        RightDiff: 1.88, 7.27, 6.69
+
+        Not moving prop:
+        LeftDiff: -0.25, 0.37, 1.08
+        CenterDiff: 4.49, 5.03, 4.88
+        RightDiff: 1.63, 2.60, 2.78
+
+        Moving prop from center to right:
+        LeftDiff: 0.43, 0.39, 0.46
+        CenterDiff: -25.59, -25.90, -25.91
+        RightDiff: 39.63, 40.68, 40.96
+         */
+        if(centerDiff < 0 && rightDiff > 20){
+            return "Right";
+        }else if(centerDiff < 0 && leftDiff > 20){
+            return "Left";
+        }else{
+            return "Center";
+        }
+       /* if(leftDiff > rightDiff && leftDiff > centerDiff){
             return "Left";
         }else if(centerDiff > rightDiff && centerDiff > leftDiff){
             return "Center";
         }else{
             return "Right";
-        }
+        }*/
     }
     public boolean getIsSeeingPixel(){
         return seeingPixel;

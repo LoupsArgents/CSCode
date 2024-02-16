@@ -13,6 +13,8 @@ public class CSPhillyAuto extends CSYorkDF {
     ArrayList<Double> rightAverages = new ArrayList<>();
     ArrayList<Double> centerAverages = new ArrayList<>();
     ArrayList<Double> leftAverages = new ArrayList<>();
+    boolean cycle = false;
+
     boolean parkingNearWall = false;
     int pixelsOnStack = 5;
     public void runOpMode(){}
@@ -31,12 +33,13 @@ public class CSPhillyAuto extends CSYorkDF {
         processor.setMode(EverythingProcessor.ProcessorMode.PROP);
         ArrayList<Double> rightAverages = new ArrayList<>();
         ArrayList<Double> leftAverages = new ArrayList<>();
-        boolean cycle = false;
         double leftAvg = 0.0;
         double rightAvg = 0.0;
         double camLeftInitial = 0.0;
         double camCenterInitial = 0.0;
         double camRightInitial = 0.0;
+        boolean streaming = false;
+        long timeStreamingDetected = 0;
         setInitialPositions();
         boolean doneTheThing = false;
         while(opModeInInit()){
@@ -61,19 +64,30 @@ public class CSPhillyAuto extends CSYorkDF {
             telemetry.addData("Alliance", alliance);
             if(gamepad1.x) parkingNearWall = true;
             if(gamepad1.b) parkingNearWall = false;
-            if(portal.getCameraState() == VisionPortal.CameraState.STREAMING && !doneTheThing){
+            if(portal.getCameraState() == VisionPortal.CameraState.STREAMING && !streaming){
+                timeStreamingDetected = System.currentTimeMillis();
+                streaming = true;
+            }
+            long nowTime = System.currentTimeMillis();
+            if (!doneTheThing && streaming && (nowTime - timeStreamingDetected > 1000)) {
                 ZonedDateTime dt = ZonedDateTime.now();
                 String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
-                portal.saveNextFrameRaw("PhillyAutoPropInitial " + time);
+                portal.saveNextFrameRaw("PropTestingInitial " + time);
                 camLeftInitial = processor.getLeftVal();
                 camCenterInitial = processor.getCenterVal();
                 camRightInitial = processor.getRightVal();
+
                 RobotLog.aa("CamLeftInitial", String.valueOf(camLeftInitial));
                 RobotLog.aa("CamRightInitial", String.valueOf(camRightInitial));
                 RobotLog.aa("CamCenterInitial", String.valueOf(camCenterInitial));
                 doneTheThing = true;
             }
-            if(doneTheThing) telemetry.addData("Status", "Now you can put the prop down");
+            if(doneTheThing){
+                telemetry.addData("Status", "Now you can put the prop down");
+                telemetry.addData("CamLeftInitial", camLeftInitial);
+                telemetry.addData("CamCenterInitial", camCenterInitial);
+                telemetry.addData("CamRightInitial", camRightInitial);
+            }
             telemetry.update();
         }
         waitForStart();
@@ -108,30 +122,45 @@ public class CSPhillyAuto extends CSYorkDF {
         doPurplePixel(result, alliance, isNear);
         if(isNear) {
             doYellowPixel(result, alliance);
-            cycle(result, alliance);
-            String s;
-            if(alliance == 1) s = "Right";
-            else s = "Left";
-            cycle(s, alliance);
-            goStraight(.7, 2, -90.0*alliance);
+            if(cycle) {
+                cycle(result, alliance);
+                String s;
+                if (alliance == 1) s = "Right";
+                else s = "Left";
+                cycle(s, alliance);
+                goStraight(.7, 2, -90.0 * alliance);
+                liftIdealPos = liftInitial;
+                while (Math.abs(liftIdealPos - liftPos) > .005) {
+                    liftWithinLoop();
+                }
+                arm1.setPosition(armAlmostDown);
+                wrist.setPosition(wristAlmostDown);
+                sleep(1000);
+                arm1.setPosition(arm1DownPos);
+                wrist.setPosition(wristDownPos);
+            }else park(alliance, result, parkingNearWall); //once I get this figured out
+        }else{
+            getToBoardFromFar(result, alliance);
+            openLowerClaw();
+            sleep(500);
+            String r = result + "Center";
+            positionOnBackdrop(r, alliance, 1);
+            sleep(500);
+            positionOnBackdrop(r, alliance, 2);
+            sleep(500);
+            openUpperClaw();
+            sleep(500);
+            goStraight(.5, 3, -90.0*alliance);
             liftIdealPos = liftInitial;
-            while(Math.abs(liftIdealPos - liftPos) > .005){
-              liftWithinLoop();
+            while(Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()){
+                liftWithinLoop();
             }
             arm1.setPosition(armAlmostDown);
             wrist.setPosition(wristAlmostDown);
             sleep(1000);
             arm1.setPosition(arm1DownPos);
             wrist.setPosition(wristDownPos);
-            //park(alliance, result, parkingNearWall); //once I get this figured out
-        }else{
-            getToBoardFromFar(result, alliance);
-            goStraight(.5, 3, -90.0*alliance);
-            arm1.setPosition(armAlmostDown);
-            wrist.setPosition(wristAlmostDown);
             sleep(1000);
-            arm1.setPosition(arm1DownPos);
-            wrist.setPosition(wristDownPos);
         }
         //left out because cycling is incomplete
         //cycle(result, alliance);
@@ -167,7 +196,9 @@ public class CSPhillyAuto extends CSYorkDF {
             openLowerClaw();
             sleep(500);
         }else if((result.equals("Right") && ((alliance == 1 && isNear) || (alliance == -1 && !isNear))) || (result.equals("Left") && ((alliance == -1 && isNear) || (alliance == 1 && !isNear)))){
-            goStraight(.6, 20, 0.0);//power used to be .4, then .5; used to be 15 in before pathing change
+            goStraight(.6, 10, 0.0);//power used to be .4, then .5; used to be 15 inches before pathing change
+            goStraight(.4, 5, 0.0);
+            goStraight(.3, 5, 0.0);
             wrist.setPosition(wristAlmostDown);
             activateBackCamera();
             double heading;
@@ -193,7 +224,7 @@ public class CSPhillyAuto extends CSYorkDF {
         positionOnBackdrop(result, alliance, 1);
         sleep(500);
         positionOnBackdrop(result, alliance, 2);
-        //sleep(500);
+        sleep(500);
         openUpperClaw();
         sleep(500);
     }
@@ -327,7 +358,7 @@ public class CSPhillyAuto extends CSYorkDF {
         }
         double inchesAway; //used to be 6.25
         if(attempt == 1) inchesAway = 12;
-        else inchesAway = 6;
+        else inchesAway = 5.5; //used to be 6
         if(dists[1] - inchesAway > 0){
             sleep(100);
             RobotLog.aa("GoingBackward", (dists[1]-inchesAway) + " inches");
@@ -449,32 +480,28 @@ public class CSPhillyAuto extends CSYorkDF {
         if((result.equals("Left") && alliance == 1) || (result.equals("Right") || alliance == -1)){
             goBackward(.5, 4, 90.0 * alliance);
             closeLowerClaw();
-            sleep(500);
-            if(alliance == 1){
-                strafeRight(.6, 18, 5, 90.0*alliance);
-            }else if(alliance == -1){
-                strafeLeft(.6, 18, 5, 90.0*alliance);
-            }
             absoluteHeading(.4, -90.0*alliance);
             absoluteHeading(.2, -90.0*alliance);
+            if(alliance == 1){
+                strafeLeft(.6, 21, 5, -90.0*alliance);
+            }else if(alliance == -1){
+                strafeRight(.6, 21, 5, -90.0*alliance);
+            }
+            sleep(500);
             goBackward(.6, 50, -90.0*alliance);
-            double inchesMoved = 0.0;
             wrist.setPosition(wristAlmostDown);
             arm1.setPosition(armAlmostUp);
-            if(alliance == 1){
-                strafeRight(.6, 20, 5, -90.0*alliance);
-            }else if(alliance == -1){
-                strafeLeft(.6, 20, 5, -90.0*alliance);
-            }
+            goBackward(.6, 22, -90.0*alliance); //was 25, then 20
             wrist.setPosition(wristScoringPos);
             arm1.setPosition(arm1ScoringPos);
             liftIdealPos = liftYellowPixelPos;
             sleep(500);
-            goBackward(.6, 25, -90.0*alliance);
-            positionOnBackdrop("LeftCenter", alliance, 1);
-            sleep(500);
-            positionOnBackdrop("LeftCenter", alliance, 2);
-            openLowerClaw();
+            if(alliance == 1){
+                strafeRight(.6, 23, 5, -90.0*alliance);
+            }else if(alliance == -1){
+                strafeLeft(.6, 23, 5, -90.0*alliance);
+            }
+
         }else if(result.equals("Center")){
 
         }else if((result.equals("Right") && alliance == 1) || (result.equals("Left") || alliance == -1)){

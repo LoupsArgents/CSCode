@@ -109,11 +109,11 @@ public class CSYorkDF extends LinearOpMode {
     double wristStack23Pos = 0.13;
     //these ^^^ may need changing -- we'll see
     double camOutOfWay = 0.36; //pointing straight out
-    double camUsePos = 0.655;
+    double camUsePos = 0.6475;
     double camTuckedIn = 0.9575;
 
     double liftPos;
-    double liftYellowPixelPos = 0.0262024407753051;
+    double liftYellowPixelPos = 0.04; //0.0262024407753051;
     double liftIdealPos;
     double liftInitial;
     boolean liftHappyPlace = true;
@@ -834,68 +834,6 @@ public class CSYorkDF extends LinearOpMode {
     public String getPropResult(double leftAv, double rightAv, String processorResult){
         String cameraResult = processorResult;
         return cameraResult;
-        /*double ultraDist = getUltraDistance();
-        RobotLog.aa("Ultrasonic", String.valueOf(ultraDist));
-        RobotLog.aa("LeftAvg", String.valueOf(leftAv));
-        RobotLog.aa("RightAvg", String.valueOf(rightAv));
-        if(ultraDist < 200 && !cameraResult.equals("Center")){
-            //we don't trust the camera, so we trust the ultrasonic and the ultrasonic says center
-            RobotLog.aa("Status", "We don't trust the camera; trust ultrasonic and return center");
-            return "Center";
-        }else if(ultraDist > 200 && cameraResult.equals("Center")){
-            //we don't trust the camera, so we trust the distance sensors
-            //(hope we don't get here)
-            if(leftAv > 15 && leftAv < 26){
-                RobotLog.aa("Status", "We don't trust the camera; trust distance sensors and return left");
-                return "Left";
-            }else{
-                RobotLog.aa("Status", "We don't trust the camera; trust distance sensors and return right");
-                return "Right";
-            }
-        }else {
-            //we trust the camera
-            RobotLog.aa("Status", "We trust the camera; " + cameraResult.toLowerCase());
-            return cameraResult;
-        }*/
-        //DistanceSensorResult distResult = getDistances();
-        //75ish is center prop, ~300 is nothing there
-        //String sensorResult = distResult.getSensorResult();
-        //String sensorResult;
-        //if(leftAv > 15 && leftAv < 29){
-          //  sensorResult = "Left";
-        /*}else if(rightAv > 15 && rightAv < 26){
-            sensorResult = "Right";
-        }else{
-            sensorResult = "Not Right";
-        }
-        if(ultraDist < 200){
-            return "Center";
-        }else if(sensorResult.equals("Right")){
-            return "Right";
-        }else if(sensorResult.equals("Left")){
-            return "Left";
-        }else{
-            return "Left"; //ahh so much fun when only two sensors work :))))))
-        }
-        /*if(cameraResult.equals(sensorResult)){
-            telemetry.addData("Status", "They agree, using result of " + cameraResult);
-            telemetry.update();
-            return cameraResult;
-        }
-        int code = distResult.getErrorCode();
-        //so anything below here means they disagree
-        if(code == 0){
-            //both sensors are good
-            telemetry.addData("Status", "They disagree, using sensor result of " + sensorResult);
-            telemetry.update();
-            return sensorResult;
-        }else{
-            //one or both sensors aren't working
-            telemetry.addData("Status", "One or both sensors aren't working, using camera result of " + cameraResult);
-            telemetry.update();
-            return cameraResult;
-        }*/
-
     }
     public double getUltraDistance(){
         double volt = ultra.getVoltage();

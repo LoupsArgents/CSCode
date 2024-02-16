@@ -77,24 +77,21 @@ public class ServoPositionsTest extends LinearOpMode {
     boolean change2 = true;
     public void runOpMode() {
         String servo1Name = "arm3";
-        String servo2Name = "claw2";
-
+        String servo2Name = "frontCamera";
         servo1 = hardwareMap.get(Servo.class, servo1Name);
         servo2 = hardwareMap.get(Servo.class, servo2Name);
-        Servo endStop = hardwareMap.get(Servo.class, "endStop");
         //on broken scrimmagebot configurations: claw is part of wrist rotation, poleGuide is v4b
         //double armStack45Pos = 0.937; //was .935 then .93
         //    double armStack34Pos = 0.947; //was .945
         //    double armStack23Pos = 0.955; //was .955, then .96, then .957
-        s1p1 = .937; // 0.5;
-        s1p2 = .955; //0.5;
+        s1p1 = .97; // 0.5;
+        s1p2 = .97; //0.5;
         s1current = 0.97; //0.5
-        s2p1 = 0.135;
-        s2p2 = 0.135;
-        s2current = 0.135;
+        s2p1 = .655;
+        s2p2 = .655;
+        s2current = .655;
         servo1.setPosition(s1current);
         servo2.setPosition(s2current);
-        endStop.setPosition(.5925);
         waitForStart();
         while (opModeIsActive()) {
             telemetry.addData("gamepad 1 controls the servo called", servo1Name);
