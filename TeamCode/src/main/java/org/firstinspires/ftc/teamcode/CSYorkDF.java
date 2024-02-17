@@ -712,18 +712,7 @@ public class CSYorkDF extends LinearOpMode {
                 sleep(100);
                 currentDetections = ATProcessor.getDetections();
                 if(currentDetections.size() == 0){
-                    RobotLog.aa("Status", "April tag failed; waiting a long time");
-                    liftIdealPos = liftInitial;
-                    goStraight(.4, 3);
-                    while(Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()){
-                      liftWithinLoop();
-                    }
-                    arm1.setPosition(armAlmostDown);
-                    wrist.setPosition(wristAlmostDown);
-                    sleep(1000);
-                    arm1.setPosition(arm1DownPos);
-                    wrist.setPosition(wristDownPos);
-                    sleep(30000);
+                    return new double[2];
                 }
             }
         }

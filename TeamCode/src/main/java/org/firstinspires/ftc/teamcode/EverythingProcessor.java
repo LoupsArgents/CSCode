@@ -325,9 +325,9 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         CenterDiff: -25.59, -25.90, -25.91
         RightDiff: 39.63, 40.68, 40.96
          */
-        if(centerDiff < 0 && rightDiff > 20){
+        if(centerDiff < -5 && rightDiff > 10){
             return "Right";
-        }else if(centerDiff < 0 && leftDiff > 20){
+        }else if(centerDiff < -5 && leftDiff > 10){
             return "Left";
         }else{
             return "Center";
