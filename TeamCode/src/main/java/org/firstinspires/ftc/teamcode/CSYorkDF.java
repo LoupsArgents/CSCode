@@ -281,7 +281,7 @@ public class CSYorkDF extends LinearOpMode {
         RobotLog.aa("StrafeLeft", "goal heading is " + targetheading);
         while(newInchesTraveled(strafeStartTicks, strafeCurrentTicks) < inches && current - startthing < 1000*timelimit && opModeIsActive()){
             liftWithinLoop();
-            RobotLog.aa("Inches", String.valueOf(newInchesTraveled(strafeStartTicks, strafeCurrentTicks)));
+            //RobotLog.aa("Inches", String.valueOf(newInchesTraveled(strafeStartTicks, strafeCurrentTicks)));
             double heading = newGetHeading();
             if(heading-targetheading>=0){
                 multiplier = .1*(heading-targetheading)+1;
@@ -361,7 +361,7 @@ public class CSYorkDF extends LinearOpMode {
                 motorBR.setPower(-power/2);
             }
             strafeCurrentTicks = strafeOdo.getCurrentPosition();
-            RobotLog.aa("Strafe", String.valueOf(strafeCurrentTicks));
+            //RobotLog.aa("Strafe", String.valueOf(strafeCurrentTicks));
         }
         stopMotors();
         int forwardEndTicks = forwardOdo.getCurrentPosition();
@@ -763,6 +763,7 @@ public class CSYorkDF extends LinearOpMode {
             for(double d : valsToAverage){
                 xAvg += d;
             }
+            RobotLog.aa("ValsToAverage", valsToAverage.toString());
             xAvg /= valsToAverage.size();
         }else if(result.equals("Center")){
             //average (if they exist) the left +6, the center, the right-6
@@ -776,6 +777,7 @@ public class CSYorkDF extends LinearOpMode {
             if(leftCenterRightXDists[2] != 0.0){
                 valsToAverage.add(leftCenterRightXDists[2] - 6);
             }
+            RobotLog.aa("ValsToAverage", valsToAverage.toString());
             for(double d : valsToAverage){
                 xAvg += d;
             }
@@ -792,11 +794,13 @@ public class CSYorkDF extends LinearOpMode {
             if(leftCenterRightXDists[2] != 0.0){
                 valsToAverage.add(leftCenterRightXDists[2]);
             }
+            RobotLog.aa("ValsToAverage", valsToAverage.toString());
             for(double d : valsToAverage){
                 xAvg += d;
             }
             xAvg /= valsToAverage.size();
         }
+        RobotLog.aa("xAvg", Double.toString(xAvg));
         frontDistAvg /= currentDetections.size();
         dists[0] = xAvg;
         dists[1] = frontDistAvg;

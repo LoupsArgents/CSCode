@@ -7,6 +7,7 @@ import org.firstinspires.ftc.vision.VisionPortal;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 @Disabled
 public class CSPhillyAuto extends CSYorkDF {
@@ -17,6 +18,8 @@ public class CSPhillyAuto extends CSYorkDF {
 
     boolean parkingNearWall = false;
     int pixelsOnStack = 5;
+    int delay = 0;
+
     public void runOpMode(){}
     public void doRun(String alliance, boolean isNear){ //1 is blue, -1 is red
         int allianceNum = 1;
@@ -42,25 +45,46 @@ public class CSPhillyAuto extends CSYorkDF {
         long timeStreamingDetected = 0;
         setInitialPositions();
         boolean doneTheThing = false;
+        boolean dpadUpPressed = false;
+        boolean dpadDownPressed = false;
         while(opModeInInit()){
             if(isNear){
-                if(!parkingNearWall){
-                    telemetry.addData("Parking", "Away from wall");
-                    telemetry.addLine("Press X on Gamepad 1 to switch to parking near wall");
+                if(cycle){
+                    telemetry.addData("Cycling", "True");
+                    telemetry.addLine("Press Y on Gamepad 1 to switch to not cycling");
                 }else{
-                    telemetry.addData("Parking", "Near wall");
-                    telemetry.addLine("Press B on Gamepad 1 to switch to parking away from wall");
+                    telemetry.addData("Cycling", "False");
+                    telemetry.addLine("Press A on Gamepad 1 to switch to cycling");
+                }
+                if(gamepad1.a) cycle = true;
+                if(gamepad1.y) cycle = false;
+            }else{
+                telemetry.addData("DelayAfterPurplePixel", (delay/1000) + " seconds");
+                telemetry.addLine("Use the up/down D-pad buttons on Gamepad 1 to change the delay in 1-second increments");
+                if(gamepad1.dpad_up){
+                    if(!dpadUpPressed){
+                        dpadUpPressed = true;
+                        delay += 1000;
+                    }
+                }else{
+                    dpadUpPressed = false;
+                }
+                if(gamepad1.dpad_down){
+                    if(!dpadDownPressed && delay > 0){
+                        dpadDownPressed = true;
+                        delay -= 1000;
+                    }
+                }else{
+                    dpadDownPressed = false;
                 }
             }
-            if(cycle){
-                telemetry.addData("Cycling", "True");
-                telemetry.addLine("Press Y on Gamepad 1 to switch to not cycling");
+            if(!parkingNearWall){
+                telemetry.addData("Parking", "Away from wall");
+                telemetry.addLine("Press X on Gamepad 1 to switch to parking near wall");
             }else{
-                telemetry.addData("Cycling", "False");
-                telemetry.addLine("Press A on Gamepad 1 to switch to cycling");
+                telemetry.addData("Parking", "Near wall");
+                telemetry.addLine("Press B on Gamepad 1 to switch to parking away from wall");
             }
-            if(gamepad1.a) cycle = true;
-            if(gamepad1.y) cycle = false;
             telemetry.addData("Alliance", alliance);
             if(gamepad1.x) parkingNearWall = true;
             if(gamepad1.b) parkingNearWall = false;
@@ -140,6 +164,11 @@ public class CSPhillyAuto extends CSYorkDF {
                 wrist.setPosition(wristDownPos);
             }else park(alliance, result, parkingNearWall); //once I get this figured out
         }else{
+            long startTime = System.currentTimeMillis();
+            long nowTime = System.currentTimeMillis();
+            while(opModeIsActive() && (nowTime - startTime) < delay){
+                nowTime = System.currentTimeMillis();
+            }
             getToBoardFromFar(result, alliance);
             openLowerClaw();
             sleep(500);
@@ -161,6 +190,7 @@ public class CSPhillyAuto extends CSYorkDF {
             sleep(1000);
             arm1.setPosition(arm1DownPos);
             wrist.setPosition(wristDownPos);
+            park(alliance, result, parkingNearWall);
             sleep(1000);
         }
         //left out because cycling is incomplete
@@ -298,7 +328,7 @@ public class CSPhillyAuto extends CSYorkDF {
         ZonedDateTime dt = ZonedDateTime.now();
         String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
         portal.saveNextFrameRaw("PhillyAutoNearBoard " + time);
-        String res = "";
+        String res = result;
         if(result.equals("LeftCenter")){
             res = "Left";
         }else if(result.equals("CenterCenter")){
@@ -307,6 +337,8 @@ public class CSPhillyAuto extends CSYorkDF {
             res = "Right";
         }
         double[] dists = getAprilTagDist(res);
+        RobotLog.aa("IdealPos", result);
+        RobotLog.aa("Dists", Arrays.toString(dists));
         if(dists[0] == 0.0 && dists[1] == 0.0){
             if(attempt == 2) {
                 RobotLog.aa("Status", "April tag not working -- ramming board");
@@ -330,15 +362,19 @@ public class CSPhillyAuto extends CSYorkDF {
         if(result.equals("Left")){
             //we want to be left of the april tag
             if(dists[0] + 1 < 0){ // used to be -1.5, then +2
+                RobotLog.aa("Strafing", (-1*(dists[0] + 1)) + " inches robot-right, board-left");
                 strafeRight(.35, -1 * (dists[0] + 1), 5, -90.0*alliance); //powers were .35
             }else if(dists[0] + 1 > 0){
+                RobotLog.aa("Strafing", (dists[0] + 1) + " inches robot-left, board-right");
                 strafeLeft(.35, dists[0] + 1, 5, -90.0*alliance);
             }
         }else if(result.equals("Center")){
             //we want to be 1 inch left of the april tag
             if(dists[0] - 1 < 0){
+                RobotLog.aa("Strafing", (-1*(dists[0] - 1)) + " inches robot-right, board-left");
                 strafeRight(.35, -1 * (dists[0]-1), 5, -90.0*alliance);
             }else if(dists[0] - 1 > 0){
+                RobotLog.aa("Strafing", (dists[0] - 1) + " inches robot-left, board-right");
                 strafeLeft(.35, dists[0]-1, 5, -90.0*alliance);
             }
         }else if(result.equals("Right")){
@@ -673,7 +709,7 @@ public class CSPhillyAuto extends CSYorkDF {
             }else{
                 RobotLog.aa("Status", "Parking away from wall");
                 if(result.equals("Left")){
-                    strafeLeft(.6, 30, 5, -90.0*alliance);
+                    strafeLeft(.6, 27, 5, -90.0*alliance);
                 }else if(result.equals("Center")){
                     strafeLeft(.6, 22, 5, -90.0*alliance);
                 }else{
