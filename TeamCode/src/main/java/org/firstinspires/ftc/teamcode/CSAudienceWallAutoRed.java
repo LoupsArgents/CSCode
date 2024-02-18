@@ -4,8 +4,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 @Autonomous
 
-public class CSAudienceAutoRed extends CSPhillyAuto {
+public class CSAudienceWallAutoRed extends CSPhillyAuto {
     public void runOpMode(){
-        doRun("Red", false);
+        doRun("Red", false, true);
     }
 }

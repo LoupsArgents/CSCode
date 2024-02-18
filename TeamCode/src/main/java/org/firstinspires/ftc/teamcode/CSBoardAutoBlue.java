@@ -6,6 +6,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 public class CSBoardAutoBlue extends CSPhillyAuto {
     public void runOpMode(){
-        doRun("Blue", true);
+        doRun("Blue", true, false);
     }
 }
