@@ -831,8 +831,8 @@ public class CSTeleop extends LinearOpMode {
                     liftPower *= 0.25;
                 }
                 double liftError = liftIdealPos - liftPos;
-                double liftTolerance = 0.005;
-                double Kp = 50;
+                double liftTolerance = 0.005; //was 0.005
+                double Kp = 30; //was 50
                 if (Math.abs(liftError) < liftTolerance) {
                     liftHappyPlace = true;
                 } else {
@@ -840,7 +840,7 @@ public class CSTeleop extends LinearOpMode {
                 }
                 if (!isJoysticking && !liftHappyPlace) {
                     if (liftError < 0) { //going down
-                        Kp = 30;
+                        Kp = 10; //was 30
                     }
                     lift2.setPower(liftError*Kp);
                     lift1.setPower(-liftError*Kp);
