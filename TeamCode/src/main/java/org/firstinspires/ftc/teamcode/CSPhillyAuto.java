@@ -2,9 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.util.RobotLog;
-
 import org.firstinspires.ftc.vision.VisionPortal;
-
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,7 +56,6 @@ public class CSPhillyAuto extends CSYorkDF {
                 }
                 if(gamepad1.a) cycle = true;
                 if(gamepad1.y) cycle = false;
-            }else{
                 telemetry.addData("DelayAfterPurplePixel", (delay/1000) + " seconds");
                 telemetry.addLine("Use the up/down D-pad buttons on Gamepad 1 to change the delay in 1-second increments");
                 if(gamepad1.dpad_up){
@@ -417,6 +414,11 @@ public class CSPhillyAuto extends CSYorkDF {
     public void cycle(String result, int alliance){
         //here, result = what part of the board you're coming from
         getToStack(result, alliance);
+        long startTime = System.currentTimeMillis();
+        long nowTime = System.currentTimeMillis();
+        while(opModeIsActive() && (nowTime - startTime) < delay){
+            nowTime = System.currentTimeMillis();
+        }
         getBackToBoard(result, alliance);
     }
     public void getToStack(String result, int alliance){
