@@ -148,10 +148,6 @@ public class CSPhillyAuto extends CSYorkDF {
             doYellowPixel(result, alliance);
             if(cycle) {
                 cycle(result, alliance);
-                String s;
-                if (alliance == 1) s = "Right";
-                else s = "Left";
-                cycle(s, alliance);
                 goStraight(.7, 2, -90.0 * alliance);
                 liftIdealPos = liftInitial;
                 while (Math.abs(liftIdealPos - liftPos) > .005) {
@@ -162,7 +158,19 @@ public class CSPhillyAuto extends CSYorkDF {
                 sleep(1000);
                 arm1.setPosition(arm1DownPos);
                 wrist.setPosition(wristDownPos);
-            }else park(alliance, result, parkingNearWall); //once I get this figured out
+
+            }
+            if(cycle) {
+                String s;
+                if(alliance == 1){
+                    s = "Right";
+                }else{
+                    s = "Left";
+                }
+                park(alliance, s, parkingNearWall); //once I get this figured out
+            }else{
+                park(alliance, result, parkingNearWall);
+            }
         }else{
             long startTime = System.currentTimeMillis();
             long nowTime = System.currentTimeMillis();
@@ -621,9 +629,9 @@ public class CSPhillyAuto extends CSYorkDF {
             absoluteHeading(.2, -90.0*alliance);
             sleep(500);
             if(alliance == 1){
-                strafeRight(.5, 21.5, 5, -90.0*alliance);
+                strafeRight(.5, 22, 5, -90.0*alliance);
             }else if(alliance == -1){
-                strafeLeft(.5, 21.5, 5, -90.0*alliance);
+                strafeLeft(.5, 22, 5, -90.0*alliance);
             }
             sleep(500);
             goBackward(.6, 55, -90.0*alliance);
@@ -723,14 +731,19 @@ public class CSPhillyAuto extends CSYorkDF {
             liftWithinLoop();
         }*/
         openLowerClaw();
+        RobotLog.aa("Status", "Opened first claw");
         sleep(500);
         //sleep(200);
         liftIdealPos = .11;
+        RobotLog.aa("Status", "Set lift position");
         goStraight(.35, .5, -90.0*alliance);
-        while(Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()){
+        RobotLog.aa("Status", "Moved and starting lift");
+        while(Math.abs(liftIdealPos - liftPos) > .05 && opModeIsActive()){
             liftWithinLoop();
         }
+        RobotLog.aa("Status", "Lift moved down");
         openUpperClaw();
+        RobotLog.aa("Status", "Claw opened");
         cameraBar.setPosition(camOutOfWay);
         sleep(500);
     }

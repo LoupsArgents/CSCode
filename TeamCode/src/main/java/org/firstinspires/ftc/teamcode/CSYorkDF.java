@@ -683,7 +683,7 @@ public class CSYorkDF extends LinearOpMode {
         liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
         double liftError = liftIdealPos - liftPos;
         double liftTolerance = 0.005;
-        double Kp = 50;
+        double Kp = 30;
         if (Math.abs(liftPos - liftIdealPos) > liftTolerance) {
             lift2.setPower(liftError*Kp);
             lift1.setPower(-liftError*Kp);
