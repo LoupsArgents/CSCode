@@ -71,15 +71,19 @@ public class CSYorkDF extends LinearOpMode {
     double multiplierBL = 1.0;
     double multiplierFL = 1.0;
     double multiplierBR = 1.0;
-    double clawUpOpen = 0.51;
-    double clawUpClose = 0.355;
+    double clawUpOpen = .525; //0.51;
+    double clawUpClose = .38; //0.355;
 
+    double clawDownOpen = .525; //0.53;
+    double clawDownClose = .435; //0.42;
     //diference should be ~.11
-    //if closed posiition is .42
+    //if closed position is .42
     //then that puts open position at ~.53
-    double clawDownOpen = 0.53;
-    double clawDownClose = 0.42;
-    double clawDownSemiClose = 0.44;
+    //claw up close: .39
+    //claw up open: .485
+    //claw down close: .435
+    //claw down open: .5
+    double clawDownSemiClose = 0.455;
     double wristDownPos = 0.135;
     double wristAlmostDown = 0.15;//for flipping the arm up
     double wristStraightUp = 0.45;
@@ -102,8 +106,9 @@ public class CSYorkDF extends LinearOpMode {
     double armStack23Pos = 0.955; //was .955, then .96, then .957
     double armStallAgainstStopPos = 1.0;
     double endStopOutOfWayPos = .64;
-    double endStop45Pos = .5;
-    double endStop23Pos = .5925; //was .58
+    double endStop45Pos = .545; //.5 was the old, shockingly bad position
+    double endStop34Pos = .565;
+    double endStop23Pos = .605; //was .58
     double wristStack45Pos = 0.12;
     double wristStack34Pos = 0.12;
     double wristStack23Pos = 0.13;
@@ -675,6 +680,8 @@ public class CSYorkDF extends LinearOpMode {
             happy = closestStackInnerFunction(processor);
         }
         stopMotors();
+        sleep(500);
+        goBackward(.4, .05);
         closeClaw();
     }
     public void liftWithinLoop(){

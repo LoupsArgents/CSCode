@@ -142,10 +142,10 @@ public class CSTeleop extends LinearOpMode {
     boolean leadScrewsDownEnd = false;
     boolean lsStateCanChange = true;
     boolean clawStateCanChange = true;
-    double clawUpopen = 0.51;
-    double clawUpclose = 0.355;
-    double clawDownopen = 0.53; //was .58 before servo broke
-    double clawDownclose = 0.42; //was .47 before servo broke
+    double clawUpopen = .525; //0.51;
+    double clawUpclose = .38; //0.355;
+    double clawDownopen = .525; //0.53; //was .58 before servo broke
+    double clawDownclose = .435; //0.42; //was .47 before servo broke
     boolean doAbsHeading = false;
     double idealAbsHeading = 0.0;
     double turningConst = 0.575; //was 0.575
