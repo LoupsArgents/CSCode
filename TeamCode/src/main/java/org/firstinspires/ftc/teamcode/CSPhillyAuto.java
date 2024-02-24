@@ -146,6 +146,7 @@ public class CSPhillyAuto extends CSYorkDF {
             if(cycle) {
                 cycle(result, alliance);
                 goStraight(.7, 2, -90.0 * alliance);
+                closeClaw();
                 liftIdealPos = liftInitial;
                 while (Math.abs(liftIdealPos - liftPos) > .005) {
                     liftWithinLoop();
@@ -155,7 +156,6 @@ public class CSPhillyAuto extends CSYorkDF {
                 sleep(1000);
                 arm1.setPosition(arm1DownPos);
                 wrist.setPosition(wristDownPos);
-
             }
             if(cycle) {
                 String s;
@@ -174,6 +174,11 @@ public class CSPhillyAuto extends CSYorkDF {
                 }
                 park(alliance, s, parkingNearWall); //once I get this figured out
             }else{
+                arm1.setPosition(armAlmostDown);
+                wrist.setPosition(wristAlmostDown);
+                sleep(1000);
+                arm1.setPosition(arm1DownPos);
+                wrist.setPosition(wristDownPos);
                 park(alliance, result, parkingNearWall);
             }
         }else{
@@ -772,8 +777,8 @@ public class CSPhillyAuto extends CSYorkDF {
     }
     public void park(int alliance, String result, boolean parkingNearWall){
         RobotLog.aa("Status", "Started parking");
-        arm1.setPosition(armAlmostDown);
-        wrist.setPosition(wristAlmostDown);
+        //arm1.setPosition(armAlmostDown);
+        //wrist.setPosition(wristAlmostDown);
         if(alliance == -1){
             if(parkingNearWall){
                 //~20 inches from the closest to the wall
@@ -818,8 +823,8 @@ public class CSPhillyAuto extends CSYorkDF {
                 }
             }
         }
-        arm1.setPosition(arm1DownPos);
-        wrist.setPosition(wristDownPos);
+        //arm1.setPosition(arm1DownPos);
+        //wrist.setPosition(wristDownPos);
         sleep(1000);
     }
 }

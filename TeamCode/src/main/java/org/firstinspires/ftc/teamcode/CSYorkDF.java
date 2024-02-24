@@ -72,17 +72,9 @@ public class CSYorkDF extends LinearOpMode {
     double multiplierFL = 1.0;
     double multiplierBR = 1.0;
     double clawUpOpen = .525; //0.51;
-    double clawUpClose = .38; //0.355;
-
+    double clawUpClose = .33; //0.355; //0.38 was good
     double clawDownOpen = .525; //0.53;
-    double clawDownClose = .435; //0.42;
-    //diference should be ~.11
-    //if closed position is .42
-    //then that puts open position at ~.53
-    //claw up close: .39
-    //claw up open: .485
-    //claw down close: .435
-    //claw down open: .5
+    double clawDownClose = .385;
     double clawDownSemiClose = 0.455;
     double wristDownPos = 0.135;
     double wristAlmostDown = 0.15;//for flipping the arm up
@@ -106,11 +98,11 @@ public class CSYorkDF extends LinearOpMode {
     double armStack23Pos = 0.955; //was .955, then .96, then .957
     double armStallAgainstStopPos = 1.0;
     double endStopOutOfWayPos = .64;
-    double endStop45Pos = .545; //.5 was the old, shockingly bad position
-    double endStop34Pos = .565;
-    double endStop23Pos = .605; //was .58
-    double wristStack45Pos = 0.12;
-    double wristStack34Pos = 0.12;
+    double endStop45Pos = .515; //was 0.545, then .53, then .525, then .52
+    double endStop34Pos = .565; //was 0.565, then .57, then .565
+    double endStop23Pos = .6; //was .58, then .605
+    double wristStack45Pos = 0.115; //wrist is 0.115, was 0.12
+    double wristStack34Pos = 0.1225; //was 0.12. 0.12 is a bit off, and 0.125 is a bit off the other way
     double wristStack23Pos = 0.13;
     //these ^^^ may need changing -- we'll see
     double camOutOfWay = 0.36; //pointing straight out
