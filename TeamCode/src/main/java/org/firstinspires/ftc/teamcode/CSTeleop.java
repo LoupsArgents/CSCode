@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Size;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
@@ -143,9 +145,9 @@ public class CSTeleop extends LinearOpMode {
     boolean lsStateCanChange = true;
     boolean clawStateCanChange = true;
     double clawUpopen = .525; //0.51;
-    double clawUpclose = .38; //0.355;
+    double clawUpclose = .33; //0.355; //0.38 was good
     double clawDownopen = .525; //0.53; //was .58 before servo broke
-    double clawDownclose = .435; //0.42; //was .47 before servo broke
+    double clawDownclose = .385; //0.42; //was .47 before servo broke //0.435 was good but didn't stall enough
     boolean doAbsHeading = false;
     double idealAbsHeading = 0.0;
     double turningConst = 0.575; //was 0.575
@@ -190,14 +192,17 @@ public class CSTeleop extends LinearOpMode {
     private ElapsedTime armTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     private ElapsedTime wristTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     private ElapsedTime camBarTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    private ElapsedTime droneTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    private ElapsedTime driveMotorTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    private boolean droneHasBeenLaunched = false;
     private double armCurrentTime;
     private double armLastTime;
     boolean leadScrewsManual = false;
     double armSetTo = 0.0;
     double wristSetTo = wristDownPos;
     double camSetTo = camTuckedIn;
-    double clawUpSetTo = clawUpopen;
-    double clawDownSetTo = clawDownopen;
+    double clawUpSetTo = clawUpclose;
+    double clawDownSetTo = clawDownclose;
     boolean canUseSlides = true;
     boolean isJoysticking = false;
     Point pixelPos;
@@ -230,10 +235,12 @@ public class CSTeleop extends LinearOpMode {
     double armStack23Pos = 0.955; //was .955, then .96, then .957
     double armStallAgainstStopPos = 1.0;
     double endStopOutOfWayPos = .64; //was .64
-    double endStop45Pos = .5;
-    double endStop23Pos = .5925; //was .58
-    double wristStack45Pos = 0.12;
-    double wristStack34Pos = 0.12;
+    double endStop45Pos = .515; //was 0.545, then .53, then .525, then .52
+    double endStop34Pos = .565; //was 0.565, then .57, then .565
+    double endStop23Pos = .6; //was .58, then .605
+    double endStopSetTo = endStopOutOfWayPos;
+    double wristStack45Pos = 0.115; //wrist is 0.115, was 0.12
+    double wristStack34Pos = 0.1225; //was 0.12. 0.12 is a bit off, and 0.125 is a bit off the other way
     double wristStack23Pos = 0.13;
     //arm + wrist positions for same side scoring need to be updated
     double armSameSideScore = 0.845;
@@ -246,8 +253,10 @@ public class CSTeleop extends LinearOpMode {
     //pixels 3 and 4 arm is 0.92, wrist is 0.12
     //pixels 2 and 3 arm is 0.945, wrist is 0.125
     //pixels 1 and 2 are normal arm/claw levels (they're on the ground)
+    boolean needArmUpABitStacks = false;
 
     public void runOpMode() {
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
@@ -374,9 +383,9 @@ public class CSTeleop extends LinearOpMode {
         telemetry.addData("status", "initialized");
         telemetry.update();
 
-        waitForStart();
+        activateFrontCamera(); // BC moved this here because it could cause the weird delay at the start of Teleop
 
-        activateFrontCamera();
+        waitForStart();
 
         timer.reset();
         armTimer.reset();
@@ -396,6 +405,10 @@ public class CSTeleop extends LinearOpMode {
             //telemetry.addData("oldHeadingWay", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
             currentTime = timer.milliseconds();
             armCurrentTime = armTimer.milliseconds();
+            //RobotLog.aa("liftCurrentPos", Double.toString(liftPos));
+            telemetry.addData("does it think it's doing the stacks auto pickup", needArmUpABitStacks);
+            telemetry.addData("liftCurrentPos", liftPos);
+            telemetry.addData("liftIdealPos", liftIdealPos);
             telemetry.addData("broken lead screw", lsm2.getCurrentPosition()); //lsm 2 is the broken one. was lsm2enc
             telemetry.addData("right lead screw", lsm1.getCurrentPosition());
             //lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
@@ -404,6 +417,7 @@ public class CSTeleop extends LinearOpMode {
             telemetry.addData("(lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init", (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init);
             telemetry.addData("wristSetTo", wristSetTo);
             telemetry.addData("loop time, ms", currentTime);
+            //RobotLog.aa("Loop time", String.valueOf(currentTime)); BC added for testing
             telemetry.addData("arm time, ms", armCurrentTime);
             telemetry.addData("backdropDistance (cm)", backDistCM);
             telemetry.addData("gamepad1.left_trigger", gamepad1.left_trigger);
@@ -457,7 +471,8 @@ public class CSTeleop extends LinearOpMode {
             if (Math.abs(cameraBar.getPosition() - camTuckedIn) < 0.05 || Math.abs(cameraBar.getPosition() - camOutOfWay) < 0.05) { //we're allowed to move the arm
                 //telemetry.addData("this", "runs");
                 if (gamepad2.dpad_up) {
-                    activateBackCamera();
+                    //RobotLog.aa("ArmFlipped", ""); BC added for testing
+                    //activateBackCamera(); Brendan commented this out because it might be the cause of a 376ms loop
                     armIdealPosition = arm1ScoringPos;
                     armPhase = 1;
                     armTimer.reset();
@@ -466,7 +481,7 @@ public class CSTeleop extends LinearOpMode {
                 if (gamepad2.dpad_down && liftPos < 0.01) {
                     pixelRow = -1;
                     doStacks = false;
-                    activateFrontCamera();
+                    //activateFrontCamera(); BC - seems unneccessary if we don't ever deactivate it
                     armIdealPosition = arm1DownPos;
                     armPhase = 2;
                     armTimer.reset();
@@ -478,7 +493,7 @@ public class CSTeleop extends LinearOpMode {
                     }
                 } else if (gamepad2.dpad_down) { //put everything all the way down
                     doStacks = false;
-                    activateFrontCamera();
+                    //activateFrontCamera(); BC - same as above
                     armIdealPosition = arm1DownPos;
                     armPhase = 2;
                     armTimer.reset();
@@ -497,10 +512,11 @@ public class CSTeleop extends LinearOpMode {
                 //higher values for arm position = lower down
                 if (gamepad2.dpad_right) {
                     stacksLevel = 3;//0 is pixels 1 and 2, 1 is pixels 2 and 3, 2 is pixels 3 and 4, 3 is pixels 4 and 5
-                    arm1.setPosition(armStack45Pos + 0.1); //was 0.935
-                    armSetTo = armStack45Pos + 0.1;
+                    arm1.setPosition(armStallAgainstStopPos); //was 0.935
+                    armSetTo = armStallAgainstStopPos;
                     armStartedAt = armSetTo;
                     endStop.setPosition(endStop45Pos);
+                    endStopSetTo = endStop45Pos;
                     //wrist.setPosition(0.12);
                     wrist.setPosition(wristAlmostDown);
                     wristStackIdeal = wristStack45Pos;
@@ -513,17 +529,19 @@ public class CSTeleop extends LinearOpMode {
                     stacksLevel -= 1;
                     if (stacksLevel < 0) {stacksLevel = 0;}
                     if (stacksLevel == 2) {
-                        arm1.setPosition(armStack34Pos + 0.1); //was 0.945
-                        armSetTo = armStack34Pos + 0.1;
+                        arm1.setPosition(armStallAgainstStopPos); //was 0.945, then armStack34Pos + 0.1
+                        armSetTo = armStallAgainstStopPos;
                         armStartedAt = armSetTo;
-                        endStop.setPosition((55*endStop23Pos + 45*endStop45Pos)/100);
+                        endStop.setPosition(endStop34Pos);
+                        endStopSetTo = endStop34Pos;
                         //wrist.setPosition(0.12);
                         wristStackIdeal = wristStack34Pos;
                     } else if (stacksLevel == 1) {
-                        arm1.setPosition(armStack23Pos + 0.1); //was 0.955
-                        armSetTo = armStack23Pos + 0.1; //was 0.955
+                        arm1.setPosition(armStallAgainstStopPos); //was 0.955, then armStack23Pos + 0.1
+                        armSetTo = armStallAgainstStopPos; //was 0.955
                         armStartedAt = armSetTo;
                         endStop.setPosition(endStop23Pos);
+                        endStopSetTo = endStop23Pos;
                         //wrist.setPosition(0.125);
                         wristStackIdeal = wristStack23Pos;
                     } else if (stacksLevel == 0) {
@@ -531,6 +549,7 @@ public class CSTeleop extends LinearOpMode {
                         armSetTo = arm1DownPos;
                         armStartedAt = armSetTo;
                         endStop.setPosition(endStopOutOfWayPos);
+                        endStopSetTo = endStopOutOfWayPos;
                         //wrist.setPosition(wristDownPos);
                         wristStackIdeal = wristDownPos;
                     }
@@ -538,7 +557,7 @@ public class CSTeleop extends LinearOpMode {
                     stacksLevelCanChange = true;
                 }
                 if (doStacks && wristTimer.milliseconds() > 250) {
-                    telemetry.addData("519", "works");
+                    //telemetry.addData("519", "works");
                     if (wristSetTo != wristStackIdeal) {
                         wrist.setPosition(wristStackIdeal);
                         wristSetTo = wristStackIdeal;
@@ -551,7 +570,7 @@ public class CSTeleop extends LinearOpMode {
                     }
                     wristSetTo = wristDownPos;
                 }*/
-                if (gamepad1.dpad_up) {
+                /*if (gamepad1.dpad_up) {
                     doStacks = false;
                     armMotionProfiling = true;
                     motionTimer.reset();
@@ -572,7 +591,7 @@ public class CSTeleop extends LinearOpMode {
                     if (!armMotionProfiling) {
                         armStartedAt = armIdealPosition;
                     }
-                }
+                }*/
                 /*if (gamepad1.dpad_right || gamepad1.dpad_left) {
                     doStacks = false;
                     armPhase = 0;
@@ -586,6 +605,7 @@ public class CSTeleop extends LinearOpMode {
                 }*/
                 if (!doStacks && !armMotionProfiling) {
                     endStop.setPosition(endStopOutOfWayPos);
+                    endStopSetTo = endStopOutOfWayPos;
                     if ((armPhase == 1) && armTimer.milliseconds() > 1100) { //was 2000, then 1500, 1100 worked
                         armPhase += 2;
                     }
@@ -673,7 +693,7 @@ public class CSTeleop extends LinearOpMode {
 
             telemetry.update();
             //claw stuff
-            if (gamepad1.right_bumper && (armSetTo == arm1DownPos || armSetTo >= armStack45Pos + 0.1)) {
+            if (gamepad1.right_bumper && (armSetTo != arm1ScoringPos)) {
                 if (!camInUsePos) {
                     cameraBar.setPosition(camUsePos);
                     camSetTo = camUsePos;
@@ -696,14 +716,22 @@ public class CSTeleop extends LinearOpMode {
                 doAutoPickup = !closestStackInnerFunction(processor); //true = keep going, false = stop
                 camInUsePos = true;
                 if (!doAutoPickup) {
-                    clawUp.setPosition(clawUpclose);
-                    clawUpSetTo = clawUpclose;
-                    cameraBar.setPosition(camTuckedIn);
-                    camSetTo = camTuckedIn;
-                    camInUsePos = false;
-                    clawDown.setPosition(clawDownclose);
-                    clawDownSetTo = clawDownclose;
-                    gamepad1.rumble(500);
+                    if (endStopSetTo != endStopOutOfWayPos) {
+                        //arm1.setPosition(armSetTo - 0.025);
+                        //armSetTo -= 0.025;
+                        needArmUpABitStacks = true;
+                        armTimer.reset();
+                        driveMotorTimer.reset();
+                    } else {
+                        clawUp.setPosition(clawUpclose);
+                        clawUpSetTo = clawUpclose;
+                        cameraBar.setPosition(camTuckedIn);
+                        camSetTo = camTuckedIn;
+                        camInUsePos = false;
+                        clawDown.setPosition(clawDownclose);
+                        clawDownSetTo = clawDownclose;
+                        gamepad1.rumble(500);
+                    }
                 }
                 if (processor.getIsSeeingPixel() || clawSeesPixels()) {
                     hasEverSeenPixel = true;
@@ -726,6 +754,26 @@ public class CSTeleop extends LinearOpMode {
                 camSetTo = camTuckedIn;
                 camInUsePos = false;
                 gamepad1.rumble(100);
+            }
+            if (needArmUpABitStacks && driveMotorTimer.milliseconds() < 200) {
+                motorFL.setPower(-0.25);//was -.3
+                motorFR.setPower(-0.25);
+                motorBR.setPower(-0.25);
+                motorBL.setPower(-0.25);
+            } else if (needArmUpABitStacks && driveMotorTimer.milliseconds() > 200) {
+                clawUp.setPosition(clawUpclose);
+                clawUpSetTo = clawUpclose;
+                cameraBar.setPosition(camTuckedIn);
+                camSetTo = camTuckedIn;
+                camInUsePos = false;
+                clawDown.setPosition(clawDownclose);
+                clawDownSetTo = clawDownclose;
+                gamepad1.rumble(500);
+            }
+            if (needArmUpABitStacks && armTimer.milliseconds() > 500) {
+                arm1.setPosition(armSetTo - 0.05); //was 0.025
+                armSetTo -= 0.05; //was 0.025
+                needArmUpABitStacks = false;
             }
             if (gamepad1.left_bumper) {
                 doAutoBoardDistance = true;
@@ -1014,6 +1062,11 @@ public class CSTeleop extends LinearOpMode {
                 }
                 if (gamepad2.right_trigger > 0.05 && lss2SetTo == lss2Launch) {
                     droneRelease.setPosition(droneFire);
+                    droneHasBeenLaunched = true;
+                    droneTimer.reset();
+                }
+                if (droneHasBeenLaunched && droneTimer.milliseconds() > 2000) {
+                    droneRelease.setPosition(droneInitial);
                 }
                 //lead screw code
                 if (gamepad2.y) {
@@ -1234,7 +1287,7 @@ public class CSTeleop extends LinearOpMode {
         return dists;
     }
     public void activateFrontCamera(){
-        if(portal.getCameraState() == VisionPortal.CameraState.STREAMING){
+        if(portal.getCameraState() == VisionPortal.CameraState.STREAMING) {
             portal.setActiveCamera(frontCamera);
             if(!portal.getProcessorEnabled(processor)) portal.setProcessorEnabled(processor, true);
             if(portal.getProcessorEnabled(ATProcessor)) portal.setProcessorEnabled(ATProcessor, false);
