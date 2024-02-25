@@ -470,7 +470,7 @@ public class CSTeleop extends LinearOpMode {
             }
             if (Math.abs(cameraBar.getPosition() - camTuckedIn) < 0.05 || Math.abs(cameraBar.getPosition() - camOutOfWay) < 0.05) { //we're allowed to move the arm
                 //telemetry.addData("this", "runs");
-                if (gamepad2.dpad_up) {
+                if (gamepad2.dpad_up && armSetTo != arm1ScoringPos) {
                     //RobotLog.aa("ArmFlipped", ""); BC added for testing
                     //activateBackCamera(); Brendan commented this out because it might be the cause of a 376ms loop
                     armIdealPosition = arm1ScoringPos;

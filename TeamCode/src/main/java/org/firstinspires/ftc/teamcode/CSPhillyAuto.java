@@ -148,7 +148,7 @@ public class CSPhillyAuto extends CSYorkDF {
                 goStraight(.7, 2, -90.0 * alliance);
                 closeClaw();
                 liftIdealPos = liftInitial;
-                while (Math.abs(liftIdealPos - liftPos) > .005) {
+                while (Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()) {
                     liftWithinLoop();
                 }
                 arm1.setPosition(armAlmostDown);
@@ -721,7 +721,7 @@ public class CSPhillyAuto extends CSYorkDF {
         arm1.setPosition(armAlmostUp);
         goBackward(.6, 18, -90.0*alliance); //power was .6, then .7; distance was 15 but started being too much bc speed increase then added bc skidout had been doing that
         goBackward(.4, 10, -90.0*alliance);
-        liftIdealPos = .06;
+        liftIdealPos = .02;
         sleep(500);
         if(alliance == 1){
             strafeRight(.8, 13, 5, -90.0*alliance); //powers were .6, then .7; dists were 20 then 15
@@ -732,18 +732,18 @@ public class CSPhillyAuto extends CSYorkDF {
         arm1.setPosition(arm1ScoringPos);
         sleep(500);
         if(alliance == 1){
-            String s = "Right";
+            String s = "RightCenter";
             if(result.equals("Right")){
-                s = "Center";
+                s = "CenterCenter";
             }
             positionOnBackdrop(s, alliance, 1);
             sleep(500);
             positionOnBackdrop(s, alliance, 2);
 
         }else if(alliance == -1){
-            String s = "Left";
+            String s = "LeftCenter";
             if(result.equals("Left")){
-                s = "Center";
+                s = "CenterCenter";
             }
             positionOnBackdrop(s, alliance, 1);
             sleep(500);
@@ -755,14 +755,32 @@ public class CSPhillyAuto extends CSYorkDF {
         }*/
         openLowerClaw();
         RobotLog.aa("Status", "Opened first claw");
-        sleep(500);
+        long start = System.currentTimeMillis();
+        long now = System.currentTimeMillis();
+        while(now - start < 500 && opModeIsActive()){
+            liftWithinLoop();
+            now = System.currentTimeMillis();
+        }
         //sleep(200);
-        liftIdealPos = .08;
+        liftIdealPos = .05;
         RobotLog.aa("Status", "Set lift position");
         goStraight(.35, .5, -90.0*alliance);
+        start = System.currentTimeMillis();
+        now = System.currentTimeMillis();
+        while(now - start < 500 && opModeIsActive()){
+            liftWithinLoop();
+            now = System.currentTimeMillis();
+        }
+        goBackward(.35, .25, -90.0*alliance);
         RobotLog.aa("Status", "Moved and starting lift");
         while(Math.abs(liftIdealPos - liftPos) > .05 && opModeIsActive()){
             liftWithinLoop();
+        }
+        start = System.currentTimeMillis();
+        now = System.currentTimeMillis();
+        while(now - start < 500 && opModeIsActive()){
+            liftWithinLoop();
+            now = System.currentTimeMillis();
         }
         RobotLog.aa("Status", "Lift moved down");
         openUpperClaw();
@@ -770,7 +788,7 @@ public class CSPhillyAuto extends CSYorkDF {
         cameraBar.setPosition(camOutOfWay);
         long startTime = System.currentTimeMillis();
         long currentTime = System.currentTimeMillis();
-        while(currentTime - startTime < 500){
+        while(currentTime - startTime < 500 && opModeIsActive()){
             liftWithinLoop();
             currentTime = System.currentTimeMillis();
         }
