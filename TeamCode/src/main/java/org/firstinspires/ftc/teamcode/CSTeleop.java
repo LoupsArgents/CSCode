@@ -716,6 +716,8 @@ public class CSTeleop extends LinearOpMode {
                 doAutoPickup = !closestStackInnerFunction(processor); //true = keep going, false = stop
                 camInUsePos = true;
                 if (!doAutoPickup) {
+                    pixelRow = -1;
+                    secondPixelChange = 0;
                     if (endStopSetTo != endStopOutOfWayPos) {
                         //arm1.setPosition(armSetTo - 0.025);
                         //armSetTo -= 0.025;
@@ -793,6 +795,8 @@ public class CSTeleop extends LinearOpMode {
                     cameraBar.setPosition(camTuckedIn);
                     camSetTo = camTuckedIn;
                     camInUsePos = false;
+                    pixelRow = -1;
+                    secondPixelChange = 0;
                 }
                 if (gamepad1.left_trigger > 0.1 && clawStateCanChange) {
                     clawStateCanChange = false;
@@ -800,8 +804,8 @@ public class CSTeleop extends LinearOpMode {
                     if (clawDownSetTo == clawDownopen) {
                         clawUp.setPosition(clawUpopen);
                         clawUpSetTo = clawUpopen;
-                        pixelRow = -1;
-                        secondPixelChange = 0;
+                        //pixelRow = -1;
+                        //secondPixelChange = 0;
                     } else {
                         clawDown.setPosition(clawDownopen);
                         clawDownSetTo = clawDownopen;
