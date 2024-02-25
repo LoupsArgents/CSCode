@@ -56,24 +56,25 @@ public class CSPhillyAuto extends CSYorkDF {
                 }
                 if(gamepad1.a) cycle = true;
                 if(gamepad1.y) cycle = false;
-                telemetry.addData("DelayAfterPurplePixel", (delay/1000) + " seconds");
-                telemetry.addLine("Use the up/down D-pad buttons on Gamepad 1 to change the delay in 1-second increments");
-                if(gamepad1.dpad_up){
-                    if(!dpadUpPressed){
-                        dpadUpPressed = true;
-                        delay += 1000;
-                    }
-                }else{
-                    dpadUpPressed = false;
+
+            }
+            telemetry.addData("DelayAfterPurplePixel", (delay/1000) + " seconds");
+            telemetry.addLine("Use the up/down D-pad buttons on Gamepad 1 to change the delay in 1-second increments");
+            if(gamepad1.dpad_up){
+                if(!dpadUpPressed){
+                    dpadUpPressed = true;
+                    delay += 1000;
                 }
-                if(gamepad1.dpad_down){
-                    if(!dpadDownPressed && delay > 0){
-                        dpadDownPressed = true;
-                        delay -= 1000;
-                    }
-                }else{
-                    dpadDownPressed = false;
+            }else{
+                dpadUpPressed = false;
+            }
+            if(gamepad1.dpad_down){
+                if(!dpadDownPressed && delay > 0){
+                    dpadDownPressed = true;
+                    delay -= 1000;
                 }
+            }else{
+                dpadDownPressed = false;
             }
             if(!parkingNearWall){
                 telemetry.addData("Parking", "Away from wall");
