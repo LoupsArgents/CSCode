@@ -463,14 +463,14 @@ public class CSTeleop extends LinearOpMode {
                 camInUsePos = false;
             }
             //arm manual code
-            if (gamepad2.dpad_right) { //don't mess up stacks code
+            /*if (gamepad2.dpad_right) { //don't mess up stacks code
                 cameraBar.setPosition(camTuckedIn);
                 camSetTo = camTuckedIn;
                 camInUsePos = false;
-            }
-            if (Math.abs(cameraBar.getPosition() - camTuckedIn) < 0.05 || Math.abs(cameraBar.getPosition() - camOutOfWay) < 0.05) { //we're allowed to move the arm
+            }*/
+            if (true) {//(Math.abs(cameraBar.getPosition() - camTuckedIn) < 0.05 || Math.abs(cameraBar.getPosition() - camOutOfWay) < 0.05) { //we're allowed to move the arm
                 //telemetry.addData("this", "runs");
-                if (gamepad2.dpad_up && armSetTo != arm1ScoringPos) {
+                if (gamepad2.dpad_up && armSetTo != arm1ScoringPos && (camSetTo == camTuckedIn || camSetTo == camOutOfWay)) {
                     //RobotLog.aa("ArmFlipped", ""); BC added for testing
                     //activateBackCamera(); Brendan commented this out because it might be the cause of a 376ms loop
                     armIdealPosition = arm1ScoringPos;
@@ -478,7 +478,7 @@ public class CSTeleop extends LinearOpMode {
                     armTimer.reset();
                     doStacks = false;
                 }
-                if (gamepad2.dpad_down && liftPos < 0.01) {
+                if (gamepad2.dpad_down && liftPos < 0.01 && (camSetTo == camTuckedIn || camSetTo == camOutOfWay)) {
                     pixelRow = -1;
                     doStacks = false;
                     //activateFrontCamera(); BC - seems unneccessary if we don't ever deactivate it
@@ -491,7 +491,7 @@ public class CSTeleop extends LinearOpMode {
                         clawDown.setPosition(clawDownclose);
                         clawDownSetTo = clawDownclose;
                     }
-                } else if (gamepad2.dpad_down) { //put everything all the way down
+                } else if (gamepad2.dpad_down && (camSetTo == camTuckedIn || camSetTo == camOutOfWay)) { //put everything all the way down
                     doStacks = false;
                     //activateFrontCamera(); BC - same as above
                     armIdealPosition = arm1DownPos;
@@ -563,47 +563,7 @@ public class CSTeleop extends LinearOpMode {
                         wristSetTo = wristStackIdeal;
                     }
                 }
-                /*if (&& armPhase == 4 && wristTimer.milliseconds() > 500) {
-                    if (!(wristSetTo == wristDownPos)) {
-                        wrist.setPosition(wristDownPos);
-                        wristSetTo = wristDownPos;
-                    }
-                    wristSetTo = wristDownPos;
-                }*/
-                /*if (gamepad1.dpad_up) {
-                    doStacks = false;
-                    armMotionProfiling = true;
-                    motionTimer.reset();
-                    armIdealPosition = arm1ScoringPos;
-                    armSetTo = arm1ScoringPos;
-                    armPhase = 3;
-
-                } else if (gamepad1.dpad_down) {
-                    doStacks = false;
-                    armMotionProfiling = true;
-                    motionTimer.reset();
-                    armIdealPosition = arm1DownPos;
-                    armSetTo = arm1DownPos;
-                    armPhase = 4;
-                }
-                if (armMotionProfiling) {
-                    armMotionProfiling = moveArmToPos(armStartedAt, armIdealPosition, motionTimer, 1400);
-                    if (!armMotionProfiling) {
-                        armStartedAt = armIdealPosition;
-                    }
-                }*/
-                /*if (gamepad1.dpad_right || gamepad1.dpad_left) {
-                    doStacks = false;
-                    armPhase = 0;
-                    arm1.setPosition(armSameSideScore);
-                    armSetTo = armSameSideScore;
-                    wrist.setPosition(wristSameSideScore);
-                    wristSetTo = wristSameSideScore;
-                    cameraBar.setPosition(camOutOfWay);
-                    camSetTo = camOutOfWay;
-                    camInUsePos = false;
-                }*/
-                if (!doStacks && !armMotionProfiling) {
+                if (!doStacks && !armMotionProfiling && (camSetTo == camTuckedIn || camSetTo == camOutOfWay)) {
                     endStop.setPosition(endStopOutOfWayPos);
                     endStopSetTo = endStopOutOfWayPos;
                     if ((armPhase == 1) && armTimer.milliseconds() > 1100) { //was 2000, then 1500, 1100 worked
@@ -801,9 +761,14 @@ public class CSTeleop extends LinearOpMode {
                 if (gamepad1.left_trigger > 0.1 && clawStateCanChange) {
                     clawStateCanChange = false;
                     //if first one is open, open second, otherwise open first
-                    if (clawDownSetTo == clawDownopen) {
+                    if (clawDownSetTo == clawDownopen) { //opening the second one
                         clawUp.setPosition(clawUpopen);
                         clawUpSetTo = clawUpopen;
+                        if (armSetTo == arm1DownPos) { //flip out camera bar so we can use it
+                            cameraBar.setPosition(camUsePos);
+                            camInUsePos = true;
+                            camSetTo = camUsePos;
+                        }
                         //pixelRow = -1;
                         //secondPixelChange = 0;
                     } else {
