@@ -466,7 +466,7 @@ public class CSTeleop extends LinearOpMode {
             /*if (gamepad2.dpad_right) { //don't mess up stacks code
                 cameraBar.setPosition(camTuckedIn);
                 camSetTo = camTuckedIn;
-                camInUsePos = false;
+                camInUsePos = false;//
             }*/
             if (true) {//(Math.abs(cameraBar.getPosition() - camTuckedIn) < 0.05 || Math.abs(cameraBar.getPosition() - camOutOfWay) < 0.05) { //we're allowed to move the arm
                 //telemetry.addData("this", "runs");
