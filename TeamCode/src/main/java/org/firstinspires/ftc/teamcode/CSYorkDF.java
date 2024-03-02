@@ -71,11 +71,11 @@ public class CSYorkDF extends LinearOpMode {
     double multiplierBL = 1.0;
     double multiplierFL = 1.0;
     double multiplierBR = 1.0;
-    double clawUpOpen = .525; //0.51;
-    double clawUpClose = .33; //0.355; //0.38 was good
-    double clawDownOpen = .525; //0.53;
-    double clawDownClose = .385;
-    double clawDownSemiClose = 0.455;
+    double clawUpOpen = .465; //0.51; //was .525
+    double clawUpClose = .79; //0.355; //0.38 was good //was .33
+    double clawDownOpen = .465; //0.53; //was .525
+    double clawDownSemiClose = .62;
+    double clawDownClose = .69; //was .385
     double wristDownPos = 0.135;
     double wristAlmostDown = 0.15;//for flipping the arm up
     double wristStraightUp = 0.45;
@@ -547,6 +547,14 @@ public class CSYorkDF extends LinearOpMode {
         previousHeading = currentHeading;
         return processedHeading;
     }
+    public void wait(int time){
+        long start = System.nanoTime();
+        long now = System.nanoTime();
+        while(now - start < (time*Math.pow(10, 6)) && opModeIsActive()){
+            liftWithinLoop();
+            now = System.nanoTime();
+        }
+    }
     public void initializeHardware(){
         control_Hub = hardwareMap.get(Blinker.class, "Control Hub");
         motorFR = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
@@ -673,7 +681,7 @@ public class CSYorkDF extends LinearOpMode {
         }
         stopMotors();
         sleep(500);
-        goBackward(.4, .05);
+        //goBackward(.4, .05);
         closeClaw();
     }
     public void liftWithinLoop(){

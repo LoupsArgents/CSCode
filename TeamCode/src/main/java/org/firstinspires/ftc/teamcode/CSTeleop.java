@@ -224,6 +224,7 @@ public class CSTeleop extends LinearOpMode {
     boolean endgameCanChange = true;
     double droneInitial = 0.72; //the position we want the drone launcher servo to be at when it's not trying to launch the drone
     double droneFire = 0; //the position for the drone launcher servo that will launch the drone
+    double droneParallelToGround = 0.435;
     double lss2Launch = .3925; //0.4075; //the position we want for the left lead screw to be at when the drone is launching, down is 0.52, old was 0.55
     //old launch position was 0.4625
     //old bot up was 0.395, old bot down was 0.52
@@ -254,6 +255,7 @@ public class CSTeleop extends LinearOpMode {
     //pixels 2 and 3 arm is 0.945, wrist is 0.125
     //pixels 1 and 2 are normal arm/claw levels (they're on the ground)
     boolean needArmUpABitStacks = false;
+    boolean justEndedDroneTimer = true;
 
     public void runOpMode() {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
@@ -406,6 +408,10 @@ public class CSTeleop extends LinearOpMode {
             currentTime = timer.milliseconds();
             armCurrentTime = armTimer.milliseconds();
             //RobotLog.aa("liftCurrentPos", Double.toString(liftPos));
+            //clawLeftSensor.getDistance(DistanceUnit.INCH);
+            //double rightSensorPos = clawRightSensor.getDistance(DistanceUnit.INCH);
+            telemetry.addData("left sensor", clawLeftSensor.getDistance(DistanceUnit.INCH));
+            telemetry.addData("right sensor", clawRightSensor.getDistance(DistanceUnit.INCH));
             telemetry.addData("does it think it's doing the stacks auto pickup", needArmUpABitStacks);
             telemetry.addData("liftCurrentPos", liftPos);
             telemetry.addData("liftIdealPos", liftIdealPos);
@@ -478,7 +484,7 @@ public class CSTeleop extends LinearOpMode {
                     armTimer.reset();
                     doStacks = false;
                 }
-                if (gamepad2.dpad_down && liftPos < 0.01 && (camSetTo == camTuckedIn || camSetTo == camOutOfWay)) {
+                if (gamepad2.dpad_down && liftPos < 0.01 && (camSetTo == camTuckedIn || camSetTo == camOutOfWay) && (armSetTo == arm1ScoringPos)) {
                     pixelRow = -1;
                     doStacks = false;
                     //activateFrontCamera(); BC - seems unneccessary if we don't ever deactivate it
@@ -510,7 +516,7 @@ public class CSTeleop extends LinearOpMode {
                 //pixels 2 and 3 arm is 0.955, wrist is 0.13
                 //pixels 1 and 2 are normal arm/claw levels (they're on the ground)
                 //higher values for arm position = lower down
-                if (gamepad2.dpad_right) {
+                if (gamepad2.dpad_right && armSetTo != arm1ScoringPos) {
                     stacksLevel = 3;//0 is pixels 1 and 2, 1 is pixels 2 and 3, 2 is pixels 3 and 4, 3 is pixels 4 and 5
                     arm1.setPosition(armStallAgainstStopPos); //was 0.935
                     armSetTo = armStallAgainstStopPos;
@@ -523,7 +529,7 @@ public class CSTeleop extends LinearOpMode {
                     wristTimer.reset();
                     doStacks = true;
                 }
-                if (gamepad2.dpad_left && stacksLevelCanChange) {
+                if (gamepad2.dpad_left && stacksLevelCanChange && armSetTo != arm1ScoringPos) {
                     stacksLevelCanChange = false;
                     doStacks = true;
                     stacksLevel -= 1;
@@ -877,6 +883,13 @@ public class CSTeleop extends LinearOpMode {
                     isJoysticking = true;
                     liftHappyPlace = true;
                     liftIdealPos = liftPos;
+                    //liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange + secondPixelChange;
+                    //so pixelRow * pixelRowChange = liftIdealPos - baseBoardHeightAmt - secondPixelChange;
+                    //so pixelRow = (liftIdealPos - baseBoardHeightAmt - secondPixelChange)/pixelRowChange;
+                    pixelRow = ((liftIdealPos - baseBoardHeightAmt - secondPixelChange)/pixelRowChange);
+                    if (Math.abs((pixelRow - (int)pixelRow)) > 0.1) {
+                        pixelRow = (int)(pixelRow) + 1;
+                    }
                     lift2.setPower(liftPower);
                     lift1.setPower(-liftPower);
                 } else {
@@ -1034,8 +1047,13 @@ public class CSTeleop extends LinearOpMode {
                     droneHasBeenLaunched = true;
                     droneTimer.reset();
                 }
-                if (droneHasBeenLaunched && droneTimer.milliseconds() > 2000) {
-                    droneRelease.setPosition(droneInitial);
+                if (droneHasBeenLaunched && droneTimer.milliseconds() > 1000 && justEndedDroneTimer) {
+                    justEndedDroneTimer = false;
+                    droneRelease.setPosition(droneParallelToGround);
+                    if (lss2SetTo != lss2DownPos) {
+                        lss2.setPosition(lss2DownPos);
+                        lss2SetTo = lss2DownPos;
+                    }
                 }
                 //lead screw code
                 if (gamepad2.y) {
@@ -1331,7 +1349,7 @@ public class CSTeleop extends LinearOpMode {
     public boolean closestStackInnerFunction(EverythingProcessor processor){
         double leftSensorPos = clawLeftSensor.getDistance(DistanceUnit.INCH);
         double rightSensorPos = clawRightSensor.getDistance(DistanceUnit.INCH);
-        boolean isThereAPixel = leftSensorPos < 2 || rightSensorPos < 2;
+        boolean isThereAPixel = leftSensorPos < 1.6 || rightSensorPos < 1.6; //both used to be 2
         if(!isThereAPixel){ //y threshold was 300
             //RobotLog.aa("DistanceFromCenter", String.valueOf(Math.abs(pixelPos.x - 320)));
             double power = .35; //was 0.35, .5 was too fast
