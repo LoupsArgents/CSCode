@@ -69,9 +69,12 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         }
         Scalar lowHSV;
         Scalar highHSV;
+        Scalar otherLowHSV = new Scalar(0, 70, 70);
+        Scalar otherHighHSV = new Scalar(10, 255, 255); //for red
         if(alliance == 1) {
             lowHSV = new Scalar(160, 70, 70);
             highHSV = new Scalar(180, 255, 255);
+
         }else{
             lowHSV = new Scalar(100, 70, 70);
             highHSV = new Scalar(120, 255, 255);
@@ -79,6 +82,11 @@ public class EverythingProcessor extends LinearOpMode implements VisionProcessor
         Mat thresh = new Mat();
         // Get a black and white image of red objects
         Core.inRange(mat, lowHSV, highHSV, thresh);
+        if(alliance == 1){
+            Mat newThing = new Mat();
+            Core.inRange(mat, otherLowHSV, otherHighHSV, newThing);
+            Core.bitwise_or(newThing, thresh, thresh);
+        }
         mat.release();
         thresh.copyTo(frame);
         //Imgproc.line(frame, new Point(180, 0), new Point(180, 500), new Scalar(100, 100, 100), 4, Imgproc.LINE_8);

@@ -73,8 +73,10 @@ public class CSYorkDF extends LinearOpMode {
     double multiplierBR = 1.0;
     double clawUpOpen = .465; //0.51; //was .525
     double clawUpClose = .79; //0.355; //0.38 was good //was .33
+    double clawUpLessOpen = .5;
     double clawDownOpen = .465; //0.53; //was .525
     double clawDownSemiClose = .62;
+    double clawDownLessOpen = .5;
     double clawDownClose = .69; //was .385
     double wristDownPos = 0.135;
     double wristAlmostDown = 0.15;//for flipping the arm up
@@ -110,7 +112,7 @@ public class CSYorkDF extends LinearOpMode {
     double camTuckedIn = 0.9575;
 
     double liftPos;
-    double liftYellowPixelPos = 0.035; //0.0262024407753051;
+    double liftYellowPixelPos = .04; //0.035; //0.0262024407753051;
     double liftIdealPos;
     double liftInitial;
     boolean liftHappyPlace = true;

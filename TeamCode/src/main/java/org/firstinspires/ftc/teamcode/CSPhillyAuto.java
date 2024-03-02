@@ -89,7 +89,7 @@ public class CSPhillyAuto extends CSYorkDF {
             if (!doneTheThing && streaming && (nowTime - timeStreamingDetected > 1000)) {
                 ZonedDateTime dt = ZonedDateTime.now();
                 String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
-                portal.saveNextFrameRaw("PropTestingInitial " + time);
+                portal.saveNextFrameRaw("PhillyAutoPropInitial " + time);
                 camLeftInitial = processor.getLeftVal();
                 camCenterInitial = processor.getCenterVal();
                 camRightInitial = processor.getRightVal();
@@ -150,18 +150,19 @@ public class CSPhillyAuto extends CSYorkDF {
             }else{
                 getToBoardFromWall(result, alliance);
             }
-            openLowerClaw();
+            clawDown.setPosition(clawDownLessOpen); //openLowerClaw();
             sleep(500);
             String r = result + "Center";
             positionOnBackdrop(r, alliance, 1);
             sleep(500);
             positionOnBackdrop(r, alliance, 2);
             sleep(500);
-            openUpperClaw();
+            clawUp.setPosition(clawUpLessOpen); //openUpperClaw();
             sleep(500);
             goStraight(.5, 3, -90.0 * alliance);
             closeClaw();
             liftIdealPos = liftInitial;
+            liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
             while (Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()) {
                 liftWithinLoop();
             }
@@ -178,6 +179,7 @@ public class CSPhillyAuto extends CSYorkDF {
             goStraight(.7, 2, -90.0 * alliance);
             closeClaw();
             liftIdealPos = liftInitial;
+            liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
             while (Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()) {
                 liftWithinLoop();
             }
@@ -236,7 +238,7 @@ public class CSPhillyAuto extends CSYorkDF {
             RobotLog.aa("Subtracting", String.valueOf(toSubtract));
             activateBackCamera();
             RobotLog.aa("HeadingAfterDiagonal", String.valueOf(newGetHeading()));
-            goStraight(.6, 19.5-toSubtract, 0.0); //used to be 25-toSubtract, then 22.5-, then 20.5-; power used to be .4 then .5
+            goStraight(.6, 20-toSubtract, 0.0); //used to be 25-toSubtract, then 22.5-, then 20.5-, then 19.5-; power used to be .4 then .5
             openLowerClaw();
             sleep(500);
         }else if((result.equals("Right") && ((alliance == 1 && isNear) || (alliance == -1 && !isNear))) || (result.equals("Left") && ((alliance == -1 && isNear) || (alliance == 1 && !isNear)))){
@@ -294,7 +296,7 @@ public class CSPhillyAuto extends CSYorkDF {
             }
             cameraBar.setPosition(camTuckedIn);
         }else if(result.equals("Center")){
-            goBackward(.7, 3, 0.0); //power was .5, then .6; was 5 inches
+            goBackward(.7, 3.5, 0.0); //power was .5, then .6; was 5 inches, then 3 then 4
             closeLowerClaw();
             wrist.setPosition(wristAlmostDown);
             absoluteHeading(.4, -90.0 * alliance);
@@ -341,6 +343,7 @@ public class CSPhillyAuto extends CSYorkDF {
                 RobotLog.aa("Status", "April tag failed; waiting a long time");
                 liftIdealPos = liftInitial;
                 goStraight(.4, 3);
+                liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
                 while(Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()){
                   liftWithinLoop();
                 }
@@ -554,7 +557,7 @@ public class CSPhillyAuto extends CSYorkDF {
                 strafeLeft(.7, 23, 5, -90.0*alliance);
             }
         }else if(result.equals("Center")){
-            goBackward(.5, 2, 0.0);
+            goBackward(.5, 2.5, 0.0); //was 2 then 3
             sleep(300); //was 500
             if(alliance == 1) {
                 strafeRight(.7, 10, 5, 0.0); //power was .6
@@ -653,7 +656,7 @@ public class CSPhillyAuto extends CSYorkDF {
                 strafeRight(.5, 19, 5, -90.0*alliance);
             }
         }else if(result.equals("Center")){
-            goBackward(.5, 4, 0.0);
+            goBackward(.5, 4.5, 0.0);
             closeLowerClaw();
             sleep(300); //was 500
             absoluteHeading(.4, -90.0*alliance);
@@ -712,7 +715,7 @@ public class CSPhillyAuto extends CSYorkDF {
         wrist.setPosition(wristAlmostDown);
         arm1.setPosition(armAlmostUp);
         goBackward(.7, 15, -90.0*alliance); //was 18
-        liftIdealPos = .02;
+        liftIdealPos = .03;
         sleep(300); //was 500
         String res = "Right";
         if(alliance == -1){
@@ -779,11 +782,12 @@ public class CSPhillyAuto extends CSYorkDF {
         wait(500);
         goBackward(.35, .25, -90.0*alliance);
         RobotLog.aa("Status", "Moved and starting lift");
-        while(Math.abs(liftIdealPos - liftPos) > .05 && opModeIsActive()){
+        /*liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
+        while(Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()){
             liftWithinLoop();
-        }
+        }*/
         wait(500);
-        RobotLog.aa("Status", "Lift moved down");
+        RobotLog.aa("Status", "Lift moved up");
         openUpperClaw();
         RobotLog.aa("Status", "Claw opened");
         cameraBar.setPosition(camOutOfWay);
