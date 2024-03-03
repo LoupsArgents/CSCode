@@ -83,10 +83,10 @@ public class CSYorkDF extends LinearOpMode {
     double wristStraightUp = 0.45;
     double wristTuckedIn = 0.735;
     double wristScoringPos = 0.54;
-    double arm1ScoringPos = 0.2675;
-    double armAlmostUp = 0.37;
-    double armAlmostDown = 0.8;
-    double arm1DownPos = 0.97;
+    double arm1ScoringPos = 0.1; // was 0.2675
+    double armAlmostUp = 0.2025; // was 0.37
+    double armAlmostDown = 0.6; // was 0.8
+    double arm1DownPos = 0.8; // was 0.97
     //stacks positions: top level (pixels 4 and 5) arm is 0.935, wrist is 0.12
     //pixels 3 and 4 arm is 0.945, wrist is 0.12
     //pixels 2 and 3 arm is 0.955, wrist is 0.13
@@ -98,7 +98,7 @@ public class CSYorkDF extends LinearOpMode {
     double armStack45Pos = 0.937; //was .935 then .93
     double armStack34Pos = 0.947; //was .945
     double armStack23Pos = 0.955; //was .955, then .96, then .957
-    double armStallAgainstStopPos = 1.0;
+    double armStallAgainstStopPos = 0.83; // was 1.0 for old servo
     double endStopOutOfWayPos = .64;
     double endStop45Pos = .515; //was 0.545, then .53, then .525, then .52
     double endStop34Pos = .565; //was 0.565, then .57, then .565

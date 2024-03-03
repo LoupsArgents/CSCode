@@ -105,8 +105,8 @@ public class CSTeleop extends LinearOpMode {
     Servo droneRelease;
     Servo endStop;
     double arm1ScoringPos = 0.1;//was 0.2675
-    double armAlmostUp = 0.17; //was 0.37
-    double armAlmostDown = 0.6; // was 0.6
+    double armAlmostUp = 0.2025; //was 0.37, then 0.2025
+    double armAlmostDown = 0.6; // was 0.8
     double arm1DownPos = 0.8; //was 1.0
     Servo clawUp;
     Servo clawDown;
@@ -236,13 +236,13 @@ public class CSTeleop extends LinearOpMode {
     double armStack23Pos = 0.955; //was .955, then .96, then .957
     double armStallAgainstStopPos = 1.0;
     double endStopOutOfWayPos = .64; //was .64
-    double endStop45Pos = .515; //was 0.545, then .53, then .525, then .52
+    double endStop45Pos = .53; //was 0.545, then .53, then .525, then .52, then 0.515
     double endStop34Pos = .565; //was 0.565, then .57, then .565
     double endStop23Pos = .6; //was .58, then .605
     double endStopSetTo = endStopOutOfWayPos;
-    double wristStack45Pos = 0.115; //wrist is 0.115, was 0.12
-    double wristStack34Pos = 0.1225; //was 0.12. 0.12 is a bit off, and 0.125 is a bit off the other way
-    double wristStack23Pos = 0.13;
+    double wristStack45Pos = 0.13; //was 0.12, then 0.115
+    double wristStack34Pos = 0.13; //was 0.12. 0.12 is a bit off, and 0.125 is a bit off the other way, so 0.1225
+    double wristStack23Pos = 0.135; // was 0.13
     //arm + wrist positions for same side scoring need to be updated
     double armSameSideScore = 0.845;
     double wristSameSideScore = 0.25;
@@ -572,10 +572,10 @@ public class CSTeleop extends LinearOpMode {
                 if (!doStacks && !armMotionProfiling && (camSetTo == camTuckedIn || camSetTo == camOutOfWay)) {
                     endStop.setPosition(endStopOutOfWayPos);
                     endStopSetTo = endStopOutOfWayPos;
-                    if ((armPhase == 1) && armTimer.milliseconds() > 1100) { //was 2000, then 1500, 1100 worked
+                    if ((armPhase == 1) && armTimer.milliseconds() > 1600) { //was 1100, then 1600
                         armPhase += 2;
                     }
-                    if ((armPhase == 2) && armTimer.milliseconds() > 1000) { //was 2000
+                    if ((armPhase == 2) && armTimer.milliseconds() > 1050) { //was 1000, then 1150
                         armPhase += 2;
                     }
                     if (armPhase == 1) {//just starting to go up
@@ -739,8 +739,8 @@ public class CSTeleop extends LinearOpMode {
                 gamepad1.rumble(500);
             }
             if (needArmUpABitStacks && armTimer.milliseconds() > 500) {
-                arm1.setPosition(armSetTo - 0.05); //was 0.025
-                armSetTo -= 0.05; //was 0.025
+                arm1.setPosition(armSetTo - 0.2); //was 0.025, then 0.05 - BC changed to 0.1
+                armSetTo -= 0.2; //was 0.025
                 needArmUpABitStacks = false;
             }
             if (gamepad1.left_bumper) {
