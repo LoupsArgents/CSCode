@@ -497,12 +497,16 @@ public class CSTeleop extends LinearOpMode {
                 if (gamepad2.dpad_down && liftPos < 0.01 && (camSetTo == camTuckedIn || camSetTo == camOutOfWay) && (armSetTo == arm1ScoringPos)) {
                     pixelRow = -1;
                     doStacks = false;
-                    //activateFrontCamera(); BC - seems unneccessary if we don't ever deactivate it
+                    //activateFrontCamera(); BC - seems unnecessary if we don't ever deactivate it
                     armIdealPosition = arm1DownPos;
                     armPhase = 2;
                     if ((armSetTo == arm1DownPos) || (endStopSetTo == endStop23Pos || endStopSetTo == endStop34Pos || endStopSetTo == endStop45Pos)) {
                         armPhase = 4;
+                        wrist.setPosition(wristDownPos);
+                        wristSetTo = wristDownPos;
                     }
+                    endStop.setPosition(endStopOutOfWayPos);
+                    endStopSetTo = endStopOutOfWayPos;
                     armTimer.reset();
                     if (clawUpSetTo != clawUpclose || clawDownSetTo != clawDownclose) {
                         clawUp.setPosition(clawUpclose);
@@ -510,14 +514,18 @@ public class CSTeleop extends LinearOpMode {
                         clawDown.setPosition(clawDownclose);
                         clawDownSetTo = clawDownclose;
                     }
-                } else if (gamepad2.dpad_down && (camSetTo == camTuckedIn || camSetTo == camOutOfWay)) { //put everything all the way down
+                } else if (gamepad2.dpad_down && (camSetTo == camTuckedIn || camSetTo == camOutOfWay || (endStopSetTo == endStop23Pos || endStopSetTo == endStop34Pos || endStopSetTo == endStop45Pos))) { //put everything all the way down
                     doStacks = false;
                     //activateFrontCamera(); BC - same as above
                     armIdealPosition = arm1DownPos;
                     armPhase = 2;
                     if ((armSetTo == arm1DownPos) || (endStopSetTo == endStop23Pos || endStopSetTo == endStop34Pos || endStopSetTo == endStop45Pos)) {
                         armPhase = 4;
+                        wrist.setPosition(wristDownPos);
+                        wristSetTo = wristDownPos;
                     }
+                    endStop.setPosition(endStopOutOfWayPos);
+                    endStopSetTo = endStopOutOfWayPos;
                     armTimer.reset();
                     liftIdealPos = 0.0;
                     if (clawUpSetTo != clawUpclose || clawDownSetTo != clawDownclose) {
