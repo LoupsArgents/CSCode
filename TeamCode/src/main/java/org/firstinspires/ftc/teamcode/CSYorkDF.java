@@ -95,17 +95,17 @@ public class CSYorkDF extends LinearOpMode {
     //.5 for stack 4/5 pos
     //1.0 for stall-arm-against-end-stop-for-stack pos
     //.56 for stack 2/3 pos
-    double armStack45Pos = 0.937; //was .935 then .93
-    double armStack34Pos = 0.947; //was .945
-    double armStack23Pos = 0.955; //was .955, then .96, then .957
+    double armStack45Pos = .747; //was .935 then .93 then .937 then arm servo broke then .767
+    double armStack34Pos = 0.777; //was .945 then .947 then arm servo broke
+    double armStack23Pos = 0.785; //was .955, then .96, then .957, then .955, then arm servo broke
     double armStallAgainstStopPos = 0.83; // was 1.0 for old servo
-    double endStopOutOfWayPos = .64;
-    double endStop45Pos = .515; //was 0.545, then .53, then .525, then .52
+    double endStopOutOfWayPos = .64; //was .64
+    double endStop45Pos = .53; //was 0.545, then .53, then .525, then .52, then 0.515
     double endStop34Pos = .565; //was 0.565, then .57, then .565
     double endStop23Pos = .6; //was .58, then .605
-    double wristStack45Pos = 0.115; //wrist is 0.115, was 0.12
-    double wristStack34Pos = 0.1225; //was 0.12. 0.12 is a bit off, and 0.125 is a bit off the other way
-    double wristStack23Pos = 0.13;
+    double wristStack45Pos = 0.13; //was 0.12, then 0.115
+    double wristStack34Pos = 0.13; //was 0.12. 0.12 is a bit off, and 0.125 is a bit off the other way, so 0.1225
+    double wristStack23Pos = 0.135; // was 0.13
     //these ^^^ may need changing -- we'll see
     double camOutOfWay = 0.36; //pointing straight out
     double camUsePos = 0.6475;
