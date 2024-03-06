@@ -104,8 +104,8 @@ public class CSTeleop extends LinearOpMode {
     ServoImplEx arm2;
     Servo droneRelease;
     Servo endStop;
-    double arm1ScoringPos = 0.1;//was 0.2675
-    double armAlmostUp = 0.2025; //was 0.37, then 0.2025
+    double arm1ScoringPos = 0.08;//was 0.1
+    double armAlmostUp = 0.345; //was 0.37, then 0.2025
     double armAlmostDown = 0.6; // was 0.8
     double arm1DownPos = 0.8; //was 1.0
     Servo clawUp;
