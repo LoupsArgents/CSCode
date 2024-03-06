@@ -52,6 +52,7 @@ public class CSYorkDF extends LinearOpMode {
     Servo clawDown;
     Servo wrist;
     ServoImplEx arm1;
+    ServoImplEx arm2;
     ServoImplEx cameraBar;
     Servo endStop;
     VisionPortal portal;
@@ -83,26 +84,27 @@ public class CSYorkDF extends LinearOpMode {
     double wristStraightUp = 0.45;
     double wristTuckedIn = 0.735;
     double wristScoringPos = 0.54;
-    double arm1ScoringPos = 0.1; // was 0.2675
-    double armAlmostUp = 0.2025; // was 0.37
-    double armAlmostDown = 0.6; // was 0.8
-    double arm1DownPos = 0.8; // was 0.97
-    //stacks positions: top level (pixels 4 and 5) arm is 0.935, wrist is 0.12
-    //pixels 3 and 4 arm is 0.945, wrist is 0.12
-    //pixels 2 and 3 arm is 0.955, wrist is 0.13
-    //pixels 1 and 2 are normal arm/claw levels (they're on the ground)
-    //.64 for end stop out of way pos
-    //.5 for stack 4/5 pos
-    //1.0 for stall-arm-against-end-stop-for-stack pos
-    //.56 for stack 2/3 pos
+    double arm1ScoringPos = 0.08;//was 0.1
+    double arm1AlmostUp = 0.175; //was 0.37, then 0.2025, then .345, then .175
+    double arm1AlmostDown = 0.65; // was 0.6, .7 was too much
+    double arm1DownPos = 0.8;
+    double arm2ScoringPos = 0.08;
+    double arm2AlmostUp = 0.175; //was .345, then .175
+    double arm2AlmostDown = 0.66; //was 0.61, .71 was too much
+    double arm2DownPos = 0.7975;
+    double arm145 = 0.785;
+    double arm245 = 0.785;
     double armStack45Pos = .747; //was .935 then .93 then .937 then arm servo broke then .767
     double armStack34Pos = 0.777; //was .945 then .947 then arm servo broke
     double armStack23Pos = 0.785; //was .955, then .96, then .957, then .955, then arm servo broke
     double armStallAgainstStopPos = 0.83; // was 1.0 for old servo
+    //the 4 previous values are OUTDATED! OLD! FROM BEFORE THE SERVO BROKE! FROM BEFORE WE USED TWO SERVOS! do not use.
     double endStopOutOfWayPos = .64; //was .64
     double endStop45Pos = .53; //was 0.545, then .53, then .525, then .52, then 0.515
     double endStop34Pos = .565; //was 0.565, then .57, then .565
     double endStop23Pos = .6; //was .58, then .605
+    double liftFirstWhitePixelPos = .04;
+    double liftSecondWhitePixelPos = .07;
     double wristStack45Pos = 0.13; //was 0.12, then 0.115
     double wristStack34Pos = 0.13; //was 0.12. 0.12 is a bit off, and 0.125 is a bit off the other way, so 0.1225
     double wristStack23Pos = 0.135; // was 0.13
@@ -582,6 +584,7 @@ public class CSYorkDF extends LinearOpMode {
         clawUp = hardwareMap.get(Servo.class, "claw0");
         clawDown = hardwareMap.get(Servo.class, "claw2");
         arm1 = hardwareMap.get(ServoImplEx.class, "arm3"); //this is the one that DOES have an encoder
+        arm2 = hardwareMap.get(ServoImplEx.class, "arm5"); //this is the one that DOES NOT have an encoder
         wrist = hardwareMap.get(Servo.class, "wrist");
         cameraBar = hardwareMap.get(ServoImplEx.class, "frontCamera");
         endStop = hardwareMap.get(Servo.class, "endStop");
@@ -682,9 +685,29 @@ public class CSYorkDF extends LinearOpMode {
             happy = closestStackInnerFunction(processor);
         }
         stopMotors();
-        sleep(500);
+        wait(500);
         //goBackward(.4, .05);
         closeClaw();
+    }
+    public void armDown(){
+        arm1.setPosition(arm1DownPos);
+        arm2.setPosition(arm2DownPos);
+    }
+    public void armAlmostDown(){
+        arm1.setPosition(arm1AlmostDown);
+        arm2.setPosition(arm2AlmostDown);
+    }
+    public void armAlmostUp(){
+        arm1.setPosition(arm1AlmostUp);
+        arm2.setPosition(arm2AlmostUp);
+    }
+    public void armUp(){
+        arm1.setPosition(arm1ScoringPos);
+        arm2.setPosition(arm2ScoringPos);
+    }
+    public void stallArm(){
+        arm1.setPosition(arm145);
+        arm2.setPosition(arm245);
     }
     public void liftWithinLoop(){
         //needed variables for proportional control:
@@ -840,53 +863,5 @@ public class CSYorkDF extends LinearOpMode {
     public double getUltraDistance(){
         double volt = ultra.getVoltage();
         return 205.849 * volt - 28.0321;
-    }
-    class DistanceSensorResult {
-        private double leftVal;
-        private double centerVal;
-        private double rightVal;
-        private boolean leftIsGood;
-        //private boolean centerIsGood;
-        private boolean rightIsGood;
-        private int errorCode;
-        private String sensorResult;
-        public DistanceSensorResult(double leftV, double centerV, double rightV){
-            this.leftVal = leftV;
-            //this.centerVal = centerV;
-            this.rightVal = rightV;
-            leftIsGood = true;
-            //centerIsGood = true;
-            rightIsGood = true;
-            //errorCode is the number of sensors that are reading nonsense
-            int err = 0;
-            if(leftV < 5 || leftV > 330){
-                err++;
-                leftIsGood = false;
-            }
-          /*  if(centerV < 5 || centerV > 330){
-                err++;
-                centerIsGood = false;
-            }*/
-            if(rightV < 5 || rightV > 330){
-                err++;
-                rightIsGood = false;
-            }
-            this.errorCode = err;
-            if(leftV < 28 && leftV > 15){
-                this.sensorResult = "Left";
-            }else if(rightV < 28 && rightV > 15){
-                this.sensorResult = "Right";
-            }else {
-                this.sensorResult = "Neither";
-            }
-        }
-        public double getLeftVal(){ return this.leftVal; }
-        public double getCenterVal(){ return this.centerVal; }
-        public double getRightVal(){ return this.rightVal; }
-        public boolean isLeftGood(){ return this.leftIsGood; }
-        //public boolean isCenterGood(){ return this.centerIsGood; }
-        public boolean isRightGood(){ return this.rightIsGood; }
-        public int getErrorCode(){ return this.errorCode; }
-        public String getSensorResult(){ return this.sensorResult; }
     }
 }

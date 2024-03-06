@@ -12,6 +12,8 @@ import java.util.ArrayList;
 
 @Disabled
 public class CSYorkAuto extends CSYorkDF {
+    double armAlmostDown = arm1AlmostDown;
+    double armAlmostUp = arm1AlmostUp;
     ArrayList<Double> rightAverages = new ArrayList<>();
     ArrayList<Double> centerAverages = new ArrayList<>();
     ArrayList<Double> leftAverages = new ArrayList<>();
