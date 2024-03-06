@@ -105,9 +105,19 @@ public class CSTeleop extends LinearOpMode {
     Servo droneRelease;
     Servo endStop;
     double arm1ScoringPos = 0.08;//was 0.1
-    double armAlmostUp = 0.345; //was 0.37, then 0.2025
-    double armAlmostDown = 0.6; // was 0.8
-    double arm1DownPos = 0.8; //was 1.0
+    double armAlmostUp = 0.175; //was 0.37, then 0.2025, then .345, then .175
+    double armAlmostDown = 0.65; // was 0.6, .7 was too much
+    double arm1DownPos = 0.8;
+    double arm2ScoringPos = 0.08;
+    double arm2AlmostUp = 0.175; //was .345, then .175
+    double arm2AlmostDown = 0.66; //was 0.61, .71 was too much
+    double arm2DownPos = 0.7975;
+    double arm145 = 0.785;
+    double arm245 = 0.785;
+    double arm134 = 0.8;
+    double arm234 = 0.8;
+    double arm123;
+    double arm223;
     Servo clawUp;
     Servo clawDown;
     Servo lss1;
@@ -234,7 +244,7 @@ public class CSTeleop extends LinearOpMode {
     double armStack45Pos = 0.937; //was .935 then .93
     double armStack34Pos = 0.947; //was .945
     double armStack23Pos = 0.955; //was .955, then .96, then .957
-    double armStallAgainstStopPos = 1.0;
+    double armStallAgainstStopPos = 0.8;
     double endStopOutOfWayPos = .64; //was .64
     double endStop45Pos = .53; //was 0.545, then .53, then .525, then .52, then 0.515
     double endStop34Pos = .565; //was 0.565, then .57, then .565
@@ -379,6 +389,7 @@ public class CSTeleop extends LinearOpMode {
 
         sleep(1000);
         arm1.setPosition(arm1DownPos);
+        arm2.setPosition(arm2DownPos);
         armSetTo = arm1DownPos;
         endStop.setPosition(endStopOutOfWayPos);
 
@@ -543,11 +554,13 @@ public class CSTeleop extends LinearOpMode {
                 if (gamepad2.dpad_right && armSetTo != arm1ScoringPos && endStopSetTo != endStop45Pos) {
                     stacksLevel = 3;//0 is pixels 1 and 2, 1 is pixels 2 and 3, 2 is pixels 3 and 4, 3 is pixels 4 and 5
                     arm1.setPosition(armStallAgainstStopPos); //was 0.935
+                    arm2.setPosition(arm2DownPos);
                     armSetTo = armStallAgainstStopPos;
                     armStartedAt = armSetTo;
-                    wrist.setPosition(wristAlmostDown);
+                    wrist.setPosition(wristStack45Pos);
                     wristStackIdeal = wristStack45Pos;
-                    wristTimer.reset();
+                    wristSetTo = wristStack45Pos;
+                    //wristTimer.reset();
                     if (endStopSetTo != endStopOutOfWayPos) {
                         wrist.setPosition(wristStackIdeal);
                     }
@@ -560,39 +573,16 @@ public class CSTeleop extends LinearOpMode {
                     stacksLevelCanChange = false;
                     doStacks = true;
                     stacksLevel = 1;
-                    arm1.setPosition(armStallAgainstStopPos); //was 0.955, then armStack23Pos + 0.1
-                    armSetTo = armStallAgainstStopPos; //was 0.955
+                    arm1.setPosition(armStallAgainstStopPos + 0.01); //was 0.955, then armStack23Pos + 0.1
+                    arm2.setPosition(arm2DownPos + 0.01);
+                    armSetTo = armStallAgainstStopPos + 0.01; //was 0.955
                     armStartedAt = armSetTo;
                     endStop.setPosition(endStop23Pos);
                     endStopSetTo = endStop23Pos;
                     //wrist.setPosition(0.125);
                     wristStackIdeal = wristStack23Pos;
-                    /*if (stacksLevel < 0) {stacksLevel = 0;}
-                    if (stacksLevel == 2) {
-                        arm1.setPosition(armStallAgainstStopPos); //was 0.945, then armStack34Pos + 0.1
-                        armSetTo = armStallAgainstStopPos;
-                        armStartedAt = armSetTo;
-                        endStop.setPosition(endStop34Pos);
-                        endStopSetTo = endStop34Pos;
-                        //wrist.setPosition(0.12);
-                        wristStackIdeal = wristStack34Pos;
-                    } else if (stacksLevel == 1) {
-                        arm1.setPosition(armStallAgainstStopPos); //was 0.955, then armStack23Pos + 0.1
-                        armSetTo = armStallAgainstStopPos; //was 0.955
-                        armStartedAt = armSetTo;
-                        endStop.setPosition(endStop23Pos);
-                        endStopSetTo = endStop23Pos;
-                        //wrist.setPosition(0.125);
-                        wristStackIdeal = wristStack23Pos;
-                    } else if (stacksLevel == 0) {
-                        arm1.setPosition(arm1DownPos);
-                        armSetTo = arm1DownPos;
-                        armStartedAt = armSetTo;
-                        endStop.setPosition(endStopOutOfWayPos);
-                        endStopSetTo = endStopOutOfWayPos;
-                        //wrist.setPosition(wristDownPos);
-                        wristStackIdeal = wristDownPos;
-                    }*/
+                    wrist.setPosition(wristStack23Pos);
+                    wristSetTo = wristStack23Pos;
                 } else if (!gamepad2.dpad_left) {
                     stacksLevelCanChange = true;
                 }
@@ -602,32 +592,36 @@ public class CSTeleop extends LinearOpMode {
                     doStacks = true;
                     stacksLevel = 2;
                     arm1.setPosition(armStallAgainstStopPos); //was 0.945, then armStack34Pos + 0.1
+                    arm2.setPosition(arm2DownPos);
                     armSetTo = armStallAgainstStopPos;
                     armStartedAt = armSetTo;
                     endStop.setPosition(endStop34Pos);
                     endStopSetTo = endStop34Pos;
                     //wrist.setPosition(0.12);
                     wristStackIdeal = wristStack34Pos;
+                    wrist.setPosition(wristStack34Pos);
+                    wristSetTo = wristStack34Pos;
                 }
-                if (doStacks && wristTimer.milliseconds() > 250) {
+                /*if (doStacks && wristTimer.milliseconds() > 250) {
                     //telemetry.addData("519", "works");
                     if (wristSetTo != wristStackIdeal) {
                         wrist.setPosition(wristStackIdeal);
                         wristSetTo = wristStackIdeal;
                     }
-                }
+                }*/
                 if (!doStacks && !armMotionProfiling && (camSetTo == camTuckedIn || camSetTo == camOutOfWay)) {
                     endStop.setPosition(endStopOutOfWayPos);
                     endStopSetTo = endStopOutOfWayPos;
-                    if ((armPhase == 1) && armTimer.milliseconds() > 1600) { //was 1100, then 1600
+                    if ((armPhase == 1) && armTimer.milliseconds() > 1200) { //was 1100, then 1600
                         armPhase += 2;
                     }
-                    if ((armPhase == 2) && armTimer.milliseconds() > 1200) { //was 1000, then 1150, then 1050
+                    if ((armPhase == 2) && armTimer.milliseconds() > 1000) { //was 1000, then 1150, then 1050
                         armPhase += 2;
                     }
                     if (armPhase == 1) {//just starting to go up
                         if (!(armSetTo == armAlmostUp)) {
                             arm1.setPosition(armAlmostUp);
+                            arm2.setPosition(arm2AlmostUp);
                             armSetTo = armAlmostUp;
                             armStartedAt = armAlmostUp;
                         }
@@ -646,6 +640,7 @@ public class CSTeleop extends LinearOpMode {
                         armJustDown = true;
                         if (!(armSetTo == armAlmostDown)) {
                             arm1.setPosition(armAlmostDown);
+                            arm2.setPosition(arm2AlmostDown);
                             armSetTo = armAlmostDown;
                             armStartedAt = armAlmostDown;
                         }
@@ -656,6 +651,7 @@ public class CSTeleop extends LinearOpMode {
                     } else if (armPhase == 3) { //rest of the way up
                         if (!(armSetTo == arm1ScoringPos)) {
                             arm1.setPosition(arm1ScoringPos);
+                            arm2.setPosition(arm2ScoringPos);
                             armSetTo = arm1ScoringPos;
                             armStartedAt = armAlmostDown;
                         }
@@ -670,6 +666,7 @@ public class CSTeleop extends LinearOpMode {
                         phase4JustStarted = false;
                         if (!(armSetTo == arm1DownPos)) {
                             arm1.setPosition(arm1DownPos);
+                            arm2.setPosition(arm2DownPos);
                             armSetTo = arm1DownPos;
                             armStartedAt = armAlmostDown;
                         }
@@ -787,6 +784,7 @@ public class CSTeleop extends LinearOpMode {
             }
             if (needArmUpABitStacks && armTimer.milliseconds() > 500) {
                 arm1.setPosition(armSetTo - 0.2); //was 0.025, then 0.05 - BC changed to 0.1
+                arm2.setPosition(armSetTo - 0.2);
                 armSetTo -= 0.2; //was 0.025
                 needArmUpABitStacks = false;
             }
@@ -866,6 +864,7 @@ public class CSTeleop extends LinearOpMode {
                 breakGlassMode = true;
                 canUseSlides = false;
                 arm1.setPosition(armAlmostDown);
+                arm2.setPosition(arm2AlmostDown);
                 wrist.setPosition(wristAlmostDown);
                 cameraBar.setPosition(camOutOfWay);
                 camSetTo = camOutOfWay;
@@ -883,6 +882,7 @@ public class CSTeleop extends LinearOpMode {
                 lift1.setPower(-liftPower);
                 if (gamepad2.start) {
                     arm1.setPosition(arm1DownPos);
+                    arm2.setPosition(arm2DownPos);
                     wrist.setPosition(wristDownPos);
                     liftInitial = liftEncoder.getCurrentPosition()/ticksPerRotation;
                     liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);

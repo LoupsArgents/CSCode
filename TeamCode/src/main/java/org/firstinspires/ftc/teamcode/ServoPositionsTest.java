@@ -75,12 +75,17 @@ public class ServoPositionsTest extends LinearOpMode {
     double s2current;
     boolean change1 = true;
     boolean change2 = true;
+    ServoImplEx wrist;
+    ServoImplEx endStop;
     public void runOpMode() {
         String servo1Name = "arm3";
-        String servo2Name = "endStop";
+        String servo2Name = "arm5";
         servo1 = hardwareMap.get(Servo.class, servo1Name);
         servo2 = hardwareMap.get(Servo.class, servo2Name);
-        //on broken scrimmagebot configurations: claw is part of wrist rotation, poleGuide is v4b
+        wrist = hardwareMap.get(ServoImplEx.class, "wrist");
+        endStop = hardwareMap.get(ServoImplEx.class, "endStop");
+        wrist.setPosition(0.13);
+        endStop.setPosition(0.565);
         //double armStack45Pos = 0.937; //was .935 then .93
         //    double armStack34Pos = 0.947; //was .945
         //    double armStack23Pos = 0.955; //was .955, then .96, then .957
