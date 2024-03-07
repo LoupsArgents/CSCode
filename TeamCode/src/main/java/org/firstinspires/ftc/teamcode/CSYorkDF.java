@@ -680,14 +680,52 @@ public class CSYorkDF extends LinearOpMode {
         }
     }
     public void centerOnClosestStack(EverythingProcessor processor){
-        boolean happy = closestStackInnerFunction(processor);
-        while(!happy && opModeIsActive()){
-            happy = closestStackInnerFunction(processor);
+        if(!processor.getIsSeeingPixel()){
+            goBackward(.4, 1);
+            sleep(100);
+            if(!processor.getIsSeeingPixel()){
+                endStop.setPosition(endStopOutOfWayPos);
+                sleep(1000);
+                armDown();
+                sleep(30000);
+            }
         }
-        stopMotors();
-        wait(500);
-        //goBackward(.4, .05);
-        closeClaw();
+        boolean happy = closestStackInnerFunction(processor);
+        boolean tooFar = false;
+        int strafeStart = strafeOdo.getCurrentPosition();
+        int strafeCurrent = strafeOdo.getCurrentPosition();
+        int forwardStart = forwardOdo.getCurrentPosition();
+        int forwardCurrent = forwardOdo.getCurrentPosition();
+        double strafeInches = newInchesTraveled(strafeStart, strafeCurrent);
+        while(!happy && !tooFar && opModeIsActive()){
+            happy = closestStackInnerFunction(processor);
+            strafeCurrent = strafeOdo.getCurrentPosition();
+            forwardCurrent = forwardOdo.getCurrentPosition();
+            strafeInches = newInchesTraveled(strafeStart, strafeCurrent);
+            tooFar = Math.abs(strafeInches) > 9;
+        }
+        if(tooFar){
+            RobotLog.aa("Status", "Gone too far");
+            double forwardInches = Math.abs(newInchesTraveled(forwardStart, forwardCurrent));
+            goBackward(.4, forwardInches);
+            //right is negative
+            if(strafeInches < 0){
+                RobotLog.aa("Status", "Undoing moves by going left");
+                strafeLeft(.4, (-strafeInches), 5);
+            }else{
+                RobotLog.aa("Status", "Undoing moves by going right");
+                strafeRight(.4, strafeInches, 5);
+            }
+            endStop.setPosition(endStopOutOfWayPos);
+            sleep(1000);
+            armDown();
+            sleep(30000);
+        }else {
+            stopMotors();
+            wait(500);
+            //goBackward(.4, .05);
+            closeClaw();
+        }
     }
     public void armDown(){
         arm1.setPosition(arm1DownPos);

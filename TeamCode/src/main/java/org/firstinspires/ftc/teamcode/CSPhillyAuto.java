@@ -315,7 +315,7 @@ public class CSPhillyAuto extends CSYorkDF {
     public void positionOnBackdrop(String result, int alliance, int attempt){ //attempt 1 is initial pass, attempt 2 is second pass
         ZonedDateTime dt = ZonedDateTime.now();
         String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
-        portal.saveNextFrameRaw("PhillyAutoNearBoard " + time);
+        portal.saveNextFrameRaw("PhillyAutoNearBoardFirst " + time);
         String res = result;
         if(result.equals("LeftCenter")){
             res = "Left";
@@ -333,7 +333,29 @@ public class CSPhillyAuto extends CSYorkDF {
                 goBackward(.3, 5.75, -90.0 * alliance);
                 return;
             }else{
-                RobotLog.aa("Status", "April tag failed; waiting a long time");
+                RobotLog.aa("Status", "Didn't see April tag on first positioning attempt -- moving and trying again");
+                goBackward(.3, 2, -90.0*alliance);
+                sleep(500); //CHANGE THIS BACK TO 500!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                dt = ZonedDateTime.now();
+                time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
+                portal.saveNextFrameRaw("PhillyAutoNearBoardTryAgain " + time);
+                dists = getAprilTagDist(res);
+                RobotLog.aa("TryingAgainDists", Arrays.toString(dists));
+                if(dists[0] == 0.0 && dists[1] == 0.0){
+                    liftIdealPos = liftInitial;
+                    goStraight(.4, 3);
+                    liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
+                    while(Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()){
+                        liftWithinLoop();
+                    }
+                    armAlmostDown();
+                    wrist.setPosition(wristAlmostDown);
+                    sleep(1000);
+                    armDown();
+                    wrist.setPosition(wristDownPos);
+                    sleep(30000);
+                }
+                /*RobotLog.aa("Status", "April tag failed; waiting a long time");
                 liftIdealPos = liftInitial;
                 goStraight(.4, 3);
                 liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
@@ -345,7 +367,7 @@ public class CSPhillyAuto extends CSYorkDF {
                 sleep(1000);
                 armDown();
                 wrist.setPosition(wristDownPos);
-                sleep(30000);
+                sleep(30000);*/
             }
         }
         if(result.equals("Left")){
