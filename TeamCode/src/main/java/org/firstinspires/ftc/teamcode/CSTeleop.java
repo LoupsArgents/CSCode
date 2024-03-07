@@ -106,11 +106,11 @@ public class CSTeleop extends LinearOpMode {
     Servo endStop;
     double arm1ScoringPos = 0.08;//was 0.1
     double armAlmostUp = 0.175; //was 0.37, then 0.2025, then .345, then .175
-    double armAlmostDown = 0.65; // was 0.6, .7 was too much
+    double armAlmostDown = 0.6; // was 0.6, .7 was too much, 0.65 was too low
     double arm1DownPos = 0.8;
     double arm2ScoringPos = 0.08;
     double arm2AlmostUp = 0.175; //was .345, then .175
-    double arm2AlmostDown = 0.66; //was 0.61, .71 was too much
+    double arm2AlmostDown = 0.61; //was 0.61, .71 was too much, 0.66 was too low
     double arm2DownPos = 0.7975;
     double arm145 = 0.785;
     double arm245 = 0.785;
@@ -421,17 +421,17 @@ public class CSTeleop extends LinearOpMode {
             //RobotLog.aa("liftCurrentPos", Double.toString(liftPos));
             //clawLeftSensor.getDistance(DistanceUnit.INCH);
             //double rightSensorPos = clawRightSensor.getDistance(DistanceUnit.INCH);
-            telemetry.addData("left sensor", clawLeftSensor.getDistance(DistanceUnit.INCH));
-            telemetry.addData("right sensor", clawRightSensor.getDistance(DistanceUnit.INCH));
-            telemetry.addData("does it think it's doing the stacks auto pickup", needArmUpABitStacks);
+            //telemetry.addData("left sensor", clawLeftSensor.getDistance(DistanceUnit.INCH));
+            //telemetry.addData("right sensor", clawRightSensor.getDistance(DistanceUnit.INCH));
+            //telemetry.addData("does it think it's doing the stacks auto pickup", needArmUpABitStacks);
             telemetry.addData("liftCurrentPos", liftPos);
             telemetry.addData("liftIdealPos", liftIdealPos);
-            telemetry.addData("broken lead screw", lsm2.getCurrentPosition()); //lsm 2 is the broken one. was lsm2enc
-            telemetry.addData("right lead screw", lsm1.getCurrentPosition());
+            //telemetry.addData("broken lead screw", lsm2.getCurrentPosition()); //lsm 2 is the broken one. was lsm2enc
+            //telemetry.addData("right lead screw", lsm1.getCurrentPosition());
             //lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
-            telemetry.addData("ticksPerRotationLS", ticksPerRotationLS);
-            telemetry.addData("lsm1init", lsm1init);
-            telemetry.addData("(lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init", (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init);
+            //telemetry.addData("ticksPerRotationLS", ticksPerRotationLS);
+            //telemetry.addData("lsm1init", lsm1init);
+            //telemetry.addData("(lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init", (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init);
             telemetry.addData("wristSetTo", wristSetTo);
             telemetry.addData("loop time, ms", currentTime);
             //RobotLog.aa("Loop time", String.valueOf(currentTime)); BC added for testing
