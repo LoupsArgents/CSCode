@@ -488,8 +488,8 @@ public class CSPhillyAuto extends CSYorkDF {
         goStraight(.8, 59-inchesMoved, -90.0*alliance); //power was .4, then .6, then .7; added 3 inches because other forward was less
         cameraBar.setPosition(camUsePos);
         wrist.setPosition(wristAlmostDown);
-        arm1.setPosition(arm1DownPos - .03); //used to be defined in terms of the stack levels; we'll see how this works.
-        arm2.setPosition(arm2DownPos - .03);
+        arm1.setPosition(arm1DownPos - .05); //used to be defined in terms of the stack levels; we'll see how this works.
+        arm2.setPosition(arm2DownPos - .05);
         endStop.setPosition(endStopPosForCycle);
         goStraight(.6, 12, -90.0*alliance);
         goStraight(.4, 10, -90.0*alliance);
@@ -503,8 +503,8 @@ public class CSPhillyAuto extends CSYorkDF {
         centerOnClosestStack(processor);
         cameraBar.setPosition(camTuckedIn);
         wait(500); //was 750
-        arm1.setPosition(arm1DownPos - .07);
-        arm2.setPosition(arm2DownPos - .07);
+        arm1.setPosition(arm1DownPos - .1);
+        arm2.setPosition(arm2DownPos - .1);
         goBackward(.4, .5,-90.0*alliance);
         endStop.setPosition(endStopOutOfWayPos);
         pixelsOnStack -= 2;

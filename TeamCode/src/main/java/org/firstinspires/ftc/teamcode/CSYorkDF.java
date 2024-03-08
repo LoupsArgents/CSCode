@@ -104,7 +104,7 @@ public class CSYorkDF extends LinearOpMode {
     double endStop34Pos = .565; //was 0.565, then .57, then .565
     double endStop23Pos = .6; //was .58, then .605
     double liftFirstWhitePixelPos = .04;
-    double liftSecondWhitePixelPos = .07;
+    double liftSecondWhitePixelPos = .08;
     double wristStack45Pos = 0.13; //was 0.12, then 0.115
     double wristStack34Pos = 0.13; //was 0.12. 0.12 is a bit off, and 0.125 is a bit off the other way, so 0.1225
     double wristStack23Pos = 0.135; // was 0.13
