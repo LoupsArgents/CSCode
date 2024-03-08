@@ -783,9 +783,9 @@ public class CSTeleop extends LinearOpMode {
                 gamepad1.rumble(500);
             }
             if (needArmUpABitStacks && armTimer.milliseconds() > 500) {
-                arm1.setPosition(armSetTo - 0.2); //was 0.025, then 0.05 - BC changed to 0.1
-                arm2.setPosition(armSetTo - 0.2);
-                armSetTo -= 0.2; //was 0.025
+                arm1.setPosition(armSetTo - 0.1); //was 0.025, then 0.05 - BC changed to 0.1
+                arm2.setPosition(armSetTo - 0.1);
+                armSetTo -= 0.1; //was 0.025
                 needArmUpABitStacks = false;
             }
             if (gamepad1.left_bumper) {

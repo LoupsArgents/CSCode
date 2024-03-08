@@ -86,11 +86,11 @@ public class CSYorkDF extends LinearOpMode {
     double wristScoringPos = 0.54;
     double arm1ScoringPos = 0.08;//was 0.1
     double arm1AlmostUp = 0.175; //was 0.37, then 0.2025, then .345, then .175
-    double arm1AlmostDown = 0.65; // was 0.6, .7 was too much
+    double arm1AlmostDown = 0.6; // was 0.6, .7 was too much, 0.65 was too low
     double arm1DownPos = 0.8;
     double arm2ScoringPos = 0.08;
     double arm2AlmostUp = 0.175; //was .345, then .175
-    double arm2AlmostDown = 0.66; //was 0.61, .71 was too much
+    double arm2AlmostDown = 0.61; //was 0.61, .71 was too much, 0.66 was too low
     double arm2DownPos = 0.7975;
     double arm145 = 0.785;
     double arm245 = 0.785;
