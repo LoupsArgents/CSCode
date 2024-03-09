@@ -52,7 +52,6 @@ public class CSYorkDF extends LinearOpMode {
     Servo clawDown;
     Servo wrist;
     ServoImplEx arm1;
-    ServoImplEx arm2;
     ServoImplEx cameraBar;
     Servo endStop;
     VisionPortal portal;
@@ -584,7 +583,6 @@ public class CSYorkDF extends LinearOpMode {
         clawUp = hardwareMap.get(Servo.class, "claw0");
         clawDown = hardwareMap.get(Servo.class, "claw2");
         arm1 = hardwareMap.get(ServoImplEx.class, "arm3"); //this is the one that DOES have an encoder
-        arm2 = hardwareMap.get(ServoImplEx.class, "arm5"); //this is the one that DOES NOT have an encoder
         wrist = hardwareMap.get(Servo.class, "wrist");
         cameraBar = hardwareMap.get(ServoImplEx.class, "frontCamera");
         endStop = hardwareMap.get(Servo.class, "endStop");
@@ -729,23 +727,18 @@ public class CSYorkDF extends LinearOpMode {
     }
     public void armDown(){
         arm1.setPosition(arm1DownPos);
-        arm2.setPosition(arm2DownPos);
     }
     public void armAlmostDown(){
         arm1.setPosition(arm1AlmostDown);
-        arm2.setPosition(arm2AlmostDown);
     }
     public void armAlmostUp(){
         arm1.setPosition(arm1AlmostUp);
-        arm2.setPosition(arm2AlmostUp);
     }
     public void armUp(){
         arm1.setPosition(arm1ScoringPos);
-        arm2.setPosition(arm2ScoringPos);
     }
     public void stallArm(){
         arm1.setPosition(arm145);
-        arm2.setPosition(arm245);
     }
     public void liftWithinLoop(){
         //needed variables for proportional control:
