@@ -103,10 +103,10 @@ public class CSTeleop extends LinearOpMode {
     ServoImplEx arm1;
     Servo droneRelease;
     Servo endStop;
-    double arm1ScoringPos = 0.085;//was 0.1
-    double armAlmostUp = 0.175; //was 0.37, then 0.2025, then .345, then .175
-    double armAlmostDown = 0.6; // was 0.6, .7 was too much, 0.65 was too low
-    double arm1DownPos = 0.805;
+    double arm1ScoringPos = 0.07;//was 0.1, 0.085 was too shaky
+    double armAlmostUp = 0.2; //was 0.37, then 0.2025, then .345, then .175 (too close to up)
+    double armAlmostDown = 0.65; // 0.6 is too high, 0.705 is too low
+    double arm1DownPos = 0.82;
     double arm2ScoringPos = 0.075; // was 0.08
     double arm2AlmostUp = 0.16; //was .345, then .175, then .185
     double arm2AlmostDown = 0.6; //was 0.61, .71 was too much, 0.66 was too low, then 0.61
@@ -165,6 +165,7 @@ public class CSTeleop extends LinearOpMode {
     double wristStraightUp = 0.45;
     double wristTuckedIn = 0.735;
     double wristScoringPos = 0.545; //was 0.54
+    double wristInBetweenPos = (wristDownPos + wristScoringPos)/2;
     double error = 0.0;
 
     double previousHeading = 0;
@@ -265,6 +266,7 @@ public class CSTeleop extends LinearOpMode {
     //pixels 1 and 2 are normal arm/claw levels (they're on the ground)
     boolean needArmUpABitStacks = false;
     boolean justEndedDroneTimer = true;
+    boolean justStartedTeleop = true;
 
     public void runOpMode() {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
@@ -386,8 +388,8 @@ public class CSTeleop extends LinearOpMode {
         }
 
         sleep(1000);
-        arm1.setPosition(arm1DownPos);
-        armSetTo = arm1DownPos;
+        arm1.setPosition(armAlmostDown); //was arm1DownPos
+        armSetTo = armAlmostDown;
         endStop.setPosition(endStopOutOfWayPos);
 
         telemetry.addData("status", "initialized");
@@ -401,6 +403,10 @@ public class CSTeleop extends LinearOpMode {
         armTimer.reset();
 
         while (opModeIsActive()) {
+            if (justStartedTeleop) {
+                justStartedTeleop = false;
+                arm1.setPosition(arm1DownPos);
+            }
             updateAnalogs(armAna, camAna, wristAna);
             double imuRadians = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             double nghIMU = (newGetHeadingUsesRadians(imuRadians)%360) * Math.PI/180;
@@ -484,7 +490,7 @@ public class CSTeleop extends LinearOpMode {
             }*/
             if (true) {//(Math.abs(cameraBar.getPosition() - camTuckedIn) < 0.05 || Math.abs(cameraBar.getPosition() - camOutOfWay) < 0.05) { //we're allowed to move the arm
                 //telemetry.addData("this", "runs");
-                if (armJustDown && armTimer.milliseconds() > 2000) {
+                if (armJustDown && armTimer.milliseconds() > 2000) { //was armTimer.milliseconds() > 2000
                     armJustDown = false;
                     cameraBar.setPosition(camUsePos);
                     camSetTo = camUsePos;
@@ -618,9 +624,9 @@ public class CSTeleop extends LinearOpMode {
                             armSetTo = armAlmostUp;
                             armStartedAt = armAlmostUp;
                         }
-                        if (!(wristSetTo == wristAlmostDown)) {
-                            wrist.setPosition(wristAlmostDown);
-                            wristSetTo = wristAlmostDown;
+                        if (!(wristSetTo == wristScoringPos)) { //was wristAlmostDown
+                            wrist.setPosition(wristScoringPos);
+                            wristSetTo = wristScoringPos;
                         }
                         if (clawUpSetTo != clawUpclose || clawDownSetTo != clawDownclose) {
                             clawUp.setPosition(clawUpclose);
