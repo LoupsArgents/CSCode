@@ -154,9 +154,9 @@ public class CSTeleop extends LinearOpMode {
     boolean lsStateCanChange = true;
     boolean clawStateCanChange = true;
     double clawUpopen = 0.465;//.525; //0.51;
-    double clawUpclose = .79;//.33; //0.355; //0.38 was good
+    double clawUpclose = 0.76;//.33; //0.355; //0.38 was good, then 0.79
     double clawDownopen = 0.465;//.525; //0.53; //was .58 before servo broke
-    double clawDownclose = 0.69;//.385; //0.42; //was .47 before servo broke //0.435 was good but didn't stall enough
+    double clawDownclose = 0.635;//.385; //0.42; //was .47 before servo broke //0.435 was good but didn't stall enough, 0.69 stalled a lot
     boolean doAbsHeading = false;
     double idealAbsHeading = 0.0;
     double turningConst = 0.575; //was 0.575
@@ -406,6 +406,7 @@ public class CSTeleop extends LinearOpMode {
             if (justStartedTeleop) {
                 justStartedTeleop = false;
                 arm1.setPosition(arm1DownPos);
+                armSetTo = arm1DownPos;
             }
             updateAnalogs(armAna, camAna, wristAna);
             double imuRadians = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
