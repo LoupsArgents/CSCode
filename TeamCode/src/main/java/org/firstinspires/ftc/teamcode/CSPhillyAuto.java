@@ -117,10 +117,11 @@ public class CSPhillyAuto extends CSYorkDF {
     }
     public void setInitialPositions(){
         //wrist slightly up, arm slightly up, flip wrist, arm down
+        armDown();
         endStop.setPosition(endStopOutOfWayPos);
         cameraBar.setPosition(camTuckedIn);
-        closeClaw();
-        sleep(1000);
+        closeClaw(); //see what the less-closed claw position is
+        sleep(5000); //hopefully enough for people to get out of the way + not too much
         wrist.setPosition(wristAlmostDown);
         sleep(250);
         armAlmostDown();
@@ -131,9 +132,14 @@ public class CSPhillyAuto extends CSYorkDF {
         sleep(1000);
         cameraBar.setPosition(camUsePos);
         sleep(500);
+        clawUp.setPosition(clawUpInitClose);
+        clawDown.setPosition(clawDownInitClose);
+        arm1.setPosition(arm1InitDownPos);
         telemetry.addData("Status", "Positions set");
     }
     public void onRun(String result, int alliance, boolean isNear, boolean isWall){
+        closeClaw();
+        armDown();
         cameraBar.setPosition(camOutOfWay);
         //sleep(500);
         doPurplePixel(result, alliance, isNear);
@@ -158,7 +164,13 @@ public class CSPhillyAuto extends CSYorkDF {
             positionOnBackdrop(r, alliance, 2);
             sleep(500);
             clawUp.setPosition(clawUpLessOpen); //openUpperClaw();
-            sleep(500);
+            long start = System.nanoTime();
+            activateFrontCamera();
+            long now = System.nanoTime();
+            long elapsed = now - start;
+            if((elapsed/Math.pow(10, 6)) < 500){
+                sleep((500 - (int)(elapsed/Math.pow(10, 6))));
+            }
             goStraight(.5, 3, -90.0 * alliance);
             closeClaw();
             liftIdealPos = liftInitial;
@@ -228,8 +240,8 @@ public class CSPhillyAuto extends CSYorkDF {
                 toSubtract = moveForwardRight(.6, 4, 0.0);
             }
             wrist.setPosition(wristAlmostDown);
-            RobotLog.aa("Subtracting", String.valueOf(toSubtract));
             activateBackCamera();
+            RobotLog.aa("Subtracting", String.valueOf(toSubtract));
             RobotLog.aa("HeadingAfterDiagonal", String.valueOf(newGetHeading()));
             goStraight(.6, 20-toSubtract, 0.0); //used to be 25-toSubtract, then 22.5-, then 20.5-, then 19.5-; power used to be .4 then .5
             openLowerClaw();
@@ -265,7 +277,13 @@ public class CSPhillyAuto extends CSYorkDF {
         positionOnBackdrop(result, alliance, 2);
         sleep(500);
         openUpperClaw();
-        sleep(500);
+        long start = System.nanoTime();
+        activateFrontCamera();
+        long now = System.nanoTime();
+        long elapsed = now - start;
+        if((elapsed/Math.pow(10, 6)) < 500){
+            sleep((500 - (int)(elapsed/Math.pow(10, 6))));
+        }
     }
     public void getToBackdrop(String result, int alliance){
         if((result.equals("Left") && alliance == 1) || (result.equals("Right") && alliance == -1)){
@@ -481,7 +499,7 @@ public class CSPhillyAuto extends CSYorkDF {
                 inchesMoved = moveForwardRight(.85, 14.5, -90.0*alliance); //powers were .4, then .6, then .7
             }
         }
-        activateFrontCamera();
+        sleep(300);
         armDown();
         wrist.setPosition(wristDownPos);
         processor.setMode(EverythingProcessor.ProcessorMode.PIXEL);
@@ -501,7 +519,13 @@ public class CSPhillyAuto extends CSYorkDF {
         portal.saveNextFrameRaw("PhillyAutoNearStack " + time);
         centerOnClosestStack(processor);
         cameraBar.setPosition(camTuckedIn);
-        wait(500); //was 750
+        long start = System.nanoTime();
+        activateBackCamera();
+        long now = System.nanoTime();
+        long elapsed = now - start;
+        if((elapsed/Math.pow(10, 6)) < 500){
+            wait((500 - (int)(elapsed/Math.pow(10, 6))));
+        }
         arm1.setPosition(arm1DownPos - .1);
         goBackward(.4, .5,-90.0*alliance);
         endStop.setPosition(endStopOutOfWayPos);
@@ -688,7 +712,6 @@ public class CSPhillyAuto extends CSYorkDF {
         }
     }
     public void getBackToBoard(String result, int alliance){
-        activateBackCamera();
         goBackward(.8, 65.5, -90.0*alliance); //power was .6, then .7; distance was 70 but became too close for apriltags; was 54.5 then 55.5 then changed deceleration
         wrist.setPosition(wristAlmostDown);
         armAlmostUp();
