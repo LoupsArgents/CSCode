@@ -154,8 +154,10 @@ public class CSTeleop extends LinearOpMode {
     boolean lsStateCanChange = true;
     boolean clawStateCanChange = true;
     double clawUpopen = 0.465;//.525; //0.51;
+    double clawUpSlightlyOpen = 0.62;
     double clawUpclose = 0.76;//.33; //0.355; //0.38 was good, then 0.79
     double clawDownopen = 0.465;//.525; //0.53; //was .58 before servo broke
+    double clawDownSlightlyOpen = 0.55;
     double clawDownclose = 0.635;//.385; //0.42; //was .47 before servo broke //0.435 was good but didn't stall enough, 0.69 stalled a lot
     boolean doAbsHeading = false;
     double idealAbsHeading = 0.0;
@@ -780,8 +782,8 @@ public class CSTeleop extends LinearOpMode {
                 gamepad1.rumble(500);
             }
             if (needArmUpABitStacks && armTimer.milliseconds() > 500) {
-                arm1.setPosition(armSetTo - 0.1); //was 0.025, then 0.05 - BC changed to 0.1
-                armSetTo -= 0.1; //was 0.025
+                arm1.setPosition(armSetTo - 0.05); //was 0.025, then 0.05 - BC changed to 0.1
+                armSetTo -= 0.05; //was 0.025
                 needArmUpABitStacks = false;
             }
             if (gamepad1.left_bumper) {
@@ -808,19 +810,29 @@ public class CSTeleop extends LinearOpMode {
                 if (gamepad1.left_trigger > 0.1 && clawStateCanChange) {
                     clawStateCanChange = false;
                     //if first one is open, open second, otherwise open first
-                    if (clawDownSetTo == clawDownopen) { //opening the second one
-                        clawUp.setPosition(clawUpopen);
-                        clawUpSetTo = clawUpopen;
-                        if (armSetTo == arm1DownPos) { //flip out camera bar so we can use it
+                    if (clawDownSetTo == clawDownopen || clawDownSetTo == clawDownSlightlyOpen) { //opening the second one
+                        if (armSetTo != arm1ScoringPos) {
+                            clawUp.setPosition(clawUpopen);
+                            clawUpSetTo = clawUpopen;
+                        } else {
+                            clawUp.setPosition(clawUpSlightlyOpen);
+                            clawUpSetTo = clawUpSlightlyOpen;
+                        }
+                        if (armSetTo == arm1DownPos || (endStopSetTo == endStop45Pos || endStopSetTo == endStop34Pos || endStopSetTo == endStop23Pos)) { //flip out camera bar so we can use it
                             cameraBar.setPosition(camUsePos);
                             camInUsePos = true;
                             camSetTo = camUsePos;
                         }
                         //pixelRow = -1;
                         //secondPixelChange = 0;
-                    } else {
-                        clawDown.setPosition(clawDownopen);
-                        clawDownSetTo = clawDownopen;
+                    } else { //opening clawDown
+                        if (armSetTo != arm1ScoringPos) {
+                            clawDown.setPosition(clawDownopen);
+                            clawDownSetTo = clawDownopen;
+                        } else {
+                            clawDown.setPosition(clawDownSlightlyOpen);
+                            clawDownSetTo = clawDownSlightlyOpen;
+                        }
                         secondPixelChange = 0.015;
                         if (armSetTo == arm1ScoringPos && Math.abs(liftPos - liftIdealPos) < 0.01) {
                             liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange + secondPixelChange;

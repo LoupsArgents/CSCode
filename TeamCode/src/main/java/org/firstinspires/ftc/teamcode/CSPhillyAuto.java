@@ -20,6 +20,7 @@ public class CSPhillyAuto extends CSYorkDF {
 
     public void runOpMode(){}
     public void doRun(String alliance, boolean isNear, boolean isWall){ //1 is blue, -1 is red
+        if(isWall) parkingNearWall = true;
         int allianceNum = 1;
         if(alliance.equals("Blue")) allianceNum = 1;
         if(alliance.equals("Red")) allianceNum = -1;
