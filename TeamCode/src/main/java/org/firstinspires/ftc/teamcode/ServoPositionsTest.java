@@ -78,7 +78,7 @@ public class ServoPositionsTest extends LinearOpMode {
     ServoImplEx wrist;
     ServoImplEx endStop;
     public void runOpMode() {
-        String servo1Name = "claw0";
+        String servo1Name = "rightLeadScrewServo";
         String servo2Name = "claw2";
         servo1 = hardwareMap.get(Servo.class, servo1Name);
         servo2 = hardwareMap.get(Servo.class, servo2Name);
@@ -100,7 +100,7 @@ public class ServoPositionsTest extends LinearOpMode {
         s2p1 = 0.5;
         s2p2 = 0.5;
         s2current = 0.5;
-        servo1.setPosition(s1current);
+        servo1.setPosition(0.3925); //s1current - BC changed
         servo2.setPosition(s2current);
         waitForStart();
         while (opModeIsActive()) {

@@ -237,7 +237,7 @@ public class CSTeleop extends LinearOpMode {
     double droneInitial = 0.72; //the position we want the drone launcher servo to be at when it's not trying to launch the drone
     double droneFire = 0; //the position for the drone launcher servo that will launch the drone
     double droneParallelToGround = 0.435;
-    double lss2Launch = .3925; //0.4075; //the position we want for the left lead screw to be at when the drone is launching, down is 0.52, old was 0.55
+    double lss2Launch = 0.3925; //0.4075; //the position we want for the left lead screw to be at when the drone is launching, down is 0.52, old was 0.55
     //old launch position was 0.4625
     //old bot up was 0.395, old bot down was 0.52
     //new up is 0.34, new down is 0.46
