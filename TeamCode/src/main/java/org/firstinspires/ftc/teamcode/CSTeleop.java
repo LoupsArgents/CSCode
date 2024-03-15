@@ -248,13 +248,13 @@ public class CSTeleop extends LinearOpMode {
     double armStack23Pos = 0.955; //was .955, then .96, then .957
     double armStallAgainstStopPos = 0.8;
     double endStopOutOfWayPos = .64; //was .64
-    double endStop45Pos = .53; //was 0.545, then .53, then .525, then .52, then 0.515
-    double endStop34Pos = .565; //was 0.565, then .57, then .565
-    double endStop23Pos = .6; //was .58, then .605
+    double endStop45Pos = .495; //was 0.545, then .53, then .525, then .52, then 0.515, then .53
+    double endStop34Pos = .555; //was 0.565, then .57, then .565
+    double endStop23Pos = .59; //was .58, then .605
     double endStopSetTo = endStopOutOfWayPos;
-    double wristStack45Pos = 0.13; //was 0.12, then 0.115
-    double wristStack34Pos = 0.13; //was 0.12. 0.12 is a bit off, and 0.125 is a bit off the other way, so 0.1225
-    double wristStack23Pos = 0.135; // was 0.13
+    double wristStack45Pos = 0.115; //was 0.12, then 0.115, then 0.13
+    double wristStack34Pos = 0.12; //was 0.12. 0.12 is a bit off, and 0.125 is a bit off the other way, so 0.1225, was 0.130
+    double wristStack23Pos = 0.13; // was 0.135
     //arm + wrist positions for same side scoring need to be updated
     double armSameSideScore = 0.845;
     double wristSameSideScore = 0.25;
@@ -420,7 +420,9 @@ public class CSTeleop extends LinearOpMode {
             }
             lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
             lsm2pos = (lsm2.getCurrentPosition()/ticksPerRotationLS)-lsm2init; //was lsm2enc
-
+            telemetry.addData("gamepad1.left_stick_x", gamepad1.left_stick_x);
+            telemetry.addData("gamepad1.left_stick_y", gamepad1.left_stick_x);
+            telemetry.addData("gamepad1.right_stick_x", gamepad1.right_stick_x);
             //telemetry.addData("oldHeadingWay", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
             currentTime = timer.milliseconds();
             armCurrentTime = armTimer.milliseconds();
