@@ -71,7 +71,10 @@ import com.qualcomm.robotcore.hardware.PwmControl; // for Axon
 
 
 @TeleOp
-public class CSTeleop extends LinearOpMode {
+public class CSLiftTimerTeleop extends LinearOpMode {
+    boolean hasStartedTimingLift = false;
+    private ElapsedTime liftTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    double liftTimeUpMS = 0;
     boolean doAutoPickup = false;
     double multiplierFR = 1.0;
     double multiplierBL = 1.0;
@@ -420,6 +423,7 @@ public class CSTeleop extends LinearOpMode {
             }
             lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
             lsm2pos = (lsm2.getCurrentPosition()/ticksPerRotationLS)-lsm2init; //was lsm2enc
+            telemetry.addData("time it took the lift to go up (ms)", liftTimeUpMS);
             telemetry.addData("gamepad1.left_stick_x", gamepad1.left_stick_x);
             telemetry.addData("gamepad1.left_stick_y", gamepad1.left_stick_x);
             telemetry.addData("gamepad1.right_stick_x", gamepad1.right_stick_x);
@@ -592,20 +596,11 @@ public class CSTeleop extends LinearOpMode {
                 } else if (!gamepad2.dpad_left) {
                     stacksLevelCanChange = true;
                 }
-                if (gamepad2.right_stick_button && armSetTo != arm1ScoringPos) {
-                    //34 pos
-                    stacksLevelCanChange = false;
-                    doStacks = true;
-                    stacksLevel = 2;
-                    arm1.setPosition(armStallAgainstStopPos); //was 0.945, then armStack34Pos + 0.1
-                    armSetTo = armStallAgainstStopPos;
-                    armStartedAt = armSetTo;
-                    endStop.setPosition(endStop34Pos);
-                    endStopSetTo = endStop34Pos;
-                    //wrist.setPosition(0.12);
-                    wristStackIdeal = wristStack34Pos;
-                    wrist.setPosition(wristStack34Pos);
-                    wristSetTo = wristStack34Pos;
+                if (gamepad2.right_stick_button) {
+                    //stacks in real program-- here, it's lift testing
+                    hasStartedTimingLift = true;
+                    liftIdealPos = 0.2;
+                    liftTimer.reset();
                 }
                 /*if (doStacks && wristTimer.milliseconds() > 250) {
                     //telemetry.addData("519", "works");
@@ -914,6 +909,10 @@ public class CSTeleop extends LinearOpMode {
                 double Kp = 30; //was 50
                 if (Math.abs(liftError) < liftTolerance) {
                     liftHappyPlace = true;
+                    if (hasStartedTimingLift) {
+                        hasStartedTimingLift = false;
+                        liftTimeUpMS = liftTimer.milliseconds();
+                    }
                 } else {
                     liftHappyPlace = false;
                 }
