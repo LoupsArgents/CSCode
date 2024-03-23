@@ -117,6 +117,7 @@ public class CSYorkDF extends LinearOpMode {
 
     double liftPos;
     double liftYellowPixelPos = .04; //0.035; //0.0262024407753051;
+    double newMotorsConstant = 2.8;
     double liftIdealPos;
     double liftInitial;
     boolean liftHappyPlace = true;
@@ -744,9 +745,30 @@ public class CSYorkDF extends LinearOpMode {
         arm1.setPosition(arm145);
     }
     public void liftWithinLoop(){
+        double liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
+        double liftError = liftIdealPos - liftPos;
+        double liftTolerance = 0.00375 * newMotorsConstant; //was 0.005
+        double Kp = 12.5;
+        if(Math.abs(liftPos - liftIdealPos) > liftTolerance){
+            if (liftError < 0 && liftPos > 0.28) { //going down && very high up
+                Kp = 5; //was 10
+            }
+            if (liftError > 0 && liftPos > 0.425) { //going up and we're very high
+                Kp = 17.5;
+            }
+            if (liftIdealPos == 0 && liftError < 0) { //going to 0
+                Kp = 13;
+            }
+            if (liftError > 0 && liftPos < 0.056) { //going up and only on the first row
+                Kp = 11;
+            }
+            lift2.setPower(liftError*Kp);
+            lift1.setPower(-liftError*Kp);
+        }else{
+            //just keep the lift up
+        }
         //needed variables for proportional control:
-        //slidesTolerance
-        liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
+        /*liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
         double liftError = liftIdealPos - liftPos;
         double liftTolerance = 0.005;
         double Kp = 30;
@@ -765,7 +787,7 @@ public class CSYorkDF extends LinearOpMode {
                 lift2.setPower(0.5);
                 lift1.setPower(-0.5);
             }
-        }
+        }*/
     }
     public double[] getAprilTagDist(String result){
         //IDs: 1 is blue left, 2 is blue center, 3 is blue right

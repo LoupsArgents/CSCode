@@ -71,7 +71,7 @@ import com.qualcomm.robotcore.hardware.PwmControl; // for Axon
 
 
 @TeleOp
-public class CSTeleop extends LinearOpMode {
+public class CSBasicProportionalLiftTeleop extends LinearOpMode {
     boolean doAutoPickup = false;
     double multiplierFR = 1.0;
     double multiplierBL = 1.0;
@@ -911,7 +911,6 @@ public class CSTeleop extends LinearOpMode {
                 }
             }
             if (canUseSlides) {
-                liftStallPower = 0.39 * liftPos;
                 if (liftIdealPos > 0.22 * newMotorsConstant) {
                     liftIdealPos = 0.22 * newMotorsConstant;
                 }
@@ -926,20 +925,14 @@ public class CSTeleop extends LinearOpMode {
                 }
                 liftError = liftIdealPos - liftPos;
                 double liftTolerance = 0.00375 * newMotorsConstant; //was 0.005
-                Kp = 16; //was 30, then 15 (too high), then 12.5, 7.5 was too low
+                Kp = 12.5; //was 30, then 15 (too high)
                 if (Math.abs(liftError) < liftTolerance) {
                     liftHappyPlace = true;
                 } else {
                     liftHappyPlace = false;
                 }
                 if (!isJoysticking && !liftHappyPlace) {
-                    if (liftError < 0) {
-                        Kp = 12; //was 11
-                    }
-                    if (liftError < 0 && liftIdealPos == 0) {
-                        Kp = 14;
-                    }
-                    /*if (liftError < 0 && pixelRow > 5) { //going down && very high up
+                    if (liftError < 0 && pixelRow > 5) { //going down && very high up
                         Kp = 5; //was 10
                     }
                     if (liftError > 0 && liftPos > 0.425) { //going up and we're very high
@@ -950,17 +943,29 @@ public class CSTeleop extends LinearOpMode {
                     }
                     if (liftError > 0 && pixelRow == 1) { //going up and only on the first row
                         Kp = 11;
-                    }*/
-                    lift2.setPower(liftError*Kp + liftStallPower);
-                    lift1.setPower(-liftError*Kp + liftStallPower);
+                    }
+                    lift2.setPower(liftError*Kp);
+                    lift1.setPower(-liftError*Kp);
                 } else if (!isJoysticking) { //but liftHappyPlace is true
-                    liftStallPower = 0.4 * liftPos; //m was 0.41
-                    if (liftStallPower > 0.2) {
-                        liftStallPower = 0.2;
+                    liftStallPower = 0.39 * liftPos; //m was 0.41
+                    if (pixelRow == 1) {
+                        liftStallPower = 0.005;
                     }
                     lift2.setPower(liftStallPower);
                     lift1.setPower(-liftStallPower);
                 }
+                /* else if (isJoysticking == false) { //liftHappyPlace == true
+                    if (liftPos > 0.1 * newMotorsConstant) {
+                        lift2.setPower(0.015); //was .3, .15 was slightly high, so is .1?, so is .05???
+                        lift1.setPower(-0.015); //was -.3
+                    } else if (liftPos > 0.125 * newMotorsConstant) {
+                        lift2.setPower(0.25); //was .4, then .2, then .15
+                        lift1.setPower(-0.25); //was -.4
+                    } else if (liftPos > 0.20 * newMotorsConstant) {
+                        lift2.setPower(0.3); //was .5
+                        lift1.setPower(-0.3); //was -.5
+                    }
+                }*/
                 if ((liftPower > 0.05 && liftPos < 0.22 * newMotorsConstant) || (liftPower < -0.05 && liftPos > 0)) {
                     isJoysticking = true;
                     liftHappyPlace = true;
@@ -1138,7 +1143,7 @@ public class CSTeleop extends LinearOpMode {
                     }
                 }
                 //lead screw code
-                if (gamepad2.y && (armSetTo != arm1ScoringPos)) {
+                if (gamepad2.y) {
                     lss1.setPosition(lss1UpPos);
                     lss2SetTo = lss2UpPos;
                     lss2.setPosition(lss2UpPos);
