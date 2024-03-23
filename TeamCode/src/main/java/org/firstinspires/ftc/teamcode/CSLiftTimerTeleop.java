@@ -222,12 +222,13 @@ public class CSLiftTimerTeleop extends LinearOpMode {
     boolean isJoysticking = false;
     Point pixelPos;
     boolean hasEverSeenPixel = false;
-    double pixelRowChange = 0.02;
+    double newMotorsConstant = 2.8; //was 2.63451538
+    double pixelRowChange = 0.02 * newMotorsConstant;
     double pixelRow = -1;
-    double secondPixelChange = 0.0125;
+    double secondPixelChange = 0.0125 * newMotorsConstant;
     //8th row (first row is 0) is 0.217516152
     //1st row (first row is 0)
-    double baseBoardHeightAmt = 0.02; //good for row 0
+    double baseBoardHeightAmt = 0.02 * newMotorsConstant; //good for row 0
     double stacksLevel = 0; //0 is pixels 1 and 2, 1 is pixels 2 and 3, 2 is pixels 3 and 4, 4 is pixels 4 and 5
     boolean stacksLevelCanChange = true;
     boolean phase4JustStarted = false;
@@ -599,7 +600,7 @@ public class CSLiftTimerTeleop extends LinearOpMode {
                 if (gamepad2.right_stick_button) {
                     //stacks in real program-- here, it's lift testing
                     hasStartedTimingLift = true;
-                    liftIdealPos = 0.2;
+                    liftIdealPos = 0.2 * newMotorsConstant;
                     liftTimer.reset();
                 }
                 /*if (doStacks && wristTimer.milliseconds() > 250) {
@@ -897,8 +898,8 @@ public class CSLiftTimerTeleop extends LinearOpMode {
                 }
             }
             if (canUseSlides) {
-                if (liftIdealPos > 0.22) {
-                    liftIdealPos = 0.22;
+                if (liftIdealPos > 0.22 * newMotorsConstant) {
+                    liftIdealPos = 0.22 * newMotorsConstant;
                 }
                 double liftPower = -gamepad2.left_stick_y;
                 if (liftPower < 0) { //we're trying to go down
@@ -906,7 +907,7 @@ public class CSLiftTimerTeleop extends LinearOpMode {
                 }
                 double liftError = liftIdealPos - liftPos;
                 double liftTolerance = 0.00375; //was 0.005
-                double Kp = 30; //was 50
+                double Kp = 15; //was 50
                 if (Math.abs(liftError) < liftTolerance) {
                     liftHappyPlace = true;
                     if (hasStartedTimingLift) {
@@ -918,23 +919,23 @@ public class CSLiftTimerTeleop extends LinearOpMode {
                 }
                 if (!isJoysticking && !liftHappyPlace) {
                     if (liftError < 0) { //going down
-                        Kp = 10; //was 30
+                        Kp = 12; //was 30
                     }
                     lift2.setPower(liftError*Kp);
                     lift1.setPower(-liftError*Kp);
                 } else if (isJoysticking == false) { //liftHappyPlace == true
-                    if (liftPos > 0.05) {
-                        lift2.setPower(0.3);
-                        lift1.setPower(-0.3);
-                    } else if (liftPos > 0.125) {
-                        lift2.setPower(0.4);
-                        lift1.setPower(-0.4);
-                    } else if (liftPos > 0.20) {
-                        lift2.setPower(0.5);
-                        lift1.setPower(-0.5);
+                    if (liftPos > 0.05 * newMotorsConstant) {
+                        lift2.setPower(0.1);
+                        lift1.setPower(-0.1);
+                    } else if (liftPos > 0.125 * newMotorsConstant) {
+                        lift2.setPower(0.15);
+                        lift1.setPower(-0.15);
+                    } else if (liftPos > 0.20 * newMotorsConstant) {
+                        lift2.setPower(0.25);
+                        lift1.setPower(-0.25);
                     }
                 }
-                if ((liftPower > 0.05 && liftPos < 0.22) || (liftPower < -0.05 && liftPos > 0)) {
+                if ((liftPower > 0.05 && liftPos < 0.22 * newMotorsConstant) || (liftPower < -0.05 && liftPos > 0)) {
                     isJoysticking = true;
                     liftHappyPlace = true;
                     liftIdealPos = liftPos;

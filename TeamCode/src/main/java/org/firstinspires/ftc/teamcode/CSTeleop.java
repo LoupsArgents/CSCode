@@ -219,13 +219,17 @@ public class CSTeleop extends LinearOpMode {
     boolean isJoysticking = false;
     Point pixelPos;
     boolean hasEverSeenPixel = false;
-    double pixelRowChange = 0.02;
+    double newMotorsConstant = 2.8; //was 2.63451538
+    double pixelRowChange = 0.02 * newMotorsConstant;
     double pixelRow = -1;
-    double secondPixelChange = 0.0125;
+    double secondPixelChange = 0.0125 * newMotorsConstant;
     //8th row (first row is 0) is 0.217516152
     //1st row (first row is 0)
-    double baseBoardHeightAmt = 0.02; //good for row 0
+    double baseBoardHeightAmt = 0.02 * newMotorsConstant; //good for row 0
     double stacksLevel = 0; //0 is pixels 1 and 2, 1 is pixels 2 and 3, 2 is pixels 3 and 4, 4 is pixels 4 and 5
+    double liftError = 0.0;
+    double Kp = 15;
+    double liftStallPower = 0.0;
     boolean stacksLevelCanChange = true;
     boolean phase4JustStarted = false;
     boolean armJustDown = false;
@@ -364,7 +368,7 @@ public class CSTeleop extends LinearOpMode {
 
         ticksPerRotation = liftEncoder.getMotorType().getTicksPerRev();
         liftInitial = liftEncoder.getCurrentPosition()/ticksPerRotation;
-        liftPos = (liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial;
+        liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
 
         previousHeading = newGetHeading();
         processedHeading = previousHeading;
@@ -420,6 +424,9 @@ public class CSTeleop extends LinearOpMode {
             }
             lsm1pos = (lsm1.getCurrentPosition()/ticksPerRotationLS)-lsm1init;
             lsm2pos = (lsm2.getCurrentPosition()/ticksPerRotationLS)-lsm2init; //was lsm2enc
+            telemetry.addData("liftError * Kp (lift power)", liftError * Kp);
+            telemetry.addData("liftStallPower", liftStallPower);
+            telemetry.addData("liftHappyPlace", liftHappyPlace);
             telemetry.addData("gamepad1.left_stick_x", gamepad1.left_stick_x);
             telemetry.addData("gamepad1.left_stick_y", gamepad1.left_stick_x);
             telemetry.addData("gamepad1.right_stick_x", gamepad1.right_stick_x);
@@ -607,6 +614,8 @@ public class CSTeleop extends LinearOpMode {
                     wrist.setPosition(wristStack34Pos);
                     wristSetTo = wristStack34Pos;
                 }
+
+
                 /*if (doStacks && wristTimer.milliseconds() > 250) {
                     //telemetry.addData("519", "works");
                     if (wristSetTo != wristStackIdeal) {
@@ -902,40 +911,60 @@ public class CSTeleop extends LinearOpMode {
                 }
             }
             if (canUseSlides) {
-                if (liftIdealPos > 0.22) {
-                    liftIdealPos = 0.22;
+                if (liftIdealPos > 0.22 * newMotorsConstant) {
+                    liftIdealPos = 0.22 * newMotorsConstant;
                 }
                 double liftPower = -gamepad2.left_stick_y;
+                //telemetry.addData("2 left stick y", gamepad2.left_stick_y);
+                //telemetry.addData("2 right stick y", gamepad2.right_stick_y);
+                if (Math.abs(liftPower) < Math.abs(-gamepad2.right_stick_y)) {
+                    liftPower = 0.5 * -gamepad2.right_stick_y;
+                }
                 if (liftPower < 0) { //we're trying to go down
                     liftPower *= 0.25;
                 }
-                double liftError = liftIdealPos - liftPos;
-                double liftTolerance = 0.00375; //was 0.005
-                double Kp = 30; //was 50
+                liftError = liftIdealPos - liftPos;
+                double liftTolerance = 0.00375 * newMotorsConstant; //was 0.005
+                Kp = 12.5; //was 30, then 15 (too high)
                 if (Math.abs(liftError) < liftTolerance) {
                     liftHappyPlace = true;
                 } else {
                     liftHappyPlace = false;
                 }
                 if (!isJoysticking && !liftHappyPlace) {
-                    if (liftError < 0) { //going down
-                        Kp = 10; //was 30
+                    if (liftError < 0 && pixelRow > 5) { //going down && very high up
+                        Kp = 5; //was 10
+                    }
+                    if (liftError > 0 && liftPos > 0.425) { //going up and we're very high
+                        Kp = 17.5;
+                    }
+                    if (liftIdealPos == 0 && liftError < 0) { //going to 0
+                        Kp = 13;
+                    }
+                    if (liftError > 0 && pixelRow == 1) { //going up and only on the first row
+                        Kp = 11;
                     }
                     lift2.setPower(liftError*Kp);
                     lift1.setPower(-liftError*Kp);
-                } else if (isJoysticking == false) { //liftHappyPlace == true
-                    if (liftPos > 0.05) {
-                        lift2.setPower(0.3);
-                        lift1.setPower(-0.3);
-                    } else if (liftPos > 0.125) {
-                        lift2.setPower(0.4);
-                        lift1.setPower(-0.4);
-                    } else if (liftPos > 0.20) {
-                        lift2.setPower(0.5);
-                        lift1.setPower(-0.5);
+                } else if (!isJoysticking) { //but liftHappyPlace is true
+                    liftStallPower = 0.39 * liftPos; //m was 0.41
+                    if (pixelRow == 1) {
+                        liftStallPower = 0.005;
                     }
                 }
-                if ((liftPower > 0.05 && liftPos < 0.22) || (liftPower < -0.05 && liftPos > 0)) {
+                /* else if (isJoysticking == false) { //liftHappyPlace == true
+                    if (liftPos > 0.1 * newMotorsConstant) {
+                        lift2.setPower(0.015); //was .3, .15 was slightly high, so is .1?, so is .05???
+                        lift1.setPower(-0.015); //was -.3
+                    } else if (liftPos > 0.125 * newMotorsConstant) {
+                        lift2.setPower(0.25); //was .4, then .2, then .15
+                        lift1.setPower(-0.25); //was -.4
+                    } else if (liftPos > 0.20 * newMotorsConstant) {
+                        lift2.setPower(0.3); //was .5
+                        lift1.setPower(-0.3); //was -.5
+                    }
+                }*/
+                if ((liftPower > 0.05 && liftPos < 0.22 * newMotorsConstant) || (liftPower < -0.05 && liftPos > 0)) {
                     isJoysticking = true;
                     liftHappyPlace = true;
                     liftIdealPos = liftPos;
