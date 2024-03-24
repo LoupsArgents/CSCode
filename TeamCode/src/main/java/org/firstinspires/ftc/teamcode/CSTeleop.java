@@ -502,7 +502,7 @@ public class CSTeleop extends LinearOpMode {
             }*/
             if (true) {//(Math.abs(cameraBar.getPosition() - camTuckedIn) < 0.05 || Math.abs(cameraBar.getPosition() - camOutOfWay) < 0.05) { //we're allowed to move the arm
                 //telemetry.addData("this", "runs");
-                if (armJustDown && armTimer.milliseconds() > 2000) { //was armTimer.milliseconds() > 2000
+                if (armJustDown && armTimer.milliseconds() > 2000 && armSetTo != arm1ScoringPos) { //was armTimer.milliseconds() > 2000
                     armJustDown = false;
                     cameraBar.setPosition(camUsePos);
                     camSetTo = camUsePos;
@@ -511,6 +511,8 @@ public class CSTeleop extends LinearOpMode {
                     clawDown.setPosition(clawDownopen);
                     clawDownSetTo = clawDownopen;
                     camInUsePos = true;
+                } else if (armJustDown && armSetTo == arm1ScoringPos) {
+                    armJustDown = false;
                 }
                 if (gamepad2.dpad_up && armSetTo != arm1ScoringPos && (camSetTo == camTuckedIn || camSetTo == camOutOfWay)) {
                     //RobotLog.aa("ArmFlipped", ""); BC added for testing
@@ -812,11 +814,13 @@ public class CSTeleop extends LinearOpMode {
                     clawUpSetTo = clawUpclose;
                     clawDown.setPosition(clawDownclose);
                     clawDownSetTo = clawDownclose;
-                    cameraBar.setPosition(camTuckedIn);
-                    camSetTo = camTuckedIn;
-                    camInUsePos = false;
-                    pixelRow = -1;
-                    secondPixelChange = 0;
+                    if (armSetTo != arm1ScoringPos) {
+                        cameraBar.setPosition(camTuckedIn);
+                        camSetTo = camTuckedIn;
+                        camInUsePos = false;
+                        pixelRow = -1;
+                        secondPixelChange = 0;
+                    }
                 }
                 if (gamepad1.left_trigger > 0.1 && clawStateCanChange) {
                     clawStateCanChange = false;
@@ -861,7 +865,7 @@ public class CSTeleop extends LinearOpMode {
                 camInUsePos = false;
             }
 
-            if (gamepad2.y && !canDoEndgame && !isJoysticking && canChangeLiftLevel) {
+            if (gamepad2.y && !canDoEndgame && !isJoysticking && canChangeLiftLevel && armSetTo == arm1ScoringPos) {
                 canChangeLiftLevel = false;
                 pixelRow++;
                 liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange + secondPixelChange;
@@ -869,7 +873,7 @@ public class CSTeleop extends LinearOpMode {
             } else if (!gamepad2.y && !gamepad2.a) {
                 canChangeLiftLevel = true;
             }
-            if (gamepad2.a && !canDoEndgame && !isJoysticking && canChangeLiftLevel) {
+            if (gamepad2.a && !canDoEndgame && !isJoysticking && canChangeLiftLevel && armSetTo == arm1ScoringPos) {
                 canChangeLiftLevel = false;
                 pixelRow--;
                 if (pixelRow < 0) {
@@ -923,6 +927,9 @@ public class CSTeleop extends LinearOpMode {
                 }
                 if (liftPower < 0) { //we're trying to go down
                     liftPower *= 0.25;
+                }
+                if (armSetTo != arm1ScoringPos) {
+                    liftPower = 0;
                 }
                 liftError = liftIdealPos - liftPos;
                 double liftTolerance = 0.00375 * newMotorsConstant; //was 0.005
