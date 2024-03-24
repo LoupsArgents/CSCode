@@ -28,7 +28,6 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.opencv.core.Point;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Autonomous
@@ -105,8 +104,11 @@ public class CSYorkDF extends LinearOpMode {
     double endStop45Pos = .53; //was 0.545, then .53, then .525, then .52, then 0.515
     double endStop34Pos = .565; //was 0.565, then .57, then .565
     double endStop23Pos = .6; //was .58, then .605
-    double liftFirstWhitePixelPos = .04;
-    double liftSecondWhitePixelPos = .08;
+    double newMotorsConstant = 2.8;
+    double liftYellowPixelPos = .04 * newMotorsConstant; //0.035; //0.0262024407753051;
+    double liftFirstWhitePixelPos = .04 * newMotorsConstant;
+    double liftSecondWhitePixelPos = .08 * newMotorsConstant;
+    double liftTolerance = 0.00375 * newMotorsConstant; //was 0.005
     double wristStack45Pos = 0.13; //was 0.12, then 0.115
     double wristStack34Pos = 0.13; //was 0.12. 0.12 is a bit off, and 0.125 is a bit off the other way, so 0.1225
     double wristStack23Pos = 0.135; // was 0.13
@@ -114,16 +116,11 @@ public class CSYorkDF extends LinearOpMode {
     double camOutOfWay = 0.36; //pointing straight out
     double camUsePos = 0.6475;
     double camTuckedIn = 0.9575;
-
     double liftPos;
-    double liftYellowPixelPos = .04; //0.035; //0.0262024407753051;
-    double newMotorsConstant = 2.8;
     double liftIdealPos;
     double liftInitial;
     boolean liftHappyPlace = true;
     double ticksPerRotation;
-
-
     Point pixelPos;
     public void runOpMode(){
         initializeHardware();
@@ -745,49 +742,26 @@ public class CSYorkDF extends LinearOpMode {
         arm1.setPosition(arm145);
     }
     public void liftWithinLoop(){
-        double liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
+        liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
         double liftError = liftIdealPos - liftPos;
-        double liftTolerance = 0.00375 * newMotorsConstant; //was 0.005
-        double Kp = 12.5;
-        if(Math.abs(liftPos - liftIdealPos) > liftTolerance){
-            if (liftError < 0 && liftPos > 0.28) { //going down && very high up
-                Kp = 5; //was 10
-            }
-            if (liftError > 0 && liftPos > 0.425) { //going up and we're very high
-                Kp = 17.5;
-            }
-            if (liftIdealPos == 0 && liftError < 0) { //going to 0
-                Kp = 13;
-            }
-            if (liftError > 0 && liftPos < 0.056) { //going up and only on the first row
-                Kp = 11;
-            }
-            lift2.setPower(liftError*Kp);
-            lift1.setPower(-liftError*Kp);
-        }else{
-            //just keep the lift up
+        double liftStallPower = 0.4 * liftPos; //m was 0.41
+        if (liftStallPower > 0.2) {
+            liftStallPower = 0.2;
         }
-        //needed variables for proportional control:
-        /*liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
-        double liftError = liftIdealPos - liftPos;
-        double liftTolerance = 0.005;
-        double Kp = 30;
-        if (Math.abs(liftPos - liftIdealPos) > liftTolerance) {
-            lift2.setPower(liftError*Kp);
-            lift1.setPower(-liftError*Kp);
-        }else{
-            //just trying to keep the lift up
-            if (liftPos > 0.05) {
-                lift2.setPower(0.3);
-                lift1.setPower(-0.3);
-            } else if (liftPos > 0.125) {
-                lift2.setPower(0.4);
-                lift1.setPower(-0.4);
-            } else if (liftPos > 0.20) {
-                lift2.setPower(0.5);
-                lift1.setPower(-0.5);
+        double Kp = 16;
+        if (Math.abs(liftError) > liftTolerance) {
+            if (liftError < 0) {
+                Kp = 12; //was 11
             }
-        }*/
+            if (liftError < 0 && liftIdealPos == 0) {
+                Kp = 14;
+            }
+            lift2.setPower(liftError*Kp + liftStallPower);
+            lift1.setPower(-liftError*Kp + liftStallPower);
+        } else {
+            lift2.setPower(liftStallPower);
+            lift1.setPower(-liftStallPower);
+        }
     }
     public double[] getAprilTagDist(String result){
         //IDs: 1 is blue left, 2 is blue center, 3 is blue right

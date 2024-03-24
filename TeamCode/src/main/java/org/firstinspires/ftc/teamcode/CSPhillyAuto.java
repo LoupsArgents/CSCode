@@ -4,16 +4,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.vision.VisionPortal;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 @Disabled
 public class CSPhillyAuto extends CSYorkDF {
-    ArrayList<Double> rightAverages = new ArrayList<>();
-    ArrayList<Double> centerAverages = new ArrayList<>();
-    ArrayList<Double> leftAverages = new ArrayList<>();
     boolean cycle = false;
-
     boolean parkingNearWall = false;
     int pixelsOnStack = 5;
     int delay = 0;
@@ -176,7 +171,7 @@ public class CSPhillyAuto extends CSYorkDF {
             closeClaw();
             liftIdealPos = liftInitial;
             liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
-            while (Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()) {
+            while (Math.abs(liftIdealPos - liftPos) > liftTolerance && opModeIsActive()) {
                 liftWithinLoop();
             }
         }
@@ -186,8 +181,9 @@ public class CSPhillyAuto extends CSYorkDF {
             closeClaw();
             liftIdealPos = liftInitial;
             liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
-            while (Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()) {
+            while (Math.abs(liftIdealPos - liftPos) > liftTolerance && opModeIsActive()) {
                 liftWithinLoop();
+                RobotLog.aa("Error", String.valueOf(Math.abs(liftIdealPos-liftPos)));
             }
             armAlmostDown();
             wrist.setPosition(wristAlmostDown);
@@ -244,7 +240,7 @@ public class CSPhillyAuto extends CSYorkDF {
             activateBackCamera();
             RobotLog.aa("Subtracting", String.valueOf(toSubtract));
             RobotLog.aa("HeadingAfterDiagonal", String.valueOf(newGetHeading()));
-            goStraight(.6, 20-toSubtract, 0.0); //used to be 25-toSubtract, then 22.5-, then 20.5-, then 19.5-; power used to be .4 then .5
+            goStraight(.6, 19.5-toSubtract, 0.0); //used to be 25-toSubtract, then 22.5-, then 20.5-, then 19.5-, then 20-; power used to be .4 then .5
             openLowerClaw();
             sleep(500);
         }else if((result.equals("Right") && ((alliance == 1 && isNear) || (alliance == -1 && !isNear))) || (result.equals("Left") && ((alliance == -1 && isNear) || (alliance == 1 && !isNear)))){
@@ -364,7 +360,7 @@ public class CSPhillyAuto extends CSYorkDF {
                     liftIdealPos = liftInitial;
                     goStraight(.4, 3);
                     liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
-                    while(Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()){
+                    while(Math.abs(liftIdealPos - liftPos) > liftTolerance && opModeIsActive()){
                         liftWithinLoop();
                     }
                     armAlmostDown();
