@@ -176,14 +176,18 @@ public class CSPhillyAuto extends CSYorkDF {
             }
         }
         if(cycle) {
-            cycle(result, alliance);
+            if (!isWall){
+                cycle(result, alliance);
+            }else{ //is going through truss near wall
+                cycleThroughTruss(result, alliance);
+            }
             goStraight(.7, 2, -90.0 * alliance);
             closeClaw();
             liftIdealPos = liftInitial;
-            liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
+            liftPos = -((liftEncoder.getCurrentPosition() / ticksPerRotation) - liftInitial);
             while (Math.abs(liftIdealPos - liftPos) > liftTolerance && opModeIsActive()) {
                 liftWithinLoop();
-                RobotLog.aa("Error", String.valueOf(Math.abs(liftIdealPos-liftPos)));
+                RobotLog.aa("Error", String.valueOf(Math.abs(liftIdealPos - liftPos)));
             }
             armAlmostDown();
             wrist.setPosition(wristAlmostDown);
@@ -191,16 +195,18 @@ public class CSPhillyAuto extends CSYorkDF {
             armDown();
             wrist.setPosition(wristDownPos);
             String s;
-            if(alliance == 1){
-                if(!result.equals("Right")) {
+            if (alliance == 1) {
+                //this bit is figuring out where to park based on where you dropped the white pixel based on
+                //the variable result, which is where you dropped the yellow
+                if (!result.equals("Right")) {
                     s = "Right";
-                }else{
+                } else {
                     s = "Center";
                 }
-            }else{
-                if(!result.equals("Left")) {
+            } else {
+                if (!result.equals("Left")) {
                     s = "Left";
-                }else{
+                } else {
                     s = "Center";
                 }
             }
@@ -325,6 +331,186 @@ public class CSPhillyAuto extends CSYorkDF {
             armAlmostUp();
             goBackward(.7, 15, -90.0*alliance); //was 19
             cameraBar.setPosition(camTuckedIn);
+        }
+    }
+    public void getToBoardFromFar(String result, int alliance){
+        RobotLog.aa("Result", result);
+        RobotLog.aa("Alliance", String.valueOf(alliance));
+        if((result.equals("Left") && alliance == 1) || (result.equals("Right") && alliance == -1)){
+            goBackward(.5, 4, 90.0 * alliance);
+            absoluteHeading(.4, -90.0*alliance);
+            absoluteHeading(.2, -90.0*alliance);
+            closeLowerClaw();
+            if(alliance == 1){
+                strafeLeft(.7, 19, 5, -90.0*alliance); //power was .6, was 22in
+            }else if(alliance == -1){
+                strafeRight(.7, 19, 5, -90.0*alliance);
+            }
+            sleep(300); //was 500
+            goBackward(.7, 50, -90.0*alliance); //power was .6
+            wrist.setPosition(wristAlmostDown);
+            armAlmostUp();
+            goBackward(.7, 22, -90.0*alliance); //was 25, then 20; power was .6
+            wrist.setPosition(wristScoringPos);
+            armUp();
+            liftIdealPos = liftYellowPixelPos;
+            sleep(300); //was 500
+            if(alliance == 1){
+                strafeRight(.7, 23, 5, -90.0*alliance); //power was .6
+            }else if(alliance == -1){
+                strafeLeft(.7, 23, 5, -90.0*alliance);
+            }
+        }else if(result.equals("Center")){
+            goBackward(.5, 2.5, 0.0); //was 2 then 3
+            sleep(300); //was 500
+            if(alliance == 1) {
+                strafeRight(.7, 10, 5, 0.0); //power was .6
+            }else if(alliance == -1){
+                strafeLeft(.7, 10, 5, 0.0);
+            }
+            closeLowerClaw();
+            cameraBar.setPosition(camUsePos);
+            sleep(300); //was 500
+            goStraight(.6, 15, 0.0); //power was .5, was 17 in
+            sleep(300); //was 500
+            absoluteHeading(.4, -90.0*alliance);
+            absoluteHeading(.2, -90.0*alliance);
+            cameraBar.setPosition(camOutOfWay);
+            sleep(300); //was 500
+            if(alliance == 1) {
+                strafeLeft(.5, 5, 5, -90.0 * alliance);
+            }else if(alliance == -1){
+                strafeRight(.5, 5, 5, -90.0*alliance);
+            }
+            goBackward(.7, 63, -90.0*alliance); //power was .6
+            wrist.setPosition(wristAlmostDown);
+            armAlmostUp();
+            goBackward(.7, 22, -90.0*alliance); //was 25, then 20
+            wrist.setPosition(wristScoringPos);
+            armUp();
+            liftIdealPos = liftYellowPixelPos;
+            sleep(300); //was 500
+            if(alliance == 1){
+                strafeRight(.7, 23, 5, -90.0*alliance); //power was .6
+            }else if(alliance == -1){
+                strafeLeft(.7, 23, 5, -90.0*alliance);
+            }
+        }else if((result.equals("Right") && alliance == 1) || (result.equals("Left") && alliance == -1)){
+            goBackward(.5, 2, 0.0);
+            sleep(300); //was 500
+            if(alliance == 1){
+                strafeLeft(.5, 10, 5, 0.0); //power was .4
+            }else {
+                strafeRight(.5, 10, 5, 0.0);
+            }
+            closeLowerClaw();
+            sleep(300); //was 500
+            cameraBar.setPosition(camUsePos);
+            goStraight(.7, 23, 0.0); //power was .5, was 26 inches
+            sleep(300); //was 500
+            absoluteHeading(.4, -90.0*alliance);
+            absoluteHeading(.2, -90.0*alliance);
+            cameraBar.setPosition(camOutOfWay);
+            sleep(300); //was 500
+            if (alliance == 1) {
+                strafeLeft(.7, 2.5, 5, -90.0*alliance); //power was .5
+            }else if(alliance == -1){
+                strafeRight(.7, 2.5, 5, -90.0*alliance);
+            }
+            goBackward(.7, 45, -90.0*alliance); //power was .6
+            wrist.setPosition(wristAlmostDown);
+            armAlmostUp();
+            goBackward(.7, 22, -90.0*alliance); //was 25, then 20; power was .6
+            wrist.setPosition(wristScoringPos);
+            armUp();
+            liftIdealPos = liftYellowPixelPos;
+            sleep(300); //was 500
+            if(alliance == 1){
+                strafeRight(.7, 16, 5, -90.0*alliance); //power was .6; was 18
+            }else if(alliance == -1){
+                strafeLeft(.7, 16, 5, -90.0*alliance);
+            }
+        }
+    }
+    public void getToBoardFromWall(String result, int alliance){
+        if((result.equals("Left") && alliance == 1) || (result.equals("Right") && alliance == -1)){
+            goBackward(.5, 4, 90.0*alliance);
+            closeLowerClaw();
+            sleep(300); //was 500
+            absoluteHeading(.4, -90.0*alliance);
+            absoluteHeading(.2, -90.0*alliance);
+            sleep(300); //was 500
+            if(alliance == 1){
+                strafeRight(.5, 22, 5, -90.0*alliance);
+            }else if(alliance == -1){
+                strafeLeft(.5, 22, 5, -90.0*alliance);
+            }
+            sleep(300); //was 500
+            goBackward(.6, 55, -90.0*alliance);
+            wrist.setPosition(wristAlmostDown);
+            armAlmostUp();
+            goBackward(.6, 18, -90.0*alliance);
+            wrist.setPosition(wristScoringPos);
+            armUp();
+            liftIdealPos = liftYellowPixelPos;
+            sleep(300); //was 500
+            if(alliance == 1){
+                strafeLeft(.5, 19, 5, -90.0*alliance);
+            }else if(alliance == -1){
+                strafeRight(.5, 19, 5, -90.0*alliance);
+            }
+        }else if(result.equals("Center")){
+            goBackward(.5, 4.5, 0.0);
+            closeLowerClaw();
+            sleep(300); //was 500
+            absoluteHeading(.4, -90.0*alliance);
+            absoluteHeading(.2, -90.0*alliance);
+            sleep(300); //was 500
+            if(alliance == 1){
+                strafeRight(.5, 15, 5, -90.0*alliance);
+            }else if(alliance == -1){
+                strafeLeft(.5, 15, 5, -90.0*alliance);
+            }
+            sleep(300); //was 500
+            goBackward(.6, 55, -90.0*alliance);
+            wrist.setPosition(wristAlmostDown);
+            armAlmostUp();
+            goBackward(.6, 18, -90.0*alliance);
+            wrist.setPosition(wristScoringPos);
+            armUp();
+            liftIdealPos = liftYellowPixelPos;
+            sleep(300); //was 500
+            if(alliance == 1){
+                strafeLeft(.5, 19, 5, -90.0*alliance);
+            }else if(alliance == -1){
+                strafeRight(.5, 19, 5, -90.0*alliance);
+            }
+        }else if((result.equals("Right") && alliance == 1) || (result.equals("Left") && alliance == -1)){
+            goBackward(.5, 4, 0.0);
+            closeLowerClaw();
+            sleep(300); //was 500
+            absoluteHeading(.4, -90.0*alliance);
+            absoluteHeading(.2, -90.0*alliance);
+            sleep(300); //was 500
+            if(alliance == 1){
+                strafeRight(.5, 6.5, 5, -90.0*alliance);
+            }else if(alliance == -1){
+                strafeLeft(.5, 6.5, 5, -90.0*alliance);
+            }
+            sleep(300); //was 500
+            goBackward(.6, 60, -90.0*alliance);
+            wrist.setPosition(wristAlmostDown);
+            armAlmostUp();
+            goBackward(.6, 18, -90.0*alliance);
+            wrist.setPosition(wristScoringPos);
+            armUp();
+            liftIdealPos = liftYellowPixelPos;
+            sleep(300); //was 500
+            if(alliance == 1){
+                strafeLeft(.5, 19, 5, -90.0*alliance);
+            }else if(alliance == -1){
+                strafeRight(.5, 19, 5, -90.0*alliance);
+            }
         }
     }
     public void positionOnBackdrop(String result, int alliance, int attempt){ //attempt 1 is initial pass, attempt 2 is second pass
@@ -528,186 +714,6 @@ public class CSPhillyAuto extends CSYorkDF {
         endStop.setPosition(endStopOutOfWayPos);
         pixelsOnStack -= 2;
     }
-    public void getToBoardFromFar(String result, int alliance){
-        RobotLog.aa("Result", result);
-        RobotLog.aa("Alliance", String.valueOf(alliance));
-        if((result.equals("Left") && alliance == 1) || (result.equals("Right") && alliance == -1)){
-            goBackward(.5, 4, 90.0 * alliance);
-            absoluteHeading(.4, -90.0*alliance);
-            absoluteHeading(.2, -90.0*alliance);
-            closeLowerClaw();
-            if(alliance == 1){
-                strafeLeft(.7, 19, 5, -90.0*alliance); //power was .6, was 22in
-            }else if(alliance == -1){
-                strafeRight(.7, 19, 5, -90.0*alliance);
-            }
-            sleep(300); //was 500
-            goBackward(.7, 50, -90.0*alliance); //power was .6
-            wrist.setPosition(wristAlmostDown);
-            armAlmostUp();
-            goBackward(.7, 22, -90.0*alliance); //was 25, then 20; power was .6
-            wrist.setPosition(wristScoringPos);
-            armUp();
-            liftIdealPos = liftYellowPixelPos;
-            sleep(300); //was 500
-            if(alliance == 1){
-                strafeRight(.7, 23, 5, -90.0*alliance); //power was .6
-            }else if(alliance == -1){
-                strafeLeft(.7, 23, 5, -90.0*alliance);
-            }
-        }else if(result.equals("Center")){
-            goBackward(.5, 2.5, 0.0); //was 2 then 3
-            sleep(300); //was 500
-            if(alliance == 1) {
-                strafeRight(.7, 10, 5, 0.0); //power was .6
-            }else if(alliance == -1){
-                strafeLeft(.7, 10, 5, 0.0);
-            }
-            closeLowerClaw();
-            cameraBar.setPosition(camUsePos);
-            sleep(300); //was 500
-            goStraight(.6, 15, 0.0); //power was .5, was 17 in
-            sleep(300); //was 500
-            absoluteHeading(.4, -90.0*alliance);
-            absoluteHeading(.2, -90.0*alliance);
-            cameraBar.setPosition(camOutOfWay);
-            sleep(300); //was 500
-            if(alliance == 1) {
-                strafeLeft(.5, 5, 5, -90.0 * alliance);
-            }else if(alliance == -1){
-                strafeRight(.5, 5, 5, -90.0*alliance);
-            }
-            goBackward(.7, 63, -90.0*alliance); //power was .6
-            wrist.setPosition(wristAlmostDown);
-            armAlmostUp();
-            goBackward(.7, 22, -90.0*alliance); //was 25, then 20
-            wrist.setPosition(wristScoringPos);
-            armUp();
-            liftIdealPos = liftYellowPixelPos;
-            sleep(300); //was 500
-            if(alliance == 1){
-                strafeRight(.7, 23, 5, -90.0*alliance); //power was .6
-            }else if(alliance == -1){
-                strafeLeft(.7, 23, 5, -90.0*alliance);
-            }
-        }else if((result.equals("Right") && alliance == 1) || (result.equals("Left") && alliance == -1)){
-            goBackward(.5, 2, 0.0);
-            sleep(300); //was 500
-            if(alliance == 1){
-                strafeLeft(.5, 10, 5, 0.0); //power was .4
-            }else {
-                strafeRight(.5, 10, 5, 0.0);
-            }
-            closeLowerClaw();
-            sleep(300); //was 500
-            cameraBar.setPosition(camUsePos);
-            goStraight(.7, 23, 0.0); //power was .5, was 26 inches
-            sleep(300); //was 500
-            absoluteHeading(.4, -90.0*alliance);
-            absoluteHeading(.2, -90.0*alliance);
-            cameraBar.setPosition(camOutOfWay);
-            sleep(300); //was 500
-            if (alliance == 1) {
-                strafeLeft(.7, 2.5, 5, -90.0*alliance); //power was .5
-            }else if(alliance == -1){
-                strafeRight(.7, 2.5, 5, -90.0*alliance);
-            }
-            goBackward(.7, 45, -90.0*alliance); //power was .6
-            wrist.setPosition(wristAlmostDown);
-            armAlmostUp();
-            goBackward(.7, 22, -90.0*alliance); //was 25, then 20; power was .6
-            wrist.setPosition(wristScoringPos);
-            armUp();
-            liftIdealPos = liftYellowPixelPos;
-            sleep(300); //was 500
-            if(alliance == 1){
-                strafeRight(.7, 16, 5, -90.0*alliance); //power was .6; was 18
-            }else if(alliance == -1){
-                strafeLeft(.7, 16, 5, -90.0*alliance);
-            }
-        }
-    }
-    public void getToBoardFromWall(String result, int alliance){
-        if((result.equals("Left") && alliance == 1) || (result.equals("Right") && alliance == -1)){
-            goBackward(.5, 4, 90.0*alliance);
-            closeLowerClaw();
-            sleep(300); //was 500
-            absoluteHeading(.4, -90.0*alliance);
-            absoluteHeading(.2, -90.0*alliance);
-            sleep(300); //was 500
-            if(alliance == 1){
-                strafeRight(.5, 22, 5, -90.0*alliance);
-            }else if(alliance == -1){
-                strafeLeft(.5, 22, 5, -90.0*alliance);
-            }
-            sleep(300); //was 500
-            goBackward(.6, 55, -90.0*alliance);
-            wrist.setPosition(wristAlmostDown);
-            armAlmostUp();
-            goBackward(.6, 18, -90.0*alliance);
-            wrist.setPosition(wristScoringPos);
-            armUp();
-            liftIdealPos = liftYellowPixelPos;
-            sleep(300); //was 500
-            if(alliance == 1){
-                strafeLeft(.5, 19, 5, -90.0*alliance);
-            }else if(alliance == -1){
-                strafeRight(.5, 19, 5, -90.0*alliance);
-            }
-        }else if(result.equals("Center")){
-            goBackward(.5, 4.5, 0.0);
-            closeLowerClaw();
-            sleep(300); //was 500
-            absoluteHeading(.4, -90.0*alliance);
-            absoluteHeading(.2, -90.0*alliance);
-            sleep(300); //was 500
-            if(alliance == 1){
-                strafeRight(.5, 15, 5, -90.0*alliance);
-            }else if(alliance == -1){
-                strafeLeft(.5, 15, 5, -90.0*alliance);
-            }
-            sleep(300); //was 500
-            goBackward(.6, 55, -90.0*alliance);
-            wrist.setPosition(wristAlmostDown);
-            armAlmostUp();
-            goBackward(.6, 18, -90.0*alliance);
-            wrist.setPosition(wristScoringPos);
-            armUp();
-            liftIdealPos = liftYellowPixelPos;
-            sleep(300); //was 500
-            if(alliance == 1){
-                strafeLeft(.5, 19, 5, -90.0*alliance);
-            }else if(alliance == -1){
-                strafeRight(.5, 19, 5, -90.0*alliance);
-            }
-        }else if((result.equals("Right") && alliance == 1) || (result.equals("Left") && alliance == -1)){
-            goBackward(.5, 4, 0.0);
-            closeLowerClaw();
-            sleep(300); //was 500
-            absoluteHeading(.4, -90.0*alliance);
-            absoluteHeading(.2, -90.0*alliance);
-            sleep(300); //was 500
-            if(alliance == 1){
-                strafeRight(.5, 6.5, 5, -90.0*alliance);
-            }else if(alliance == -1){
-                strafeLeft(.5, 6.5, 5, -90.0*alliance);
-            }
-            sleep(300); //was 500
-            goBackward(.6, 60, -90.0*alliance);
-            wrist.setPosition(wristAlmostDown);
-            armAlmostUp();
-            goBackward(.6, 18, -90.0*alliance);
-            wrist.setPosition(wristScoringPos);
-            armUp();
-            liftIdealPos = liftYellowPixelPos;
-            sleep(300); //was 500
-            if(alliance == 1){
-                strafeLeft(.5, 19, 5, -90.0*alliance);
-            }else if(alliance == -1){
-                strafeRight(.5, 19, 5, -90.0*alliance);
-            }
-        }
-    }
     public void getBackToBoard(String result, int alliance){
         goBackward(.8, 65.5, -90.0*alliance); //power was .6, then .7; distance was 70 but became too close for apriltags; was 54.5 then 55.5 then changed deceleration
         wrist.setPosition(wristAlmostDown);
@@ -790,6 +796,53 @@ public class CSPhillyAuto extends CSYorkDF {
         RobotLog.aa("Status", "Claw opened");
         cameraBar.setPosition(camOutOfWay);
         wait(500);
+    }
+    public void cycleThroughTruss(String result, int alliance){
+        getToStackThroughTruss(result, alliance);
+        getBackToBoardThroughTruss(result, alliance);
+    }
+    public void getToStackThroughTruss(String result, int alliance){
+        double endStopPosForCycle = endStop45Pos;
+        double wristPosForCycle = wristStack45Pos;
+        goStraight(.75, 2, -90.0*alliance); //power was .4, then .55, then .65; increased distance from 5; was 7; was 5
+        openClaw();
+        armAlmostDown();
+        wrist.setPosition(wristAlmostDown);
+        liftIdealPos = liftInitial;
+        wait(250);
+        //we are always 1 inch to the robot-left of the left april tag
+        //we are always 1 inch to the robot-right of the center april tag
+        //we are always 1 inch to the robot-right of the right april tag
+        if(result.equals("Left") && alliance == 1){
+            strafeRight(.7, 8, 5, -90.0*alliance);
+            strafeRight(.5, 6, 5, -90.0*alliance);
+            strafeRight(.3, 4, 5, -90.0*alliance);
+            sleep(300);
+        }else if(result.equals("Right") && alliance == -1){
+
+        }else if(result.equals("Center") && alliance == 1){
+            strafeRight(.7, 10, 5, -90.0*alliance);
+            strafeRight(.5, 7, 5, -90.0*alliance);
+            strafeRight(.3, 5, 5, -90.0*alliance);
+            sleep(300);
+        }else if(result.equals("Center") && alliance == -1){
+
+        }else if(result.equals("Right") && alliance == 1){
+            strafeRight(.7, 12, 5, -90.0*alliance);
+            strafeRight(.5, 9, 5, -90.0*alliance);
+            strafeRight(.3, 6.5, 5, -90.0*alliance);
+            sleep(300);
+        }else if(result.equals("Left") && alliance == -1){
+
+        }
+        if(alliance == 1){
+            goStraight(.7, 70, -90.0*alliance);
+            //because I only have the strafing coded for the blue side so far
+        }
+        sleep(30000);
+    }
+    public void getBackToBoardThroughTruss(String result, int alliance){
+
     }
     public void park(int alliance, String result, boolean parkingNearWall){
         RobotLog.aa("Status", "Started parking");
