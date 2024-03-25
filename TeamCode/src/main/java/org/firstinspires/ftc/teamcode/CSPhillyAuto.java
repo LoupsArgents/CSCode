@@ -814,31 +814,140 @@ public class CSPhillyAuto extends CSYorkDF {
         //we are always 1 inch to the robot-right of the center april tag
         //we are always 1 inch to the robot-right of the right april tag
         if(result.equals("Left") && alliance == 1){
+            double idealInches = 18;
+            int startPos = strafeOdo.getCurrentPosition();
             strafeRight(.7, 8, 5, -90.0*alliance);
             strafeRight(.5, 6, 5, -90.0*alliance);
             strafeRight(.3, 4, 5, -90.0*alliance);
             sleep(300);
+            int endPos = strafeOdo.getCurrentPosition();
+            double traveled = Math.abs(newInchesTraveled(startPos, endPos));
+            RobotLog.aa("Traveled", String.valueOf(traveled));
+            if(Math.abs(traveled - idealInches) > 0.5){
+                //right is negative, left is positive
+                if(traveled-idealInches > 0){
+                    RobotLog.aa("Strafing", "Left");
+                    strafeLeft(.3, (traveled-idealInches)/2, -90.0*alliance);
+                }else if(traveled-idealInches < 0){
+                    RobotLog.aa("Strafing", "Right");
+                    strafeRight(.3, -(traveled-idealInches)/2, -90.0*alliance);
+                }
+                sleep(300);
+            }
         }else if(result.equals("Right") && alliance == -1){
-
+            //so on red-right the 1 inch move takes you away from the truss
+            //on blue-left...wait??? huh? do I not need to account for this ?? ? ? ? ????????
+            //I still need to account for it on the center, though.
+            double idealInches = 18;
+            int startPos = strafeOdo.getCurrentPosition();
+            strafeLeft(.7, 8, 5, -90.0*alliance);
+            strafeLeft(.5, 6, 5, -90.0*alliance);
+            strafeLeft(.3, 4, 5, -90.0*alliance);
+            //red right is a tad too close to the outer edge of the truss. let's see how blue left does. ok so it was good. overshoot correction time.
+            sleep(300);
+            int endPos = strafeOdo.getCurrentPosition();
+            double traveled = Math.abs(newInchesTraveled(startPos, endPos));
+            RobotLog.aa("Traveled", String.valueOf(traveled));
+            if(Math.abs(traveled - idealInches) > 0.5){
+                //right is negative, left is positive
+                if(traveled-idealInches < 0){
+                    RobotLog.aa("Strafing", "Left");
+                    strafeLeft(.3, -(traveled-idealInches)/2, -90.0*alliance);
+                }else if(traveled-idealInches > 0){
+                    RobotLog.aa("Strafing", "Right");
+                    strafeRight(.3, (traveled-idealInches)/2, -90.0*alliance);
+                }
+                sleep(300);
+            }
         }else if(result.equals("Center") && alliance == 1){
+            double idealInches = 22;
+            int startPos = strafeOdo.getCurrentPosition();
             strafeRight(.7, 10, 5, -90.0*alliance);
             strafeRight(.5, 7, 5, -90.0*alliance);
             strafeRight(.3, 5, 5, -90.0*alliance);
             sleep(300);
+            int endPos = strafeOdo.getCurrentPosition();
+            double traveled = Math.abs(newInchesTraveled(startPos, endPos));
+            RobotLog.aa("Traveled", String.valueOf(traveled));
+            if(Math.abs(traveled - idealInches) > 0.5){
+                //right is negative, left is positive
+                if(traveled-idealInches > 0){
+                    RobotLog.aa("Strafing", "Left");
+                    strafeLeft(.3, (traveled-idealInches)/2, -90.0*alliance);
+                }else if(traveled-idealInches < 0){
+                    RobotLog.aa("Strafing", "Right");
+                    strafeRight(.3, -(traveled-idealInches)/2, -90.0*alliance);
+                }
+                sleep(300);
+            }
         }else if(result.equals("Center") && alliance == -1){
-
+            double idealInches = 24;
+            int startPos = strafeOdo.getCurrentPosition();
+            RobotLog.aa("StartPos", String.valueOf(startPos));
+            strafeLeft(.7, 10, 5, -90.0*alliance);
+            strafeLeft(.5, 8, 5, -90.0*alliance);
+            strafeLeft(.3, 6, 5, -90.0*alliance);
+            sleep(300); //add 2 inches to the other center and see how it goes
+            int endPos = strafeOdo.getCurrentPosition();
+            RobotLog.aa("EndPos", String.valueOf(endPos));
+            double traveled = Math.abs(newInchesTraveled(startPos, endPos));
+            RobotLog.aa("Traveled", String.valueOf(traveled));
+            if(Math.abs(traveled - idealInches) > 0.5){
+                if(traveled-idealInches < 0){
+                    RobotLog.aa("Strafing", "Left");
+                    strafeLeft(.3, -(traveled-idealInches)/2, -90.0*alliance);
+                }else if(traveled-idealInches > 0){
+                    RobotLog.aa("Strafing", "Right");
+                    strafeRight(.3, (traveled-idealInches)/2, -90.0*alliance);
+                }
+                sleep(300);
+            }
         }else if(result.equals("Right") && alliance == 1){
+            double idealInches = 27.5;
+            int startPos = strafeOdo.getCurrentPosition();
             strafeRight(.7, 12, 5, -90.0*alliance);
             strafeRight(.5, 9, 5, -90.0*alliance);
             strafeRight(.3, 6.5, 5, -90.0*alliance);
             sleep(300);
+            int endPos = strafeOdo.getCurrentPosition();
+            double traveled = Math.abs(newInchesTraveled(startPos, endPos));
+            RobotLog.aa("Traveled", String.valueOf(traveled));
+            if(Math.abs(traveled - idealInches) > 0.5){
+                //right is negative, left is positive
+                if(traveled-idealInches > 0){
+                    RobotLog.aa("Strafing", "Left");
+                    strafeLeft(.3, (traveled-idealInches)/2, -90.0*alliance);
+                }else if(traveled-idealInches < 0){
+                    RobotLog.aa("Strafing", "Right");
+                    strafeRight(.3, -(traveled-idealInches)/2, -90.0*alliance);
+                }
+                sleep(300);
+            }
         }else if(result.equals("Left") && alliance == -1){
-
+            double idealInches = 27.5;
+            int startPos = strafeOdo.getCurrentPosition();
+            strafeLeft(.7, 12, 5, -90.0*alliance);
+            strafeLeft(.5, 9, 5, -90.0*alliance);
+            strafeLeft(.3, 6.5, 5, -90.0*alliance);
+            sleep(300);
+            int endPos = strafeOdo.getCurrentPosition();
+            double traveled = Math.abs(newInchesTraveled(startPos, endPos));
+            RobotLog.aa("Traveled", String.valueOf(traveled));
+            if(Math.abs(traveled - idealInches) > 0.5){
+                //right is negative, left is positive
+                if(traveled-idealInches < 0){
+                    RobotLog.aa("Strafing", "Left");
+                    strafeLeft(.3, -(traveled-idealInches)/2, -90.0*alliance);
+                }else if(traveled-idealInches > 0){
+                    RobotLog.aa("Strafing", "Right");
+                    strafeRight(.3, (traveled-idealInches)/2, -90.0*alliance);
+                }
+                sleep(300);
+            }
         }
-        if(alliance == 1){
-            goStraight(.7, 70, -90.0*alliance);
-            //because I only have the strafing coded for the blue side so far
-        }
+        goStraight(.5, 25, -90.0*alliance);
+        //goStraight(.7, 70, -90.0*alliance);
+        //because I only have the strafing coded for the blue side so far
         sleep(30000);
     }
     public void getBackToBoardThroughTruss(String result, int alliance){
