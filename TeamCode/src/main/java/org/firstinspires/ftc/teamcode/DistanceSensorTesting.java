@@ -9,8 +9,8 @@ public class DistanceSensorTesting extends CSYorkDF{
         initializeHardware();
         waitForStart();
         while(opModeIsActive()){
-            telemetry.addData("Left", leftDistance.getDistance(DistanceUnit.INCH));
-            telemetry.addData("Right", rightDistance.getDistance(DistanceUnit.INCH));
+            //telemetry.addData("Left", leftDistance.getDistance(DistanceUnit.INCH));
+            //telemetry.addData("Right", rightDistance.getDistance(DistanceUnit.INCH));
             telemetry.update();
         }
     }

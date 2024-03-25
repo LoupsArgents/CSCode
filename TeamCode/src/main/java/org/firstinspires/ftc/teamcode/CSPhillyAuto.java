@@ -945,9 +945,34 @@ public class CSPhillyAuto extends CSYorkDF {
                 sleep(300);
             }
         }
-        goStraight(.5, 25, -90.0*alliance);
-        //goStraight(.7, 70, -90.0*alliance);
-        //because I only have the strafing coded for the blue side so far
+        goStraight(.7, 85, -90.0*alliance);
+        endStop.setPosition(endStop45Pos);
+        armAboveStack();
+        wrist.setPosition(wristAboveStackPos);
+        sleep(1000);
+        double distFromIdeal = frontRightUltraDistance() - 8; //used to be -6.5
+        RobotLog.aa("Dist", String.valueOf(distFromIdeal));
+        //sleep(30000);
+        if(distFromIdeal > 0){
+            goStraight(.5, distFromIdeal, -90.0*alliance);
+        }
+        if(alliance == 1){
+            strafeLeftUntilPixel(.4, -90.0*alliance);
+            strafeRight(.4, 1.5, 5, -90.0*alliance);
+        }else if(alliance == -1){
+            strafeRightUntilPixel(.4, -90.0*alliance);
+            strafeLeft(.4, 1.5, 5, -90.0*alliance);
+        }
+        //then we lower the arm, close claw, etc.
+        stallArm();
+        sleep(250);
+        closeClaw();
+        sleep(500);
+        if(alliance == 1){
+            strafeRight(.7, 5, 5, -90.0*alliance);
+        }else if(alliance == -1){
+            strafeLeft(.7, 5, 5, -90.0*alliance);
+        }
         sleep(30000);
     }
     public void getBackToBoardThroughTruss(String result, int alliance){

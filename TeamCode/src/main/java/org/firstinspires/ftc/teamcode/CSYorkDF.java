@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Size;
 
-import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -31,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Autonomous
-
 public class CSYorkDF extends LinearOpMode {
     Blinker control_Hub;
     IMU imu;
@@ -54,10 +52,7 @@ public class CSYorkDF extends LinearOpMode {
     ServoImplEx cameraBar;
     Servo endStop;
     VisionPortal portal;
-    Rev2mDistanceSensor leftDistance;
-    Rev2mDistanceSensor rightDistance;
-    //Rev2mDistanceSensor centerDistance;
-    AnalogInput ultra;
+    AnalogInput frontRightUltrasonic;
     RevColorSensorV3 clawLeftSensor;
     RevColorSensorV3 clawRightSensor;
     EverythingProcessor processor;
@@ -80,11 +75,13 @@ public class CSYorkDF extends LinearOpMode {
     double clawDownInitClose = .61;
     double clawDownClose = 0.635;//.385; //0.42; //was .47 before servo broke //0.435 was good but didn't stall enough, 0.69 stalled a lot
     double wristDownPos = 0.135;
+    double wristAboveStackPos = .09; //.07
     double wristAlmostDown = 0.15;//for flipping the arm up
     double wristStraightUp = 0.45;
     double wristTuckedIn = 0.735;
     double wristScoringPos = 0.54;
     double arm1ScoringPos = 0.07;//was 0.1
+    double arm1AboveStackPos = .72;
     double arm1AlmostUp = .2; //was 0.37, then 0.2025, then .345, then .175
     double arm1AlmostDown = 0.65; // was 0.6, .7 was too much, 0.65 was too low, then 0.6
     double arm1DownPos = 0.82; //.8
@@ -148,7 +145,6 @@ public class CSYorkDF extends LinearOpMode {
             telemetry.addData("Heading", newGetHeading());
             telemetry.addData("StrafeTicks", strafeOdo.getCurrentPosition());
             telemetry.addData("ForwardTicks", forwardOdo.getCurrentPosition());
-            telemetry.addData("Ultrasonic", getUltraDistance());
             //telemetry.addData("LeftClaw", clawLeftSensor.getDistance(DistanceUnit.INCH));
             //telemetry.addData("RightClaw", clawRightSensor.getDistance(DistanceUnit.INCH));
             //30 inches is seeing the truss
@@ -447,6 +443,67 @@ public class CSYorkDF extends LinearOpMode {
     public void strafeLeft(double power, double inches, double timeLimit) {
         strafeLeft(power, inches, timeLimit, newGetHeading());
     }
+    public void strafeRightUntilPixel(double power, double idealHeading){
+        double multiplier;
+        motorFR.setPower(-power);
+        motorFL.setPower(power);
+        motorBR.setPower(power);
+        motorBL.setPower(-power);
+        double targetheading = idealHeading;
+        RobotLog.aa("StrafeRight", "goal heading is " + targetheading);
+        boolean isDone = (clawLeftSensor.getDistance(DistanceUnit.INCH) < 2.2 || clawRightSensor.getDistance(DistanceUnit.INCH) < 2.2);
+        while(!isDone && opModeIsActive()){
+            liftWithinLoop();
+            double heading = newGetHeading();
+            if(heading-targetheading>=0){
+                multiplier = .1*(heading-targetheading)+1;
+                motorFL.setPower(power*multiplier);
+                motorBL.setPower(-power);
+                motorFR.setPower(-power*multiplier);
+                motorBR.setPower(power);
+            }else if(heading-targetheading<0){
+                multiplier = -.1*(heading-targetheading)+1;
+                motorFR.setPower(-power);
+                motorBR.setPower(power*multiplier);
+                motorFL.setPower(power);
+                motorBL.setPower(-power*multiplier);
+            }
+            isDone = (clawLeftSensor.getDistance(DistanceUnit.INCH) < 2.2 || clawRightSensor.getDistance(DistanceUnit.INCH) < 2.2);
+        }
+        stopMotors();
+    }
+    public void strafeLeftUntilPixel(double power, double idealHeading){
+        double multiplier;
+        motorFR.setPower(power);
+        motorFL.setPower(-power);
+        motorBR.setPower(-power);
+        motorBL.setPower(power);
+        double targetheading = idealHeading;
+        RobotLog.aa("StrafeLeft", "goal heading is " + targetheading);
+        boolean isDone = (clawLeftSensor.getDistance(DistanceUnit.INCH) < 2.3 || clawRightSensor.getDistance(DistanceUnit.INCH) < 2.3);
+        while(!isDone && opModeIsActive()){
+            liftWithinLoop();
+            //RobotLog.aa("Inches", String.valueOf(newInchesTraveled(strafeStartTicks, strafeCurrentTicks)));
+            double heading = newGetHeading();
+            if(heading-targetheading>=0){
+                multiplier = .1*(heading-targetheading)+1;
+                motorFL.setPower(-power);
+                motorBL.setPower(power*multiplier);
+                motorFR.setPower(power);
+                motorBR.setPower(-power*multiplier);
+            }else if(heading-targetheading<0){
+                multiplier = -.1*(heading-targetheading)+1;
+                motorFR.setPower(power*multiplier);
+                motorBR.setPower(-power);
+                motorFL.setPower(-power*multiplier);
+                motorBL.setPower(power);
+            }
+            isDone = (clawLeftSensor.getDistance(DistanceUnit.INCH) < 2.2 || clawRightSensor.getDistance(DistanceUnit.INCH) < 2.2);
+        }
+        RobotLog.aa("Status", "Stopping");
+        stopMotors();
+    }
+
     public void gyroTurn(double power, double degrees){ //right is negative
         if(opModeIsActive()){
             double gyroinitial = newGetHeading();
@@ -599,10 +656,7 @@ public class CSYorkDF extends LinearOpMode {
         }*/
         backCamera = hardwareMap.get(WebcamName.class, "Webcam 1");
         frontCamera = hardwareMap.get(WebcamName.class, "Webcam 2");
-        //leftDistance = hardwareMap.get(Rev2mDistanceSensor.class, "leftProp");
-        //rightDistance = hardwareMap.get(Rev2mDistanceSensor.class, "rightProp");
-        ultra = hardwareMap.analogInput.get("ultrasonic");
-        //centerDistance = hardwareMap.get(Rev2mDistanceSensor.class, "centerDistance");
+        frontRightUltrasonic = hardwareMap.get(AnalogInput.class, "frontRightUltra");
         clawLeftSensor = hardwareMap.get(RevColorSensorV3.class, "clawLeft");
         clawRightSensor = hardwareMap.get(RevColorSensorV3.class, "clawRight");
         processor = new EverythingProcessor();
@@ -729,6 +783,7 @@ public class CSYorkDF extends LinearOpMode {
     public void armDown(){
         arm1.setPosition(arm1DownPos);
     }
+    public void armAboveStack(){ arm1.setPosition(arm1AboveStackPos); }
     public void armAlmostDown(){
         arm1.setPosition(arm1AlmostDown);
     }
@@ -868,30 +923,13 @@ public class CSYorkDF extends LinearOpMode {
         dists[1] = frontDistAvg;
         return dists;
     }
-   /* public DistanceSensorResult getDistances(){
-        double leftResult = readDistanceSensor(leftDistance);
-        double centerResult = 0.0; //readDistanceSensor(centerDistance);
-        double rightResult = readDistanceSensor(rightDistance);
-        return new DistanceSensorResult(leftResult, centerResult, rightResult);
-    }
-    public double readDistanceSensor(Rev2mDistanceSensor sensor){
-        double total = 0;
-        for(int i = 0; i < 5; i++) {
-            double val = sensor.getDistance(DistanceUnit.INCH);
-            if (val == 0.0 || val > 330) {
-                val = sensor.getDistance(DistanceUnit.INCH);
-                total += val;
-            }
-        }
-        return total / 5;
-    }*/
 
     public String getPropResult(double leftAv, double rightAv, String processorResult){
         String cameraResult = processorResult;
         return cameraResult;
     }
-    public double getUltraDistance(){
-        double volt = ultra.getVoltage();
-        return 205.849 * volt - 28.0321;
+    public double frontRightUltraDistance(){ //should return in inches if I'm doing this right
+        double volt = frontRightUltrasonic.getVoltage();
+        return (205.849 * volt - 28.0321)/2.54;
     }
 }
