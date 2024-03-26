@@ -75,32 +75,22 @@ public class ServoPositionsTest extends LinearOpMode {
     double s2current;
     boolean change1 = true;
     boolean change2 = true;
-    ServoImplEx wrist;
-    ServoImplEx endStop;
     public void runOpMode() {
-        String servo1Name = "endStop";
-        String servo2Name = "wrist";
+        String servo1Name = "rightLeadScrewServo";
+        String servo2Name = "leftLeadScrewServo";
         servo1 = hardwareMap.get(Servo.class, servo1Name);
         servo2 = hardwareMap.get(Servo.class, servo2Name);
-        /*wrist = hardwareMap.get(ServoImplEx.class, "wrist");
-        endStop = hardwareMap.get(ServoImplEx.class, "endStop");
-        wrist.setPosition(0.13);
-        endStop.setPosition(0.565);
+        //on broken scrimmagebot configurations: claw is part of wrist rotation, poleGuide is v4b
         //double armStack45Pos = 0.937; //was .935 then .93
         //    double armStack34Pos = 0.947; //was .945
         //    double armStack23Pos = 0.955; //was .955, then .96, then .957
-        /*
-        * double clawUpOpen = .525; //0.51;
-    double clawUpClose = .38; //0.355;
-    double clawDownOpen = .525; //0.53;
-    double clawDownClose = .435; //0.42;*/
-        s1p1 = 0.5;
-        s1p2 = 0.5;
-        s1current = 0.5;
-        s2p1 = 0.5;
-        s2p2 = 0.5;
-        s2current = 0.5;
-        servo1.setPosition(0.3925); //s1current - BC changed
+        s1p1 = .5; // 0.97;
+        s1p2 = .5; //0.97;
+        s1current = .5; //0.97
+        s2p1 = .5; //.655
+        s2p2 = .5; //.655
+        s2current = .5; //.655
+        servo1.setPosition(s1current);
         servo2.setPosition(s2current);
         waitForStart();
         while (opModeIsActive()) {
