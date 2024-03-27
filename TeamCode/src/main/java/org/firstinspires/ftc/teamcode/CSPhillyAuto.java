@@ -74,6 +74,8 @@ public class CSPhillyAuto extends CSYorkDF {
                 telemetry.addData("Parking", "Near wall");
                 telemetry.addLine("Press B on Gamepad 1 to switch to parking away from wall");
             }
+            telemetry.addData("ForwardOdo", forwardOdo.getCurrentPosition());
+            telemetry.addData("StrafeOdo", strafeOdo.getCurrentPosition());
             telemetry.addData("Alliance", alliance);
             if(gamepad1.x) parkingNearWall = true;
             if(gamepad1.b) parkingNearWall = false;
@@ -159,7 +161,7 @@ public class CSPhillyAuto extends CSYorkDF {
             sleep(500);
             positionOnBackdrop(r, alliance, 2);
             sleep(500);
-            clawUp.setPosition(clawUpLessOpen); //openUpperClaw();
+            clawUp.setPosition(clawUpSlightlyOpen); //used to be clawUpLessOpen; switched to the one they use in teleop
             long start = System.nanoTime();
             activateFrontCamera();
             long now = System.nanoTime();
@@ -279,7 +281,8 @@ public class CSPhillyAuto extends CSYorkDF {
         sleep(500);
         positionOnBackdrop(result, alliance, 2);
         sleep(500);
-        openUpperClaw();
+        //openUpperClaw();
+        clawUp.setPosition(clawUpSlightlyOpen);
         long start = System.nanoTime();
         activateFrontCamera();
         long now = System.nanoTime();
@@ -802,8 +805,6 @@ public class CSPhillyAuto extends CSYorkDF {
         getBackToBoardThroughTruss(result, alliance);
     }
     public void getToStackThroughTruss(String result, int alliance){
-        double endStopPosForCycle = endStop45Pos;
-        double wristPosForCycle = wristStack45Pos;
         goStraight(.75, 2, -90.0*alliance); //power was .4, then .55, then .65; increased distance from 5; was 7; was 5
         openClaw();
         armAlmostDown();
@@ -860,11 +861,11 @@ public class CSPhillyAuto extends CSYorkDF {
                 sleep(300);
             }
         }else if(result.equals("Center") && alliance == 1){
-            double idealInches = 22;
+            double idealInches = 20.5;
             int startPos = strafeOdo.getCurrentPosition();
             strafeRight(.7, 10, 5, -90.0*alliance);
-            strafeRight(.5, 7, 5, -90.0*alliance);
-            strafeRight(.3, 5, 5, -90.0*alliance);
+            strafeRight(.5, 6, 5, -90.0*alliance);
+            strafeRight(.3, 4.5, 5, -90.0*alliance);
             sleep(300);
             int endPos = strafeOdo.getCurrentPosition();
             double traveled = Math.abs(newInchesTraveled(startPos, endPos));
@@ -946,11 +947,12 @@ public class CSPhillyAuto extends CSYorkDF {
             }
         }
         goStraight(.7, 85, -90.0*alliance);
+        superOpenClaw();
         endStop.setPosition(endStop45Pos);
         armAboveStack();
         wrist.setPosition(wristAboveStackPos);
         sleep(1000);
-        double distFromIdeal = frontRightUltraDistance() - 8; //used to be -6.5
+        double distFromIdeal = frontRightUltraDistance() - 5.5;
         RobotLog.aa("Dist", String.valueOf(distFromIdeal));
         //sleep(30000);
         if(distFromIdeal > 0){
@@ -958,25 +960,38 @@ public class CSPhillyAuto extends CSYorkDF {
         }
         if(alliance == 1){
             strafeLeftUntilPixel(.4, -90.0*alliance);
-            strafeRight(.4, 1.5, 5, -90.0*alliance);
+            //strafeRight(.3, .01, 5, -90.0*alliance);
         }else if(alliance == -1){
             strafeRightUntilPixel(.4, -90.0*alliance);
-            strafeLeft(.4, 1.5, 5, -90.0*alliance);
+            //strafeLeft(.3, .01, 5, -90.0*alliance);
         }
-        //then we lower the arm, close claw, etc.
+        //then we lower the arm+wrist, close claw, etc.
+        wrist.setPosition(wristStack45Pos);
         stallArm();
-        sleep(250);
+        wait(400);
+        goStraightForTime(.5, .25, -90.0*alliance);
+        wait(400);
         closeClaw();
-        sleep(500);
-        if(alliance == 1){
-            strafeRight(.7, 5, 5, -90.0*alliance);
-        }else if(alliance == -1){
-            strafeLeft(.7, 5, 5, -90.0*alliance);
-        }
-        sleep(30000);
+        wait(400);
+        arm1.setPosition(arm1DownPos - .1);
+        goBackward(.5, .5,-90.0*alliance);
+        wait(300);
     }
     public void getBackToBoardThroughTruss(String result, int alliance){
-
+        double moved = 0;
+        if(alliance == 1){
+            strafeRight(.7, 6, 5, -90.0*alliance);
+            sleep(300);
+            moved = moveBackRightMoreStraight(.8, 13, -90.0*alliance);
+        }else if(alliance == -1){
+            strafeLeft(.7, 6, 5, -90.0*alliance);
+            sleep(300);
+            moved = moveBackLeftMoreStraight(.8, 13, -90.0*alliance);
+        }
+        endStop.setPosition(endStopOutOfWayPos);
+        //15 inch diagonal
+        //goBackward(.7, 90-moved, -90.0*alliance);
+        sleep(30000);
     }
     public void park(int alliance, String result, boolean parkingNearWall){
         RobotLog.aa("Status", "Started parking");
