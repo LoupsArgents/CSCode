@@ -11,9 +11,9 @@ public class UltraInchTesting extends CSYorkDF{
         waitForStart();
         armAboveStack();
         wrist.setPosition(wristAboveStackPos);
-        //soooo 6.5 inches ultrasonic-to-wall is probably workable
         while(opModeIsActive()){
-            telemetry.addData("UltraDistance", frontRightUltraDistance());
+            telemetry.addData("UltraDistanceFR", frontRightUltraDistance());
+            telemetry.addData("UltraDistanceBR", backRightUltraDistance());
             telemetry.addData("ClawLeft", clawLeftSensor.getDistance(DistanceUnit.INCH));
             telemetry.addData("ClawRight", clawRightSensor.getDistance(DistanceUnit.INCH));
             // < 2.2 inches should mean that there's a pixel under there (with this .72 arm position)
