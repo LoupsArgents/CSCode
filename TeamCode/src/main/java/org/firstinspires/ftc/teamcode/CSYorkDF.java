@@ -80,7 +80,7 @@ public class CSYorkDF extends LinearOpMode {
     double clawDownInitClose = .61;
     double clawDownSuperOpen = .38;
     double clawDownClose = 0.635;//.385; //0.42; //was .47 before servo broke //0.435 was good but didn't stall enough, 0.69 stalled a lot
-    double wristDownPos = 0.135;
+    double wristDownPos = 0.145; //was 0.135
     double wristAboveStackPos = .09; //.07
     double wristAlmostDown = 0.15;//for flipping the arm up
     double wristStraightUp = 0.45;

@@ -106,7 +106,7 @@ public class CSTeleop extends LinearOpMode {
     double arm1ScoringPos = 0.07;//was 0.1, 0.085 was too shaky
     double armAlmostUp = 0.2; //was 0.37, then 0.2025, then .345, then .175 (too close to up)
     double armAlmostDown = 0.65; // 0.6 is too high, 0.705 is too low
-    double arm1DownPos = 0.82;
+    double arm1DownPos = 0.82; //wristDownPos was 0.135
     double arm2ScoringPos = 0.075; // was 0.08
     double arm2AlmostUp = 0.16; //was .345, then .175, then .185
     double arm2AlmostDown = 0.6; //was 0.61, .71 was too much, 0.66 was too low, then 0.61
@@ -162,7 +162,7 @@ public class CSTeleop extends LinearOpMode {
     boolean doAbsHeading = false;
     double idealAbsHeading = 0.0;
     double turningConst = 0.575; //was 0.575
-    double wristDownPos = 0.135;
+    double wristDownPos = 0.145; //was 0.135
     double wristAlmostDown = 0.15;//for flipping the arm up
     double wristStraightUp = 0.45;
     double wristTuckedIn = 0.735;
