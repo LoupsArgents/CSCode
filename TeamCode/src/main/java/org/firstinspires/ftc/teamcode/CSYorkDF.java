@@ -482,6 +482,45 @@ public class CSYorkDF extends LinearOpMode {
         }
         stopMotors();
     }
+    public void goStraightWithLimit(double power, double inches, double timeLimit, double idealHeading){
+        double multiplier;
+        //double processedInches = -1 * inches;
+        int forwardBackStartTicks = forwardOdo.getCurrentPosition();
+        telemetry.addData("StartTicks", forwardBackStartTicks);
+        int forwardBackCurrentTicks = forwardOdo.getCurrentPosition();
+        motorFR.setPower(power);
+        motorFL.setPower(power);
+        motorBR.setPower(power);
+        motorBL.setPower(power);
+        double targetheading = idealHeading;
+        RobotLog.aa("GoStraight", "goal heading is " + targetheading);
+        long startTime = System.currentTimeMillis();
+        long currentTime = System.currentTimeMillis();
+        while(newInchesTraveled(forwardBackStartTicks, forwardBackCurrentTicks) < inches && (currentTime-startTime) < timeLimit*1000 && opModeIsActive()){
+            liftWithinLoop();
+            double heading = newGetHeading();
+            //RobotLog.aa("CurrentHeading", String.valueOf(heading));
+            if(heading-targetheading<0){  //we need to turn left
+                //RobotLog.aa("Going", "Left");
+                multiplier = -.1*(heading-targetheading)+1;
+                motorFL.setPower(power);
+                motorBL.setPower(power);
+                motorFR.setPower(power * multiplier);
+                motorBR.setPower(power * multiplier);
+            }else if(heading-targetheading>=0){
+                //RobotLog.aa("Going", "Right");
+                multiplier = .1*(heading-targetheading)+1;
+                motorFR.setPower(power);
+                motorBR.setPower(power);
+                motorFL.setPower(power*multiplier);
+                motorBL.setPower(power*multiplier);
+            }
+            currentTime = System.currentTimeMillis();
+            forwardBackCurrentTicks = forwardOdo.getCurrentPosition();
+        }
+        stopMotors();
+    }
+
     public void strafeRightUntilPixel(double power, double idealHeading){
         double multiplier;
         motorFR.setPower(-power);
@@ -856,6 +895,7 @@ public class CSYorkDF extends LinearOpMode {
             goBackward(.4, 1);
             sleep(100);
             if(!processor.getIsSeeingPixel()){
+                RobotLog.aa("Vision", "failed");
                 endStop.setPosition(endStopOutOfWayPos);
                 sleep(1000);
                 armDown();

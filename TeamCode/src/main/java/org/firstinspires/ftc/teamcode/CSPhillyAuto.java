@@ -12,7 +12,6 @@ public class CSPhillyAuto extends CSYorkDF {
     boolean parkingNearWall = false;
     int pixelsOnStack = 5;
     int delay = 0;
-
     public void runOpMode(){}
     public void doRun(String alliance, boolean isNear, boolean isWall){ //1 is blue, -1 is red
         if(isWall) parkingNearWall = true;
@@ -20,7 +19,6 @@ public class CSPhillyAuto extends CSYorkDF {
         if(alliance.equals("Blue")) allianceNum = 1;
         if(alliance.equals("Red")) allianceNum = -1;
         String result = onInit(allianceNum, isNear);
-        //waitForStart();
         onRun(result, allianceNum, isNear, isWall);
     }
     public String onInit(int alliance, boolean isNear){ //returns the team prop result
@@ -810,6 +808,7 @@ public class CSPhillyAuto extends CSYorkDF {
         armAlmostDown();
         wrist.setPosition(wristAlmostDown);
         liftIdealPos = liftInitial;
+        processor.setMode(EverythingProcessor.ProcessorMode.PIXEL);
         wait(250);
         //we are always 1 inch to the robot-left of the left april tag
         //we are always 1 inch to the robot-right of the center april tag
@@ -946,36 +945,91 @@ public class CSPhillyAuto extends CSYorkDF {
                 sleep(300);
             }
         }
-        goStraight(.7, 85, -90.0*alliance);
-        superOpenClaw();
-        endStop.setPosition(endStop45Pos);
-        armAboveStack();
-        wrist.setPosition(wristAboveStackPos);
-        sleep(700);
-        double distFromIdeal = frontRightUltraDistance() - 5.5;
-        RobotLog.aa("Dist", String.valueOf(distFromIdeal));
-        //sleep(30000);
-        if(distFromIdeal > 0){
-            goStraight(.5, distFromIdeal, -90.0*alliance);
+        arm1.setPosition(arm1DownPos + .05);
+        if((alliance == 1 && result.equals("Right")) || (alliance == -1 && result.equals("Left"))) {
+            goStraight(.7, 85, -90.0 * alliance); //was 85 inches
+        }else{
+            goStraight(.7, 82, -90.0*alliance);
         }
-        if(alliance == 1){
-            strafeLeftUntilPixel(.4, -90.0*alliance);
-            //strafeRight(.3, .01, 5, -90.0*alliance);
-        }else if(alliance == -1){
-            strafeRightUntilPixel(.4, -90.0*alliance);
-            //strafeLeft(.3, .01, 5, -90.0*alliance);
+        if((alliance == 1 && !result.equals("Right")) || (alliance == -1 && !result.equals("Left"))){
+            cameraBar.setPosition(camUsePos);
         }
-        //then we lower the arm+wrist, close claw, etc.
-        wrist.setPosition(wristStack45Pos);
-        stallArm();
-        wait(400);
-        goStraightForTime(.5, .25, -90.0*alliance);
-        wait(400);
-        closeClaw();
-        wait(400);
-        arm1.setPosition(arm1DownPos - .1);
-        goBackward(.5, .5,-90.0*alliance);
-        wait(300);
+        if((alliance == 1 && result.equals("Right") || (alliance == -1 && result.equals("Left")))) {
+            //use ultrasonic distance from wall to find stack because the color sensors needed to be moved back
+            //26.5 inches from the wall by the ultrasonic should be good
+            superOpenClaw();
+            endStop.setPosition(endStop45Pos);
+            armAboveStack();
+            wrist.setPosition(wristAboveStackPos);
+            sleep(1000);
+            double distFromIdeal = frontRightUltraDistance() - 5.5;
+            RobotLog.aa("Dist", String.valueOf(distFromIdeal));
+            //sleep(30000);
+            if(distFromIdeal > 0){
+                goStraightWithLimit(.5, distFromIdeal, .75, -90.0*alliance);
+            }
+            /*if (alliance == 1) {
+                strafeLeftUntilPixel(.4, -90.0 * alliance);
+                //strafeRight(.3, .01, 5, -90.0*alliance);
+            } else if (alliance == -1) {
+                strafeRightUntilPixel(.4, -90.0 * alliance);
+                //strafeLeft(.3, .01, 5, -90.0*alliance);
+            }*/
+            sleep(500);
+            distFromIdeal = 26.5 - backRightUltraDistance();
+            if(distFromIdeal < 0){
+                sleep(100);
+                distFromIdeal = 26.5 - backRightUltraDistance();
+            }
+            if(alliance == 1){
+                strafeLeft(.5, distFromIdeal, 5, -90.0*alliance);
+            }else if(alliance == -1){
+                strafeRight(.5, distFromIdeal, 5, -90.0*alliance);
+            }
+            //then we lower the arm+wrist, close claw, etc.
+            wrist.setPosition(wristStack45Pos);
+            stallArm();
+            wait(400);
+            goStraightForTime(.5, .25, -90.0 * alliance);
+            wait(400);
+            closeClaw();
+            wait(400);
+            arm1.setPosition(arm1DownPos - .1);
+            goBackward(.5, .5, -90.0 * alliance);
+            wait(300);
+            sleep(30000);
+        }else{
+            //we can actually use the auto-pickup here without potentially messing up the purple pixel on the spike mark
+            endStop.setPosition(endStop45Pos);
+            stallArm();
+            wrist.setPosition(wristStack45Pos);
+            wait(400);
+            if(alliance == 1){
+                strafeLeft(.6, 22, 5, -90.0*alliance);
+            }else if(alliance == -1){
+                strafeRight(.6, 22, 5, -90.0*alliance);
+            }
+            wait(500); //why it no work??? why it no WOOOOOORRRRRRRRK? why it no WOOOOOOOOOOOOOOOORRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRK???
+            //RobotLog.aa("Streaming", Boolean.toString(portal.getCameraState() == VisionPortal.CameraState.STREAMING));
+            //RobotLog.aa("SeeingPixel", String.valueOf(processor.getIsSeeingPixel()));
+            ZonedDateTime dt = ZonedDateTime.now();
+            String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
+            portal.saveNextFrameRaw("PhillyAutoNearStack " + time);
+            RobotLog.aa("Status", "Pre-pickup");
+            centerOnClosestStack(processor);
+            RobotLog.aa("Status", "After pickup");
+            cameraBar.setPosition(camTuckedIn);
+            long start = System.nanoTime();
+            activateBackCamera();
+            long now = System.nanoTime();
+            long elapsed = now - start;
+            if((elapsed/Math.pow(10, 6)) < 500){
+                wait((500 - (int)(elapsed/Math.pow(10, 6))));
+            }
+            arm1.setPosition(arm1DownPos - .1);
+            goBackward(.4, .5,-90.0*alliance);
+            endStop.setPosition(endStopOutOfWayPos);
+        }
     }
     public void getBackToBoardThroughTruss(String result, int alliance){
         double moved = 0;
@@ -1027,9 +1081,9 @@ public class CSPhillyAuto extends CSYorkDF {
         armUp();
         wrist.setPosition(wristScoringPos);
         if(alliance == 1){
-            strafeLeft(.7, 22, 5, -90.0*alliance);
+            strafeLeft(.7, 17, 5, -90.0*alliance); //was 22 in
         }else if(alliance == -1){
-            strafeRight(.7, 22, 5, -90.0*alliance);
+            strafeRight(.7, 17, 5, -90.0*alliance);
         }
         wait(300);
         String s = "";
