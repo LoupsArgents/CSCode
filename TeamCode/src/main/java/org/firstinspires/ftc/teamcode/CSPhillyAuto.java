@@ -947,6 +947,7 @@ public class CSPhillyAuto extends CSYorkDF {
         }
         arm1.setPosition(arm1DownPos + .05);
         if((alliance == 1 && result.equals("Right")) || (alliance == -1 && result.equals("Left"))) {
+            closeClaw();
             goStraight(.7, 85, -90.0 * alliance); //was 85 inches
         }else{
             goStraight(.7, 82, -90.0*alliance);
@@ -957,11 +958,12 @@ public class CSPhillyAuto extends CSYorkDF {
         if((alliance == 1 && result.equals("Right") || (alliance == -1 && result.equals("Left")))) {
             //use ultrasonic distance from wall to find stack because the color sensors needed to be moved back
             //26.5 inches from the wall by the ultrasonic should be good
-            superOpenClaw();
-            endStop.setPosition(endStop45Pos);
             armAboveStack();
+            endStop.setPosition(endStop45Pos);
+            RobotLog.aa("Endstop", "Set to the stack 4-5 position");
             wrist.setPosition(wristAboveStackPos);
             sleep(1000);
+            superOpenClaw();
             double distFromIdeal = frontRightUltraDistance() - 5.5;
             RobotLog.aa("Dist", String.valueOf(distFromIdeal));
             //sleep(30000);
@@ -997,7 +999,7 @@ public class CSPhillyAuto extends CSYorkDF {
             arm1.setPosition(arm1DownPos - .1);
             goBackward(.5, .5, -90.0 * alliance);
             wait(300);
-            sleep(30000);
+            //sleep(30000);
         }else{
             //we can actually use the auto-pickup here without potentially messing up the purple pixel on the spike mark
             endStop.setPosition(endStop45Pos);
@@ -1009,7 +1011,7 @@ public class CSPhillyAuto extends CSYorkDF {
             }else if(alliance == -1){
                 strafeRight(.6, 22, 5, -90.0*alliance);
             }
-            wait(500); //why it no work??? why it no WOOOOOORRRRRRRRK? why it no WOOOOOOOOOOOOOOOORRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRK???
+            wait(500);
             //RobotLog.aa("Streaming", Boolean.toString(portal.getCameraState() == VisionPortal.CameraState.STREAMING));
             //RobotLog.aa("SeeingPixel", String.valueOf(processor.getIsSeeingPixel()));
             ZonedDateTime dt = ZonedDateTime.now();
