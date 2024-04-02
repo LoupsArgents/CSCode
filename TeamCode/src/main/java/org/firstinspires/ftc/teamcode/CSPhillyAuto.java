@@ -964,7 +964,12 @@ public class CSPhillyAuto extends CSYorkDF {
             wrist.setPosition(wristAboveStackPos);
             sleep(1000);
             superOpenClaw();
-            double distFromIdeal = frontRightUltraDistance() - 5.5;
+            double distFromIdeal;
+            if(alliance == 1){
+                distFromIdeal = frontRightUltraDistance() - 5.5;
+            }else{
+                distFromIdeal = frontLeftUltraDistance() - 5.5;
+            }
             RobotLog.aa("Dist", String.valueOf(distFromIdeal));
             //sleep(30000);
             if(distFromIdeal > 0){
@@ -978,10 +983,18 @@ public class CSPhillyAuto extends CSYorkDF {
                 //strafeLeft(.3, .01, 5, -90.0*alliance);
             }*/
             sleep(500);
-            distFromIdeal = 26.5 - backRightUltraDistance();
-            if(distFromIdeal < 0){
-                sleep(100);
+            if(alliance == 1) {
                 distFromIdeal = 26.5 - backRightUltraDistance();
+                if (distFromIdeal < 0) {
+                    sleep(100);
+                    distFromIdeal = 26.5 - backRightUltraDistance();
+                }
+            }else{
+                distFromIdeal = 26.5 - backLeftUltraDistance();
+                if (distFromIdeal < 0) {
+                    sleep(100);
+                    distFromIdeal = 26.5 - backLeftUltraDistance();
+                }
             }
             if(alliance == 1){
                 strafeLeft(.5, distFromIdeal, 5, -90.0*alliance);
@@ -1054,7 +1067,12 @@ public class CSPhillyAuto extends CSYorkDF {
         if((elapsed/Math.pow(10, 6)) < 700){
             sleep((700 - (int)(elapsed/Math.pow(10, 6))));
         }
-        double distToWall = backRightUltraDistance();
+        double distToWall;
+        if (alliance == 1) {
+            distToWall = backRightUltraDistance();
+        }else{
+            distToWall = backLeftUltraDistance();
+        }
         RobotLog.aa("DistToWall", String.valueOf(distToWall));
         if(Math.abs(distToWall - 4) > .5){
             if(alliance == 1){

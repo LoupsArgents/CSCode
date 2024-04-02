@@ -12,7 +12,9 @@ public class UltraInchTesting extends CSYorkDF{
         armAboveStack();
         wrist.setPosition(wristAboveStackPos);
         while(opModeIsActive()){
+            telemetry.addData("UltraDistanceFL", frontLeftUltraDistance());
             telemetry.addData("UltraDistanceFR", frontRightUltraDistance());
+            telemetry.addData("UltraDistanceBL", backLeftUltraDistance());
             telemetry.addData("UltraDistanceBR", backRightUltraDistance());
             telemetry.addData("ClawLeft", clawLeftSensor.getDistance(DistanceUnit.INCH));
             telemetry.addData("ClawRight", clawRightSensor.getDistance(DistanceUnit.INCH));

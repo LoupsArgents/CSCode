@@ -54,6 +54,8 @@ public class CSYorkDF extends LinearOpMode {
     VisionPortal portal;
     AnalogInput frontRightUltrasonic;
     AnalogInput backRightUltrasonic;
+    AnalogInput frontLeftUltrasonic;
+    AnalogInput backLeftUltrasonic;
     RevColorSensorV3 clawLeftSensor;
     RevColorSensorV3 clawRightSensor;
     EverythingProcessor processor;
@@ -815,6 +817,8 @@ public class CSYorkDF extends LinearOpMode {
         frontCamera = hardwareMap.get(WebcamName.class, "Webcam 2");
         frontRightUltrasonic = hardwareMap.get(AnalogInput.class, "frontRightUltra");
         backRightUltrasonic = hardwareMap.get(AnalogInput.class, "backRightUltra");
+        frontLeftUltrasonic = hardwareMap.get(AnalogInput.class, "frontLeftUltra");
+        backLeftUltrasonic = hardwareMap.get(AnalogInput.class, "backLeftUltra");
         clawLeftSensor = hardwareMap.get(RevColorSensorV3.class, "clawLeft");
         clawRightSensor = hardwareMap.get(RevColorSensorV3.class, "clawRight");
         processor = new EverythingProcessor();
@@ -1097,4 +1101,6 @@ public class CSYorkDF extends LinearOpMode {
     public double backRightUltraDistance(){
         return ultraDistance(backRightUltrasonic);
     }
+    public double frontLeftUltraDistance(){ return ultraDistance(frontLeftUltrasonic); }
+    public double backLeftUltraDistance(){ return ultraDistance(backLeftUltrasonic); }
 }
