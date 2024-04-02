@@ -415,7 +415,7 @@ public class CSTeleop extends LinearOpMode {
                 arm1.setPosition(arm1DownPos);
                 armSetTo = arm1DownPos;
             }
-            //updateAnalogs(camAna, wristAna);
+            updateAnalogs();
             double imuRadians = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             double nghIMU = (newGetHeadingUsesRadians(imuRadians)%360) * Math.PI/180;
             double botHeading = nghIMU;
@@ -1276,13 +1276,13 @@ public class CSTeleop extends LinearOpMode {
             }
         }
     }
-    public void updateAnalogs(AnalogInput camAna, AnalogInput wristAna) {
+    public void updateAnalogs() {
         //update arm position
         //armCurrentPosition = (armAna.getVoltage() / 3.3 * 360) - armInitial;
         //update camera bar position
-        camBarCurrentPos = (camAna.getVoltage() / 3.3 * 360) - camInit;
+        //camBarCurrentPos = (camAna.getVoltage() / 3.3 * 360) - camInit;
         //update wrist position
-        wristCurrentPos = (wristAna.getVoltage() / 3.3 * 360) - wristInit;
+        //wristCurrentPos = (wristAna.getVoltage() / 3.3 * 360) - wristInit;
         //update all odo encoders
         //odometry.updatePose(); //I think???
         //update lift encoder
