@@ -283,15 +283,15 @@ public class CSTeleop extends LinearOpMode {
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
-        AnalogInput armAna = hardwareMap.get(AnalogInput.class, "armAna");
-        armCurrentPosition = armAna.getVoltage() / 3.3 * 360;
-        armInitial = armCurrentPosition;
-        AnalogInput wristAna = hardwareMap.get(AnalogInput.class, "wriatAna");
-        wristCurrentPos = armAna.getVoltage() / 3.3 * 360;
-        wristInit = wristCurrentPos;
-        AnalogInput camAna = hardwareMap.get(AnalogInput.class, "camAna");
-        camBarCurrentPos = armAna.getVoltage() / 3.3 * 360;
-        camInit = wristCurrentPos;
+        //AnalogInput armAna = hardwareMap.get(AnalogInput.class, "armAna");
+        //armCurrentPosition = armAna.getVoltage() / 3.3 * 360;
+        //armInitial = armCurrentPosition;
+        //AnalogInput wristAna = hardwareMap.get(AnalogInput.class, "wriatAna");
+        //wristCurrentPos = wristAna.getVoltage() / 3.3 * 360;
+        //wristInit = wristCurrentPos;
+        //AnalogInput camAna = hardwareMap.get(AnalogInput.class, "camAna");
+        //camBarCurrentPos = camAna.getVoltage() / 3.3 * 360;
+        //camInit = camBarCurrentPos;
 
         motorFR = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
         motorFL = hardwareMap.get(DcMotorEx.class, "motorFLandStrafeOdo");
@@ -415,7 +415,7 @@ public class CSTeleop extends LinearOpMode {
                 arm1.setPosition(arm1DownPos);
                 armSetTo = arm1DownPos;
             }
-            updateAnalogs(armAna, camAna, wristAna);
+            //updateAnalogs(camAna, wristAna);
             double imuRadians = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             double nghIMU = (newGetHeadingUsesRadians(imuRadians)%360) * Math.PI/180;
             double botHeading = nghIMU;
@@ -461,9 +461,9 @@ public class CSTeleop extends LinearOpMode {
             telemetry.addData("canChangeLiftLevel", canChangeLiftLevel);
             telemetry.addData("-gamepad2.left_stick_y", -gamepad2.left_stick_y);
             timer.reset();
-            telemetry.addData("armAna", armCurrentPosition);
-            telemetry.addData("wristAna", wristCurrentPos);
-            telemetry.addData("camAna", camBarCurrentPos);
+            //telemetry.addData("armAna", armCurrentPosition);
+            //telemetry.addData("wristAna", wristCurrentPos);
+            //telemetry.addData("camAna", camBarCurrentPos);
             telemetry.addData("botHeading", botHeading);
             //telemetry.addData("error", error);
             //telemetry.addData("idealAbsHeading", idealAbsHeading);
@@ -871,7 +871,7 @@ public class CSTeleop extends LinearOpMode {
                 pixelRow++;
                 liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange + secondPixelChange;
                 //liftIdealPos = 0.2; //BC for testing times
-            } else if (!gamepad2.y && !gamepad2.a) {
+            } else if (!gamepad2.y && !gamepad2.a && !gamepad2.x && !gamepad2.b) {
                 canChangeLiftLevel = true;
             }
             if (gamepad2.a && !canDoEndgame && !isJoysticking && canChangeLiftLevel && armSetTo == arm1ScoringPos) {
@@ -882,7 +882,21 @@ public class CSTeleop extends LinearOpMode {
                 } else {
                     liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange + secondPixelChange;
                 }
-            } else if (!gamepad2.a && !gamepad2.y) {
+            } else if (!gamepad2.y && !gamepad2.a && !gamepad2.x && !gamepad2.b) {
+                canChangeLiftLevel = true;
+            }
+            if (gamepad2.x && !canDoEndgame && !isJoysticking && canChangeLiftLevel && armSetTo == arm1ScoringPos) {
+                canChangeLiftLevel = false;
+                pixelRow = 3;
+                liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange + secondPixelChange;
+            } else if (!gamepad2.y && !gamepad2.a && !gamepad2.x && !gamepad2.b) {
+                canChangeLiftLevel = true;
+            }
+            if (gamepad2.b && !canDoEndgame && !isJoysticking && canChangeLiftLevel && armSetTo == arm1ScoringPos) {
+                canChangeLiftLevel = false;
+                pixelRow = 6;
+                liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange + secondPixelChange;
+            } else if (!gamepad2.y && !gamepad2.a && !gamepad2.x && !gamepad2.b) {
                 canChangeLiftLevel = true;
             }
             if (gamepad2.back) {
@@ -1262,9 +1276,9 @@ public class CSTeleop extends LinearOpMode {
             }
         }
     }
-    public void updateAnalogs(AnalogInput armAna, AnalogInput camAna, AnalogInput wristAna) {
+    public void updateAnalogs(AnalogInput camAna, AnalogInput wristAna) {
         //update arm position
-        armCurrentPosition = (armAna.getVoltage() / 3.3 * 360) - armInitial;
+        //armCurrentPosition = (armAna.getVoltage() / 3.3 * 360) - armInitial;
         //update camera bar position
         camBarCurrentPos = (camAna.getVoltage() / 3.3 * 360) - camInit;
         //update wrist position

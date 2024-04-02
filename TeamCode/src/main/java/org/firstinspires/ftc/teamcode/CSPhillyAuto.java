@@ -670,9 +670,9 @@ public class CSPhillyAuto extends CSYorkDF {
                 strafeRight(.6, 25, 5, -90.0*alliance); //powers on these were .4, then .6, then .7
             }
             sleep(300); //was 500
-        }else if(result.equals("Center")){
+        }else if(result.equals("Center")){ //we need this to have different distances based on alliance because of the board-centricity problem
             if(alliance == 1){
-                inchesMoved = moveForwardLeft(.85, 21, -90.0*alliance);
+                inchesMoved = moveForwardLeft(.85, 23, -90.0*alliance); //sounds like blue needs to be further? was 21 inches
             }else if(alliance == -1){
                 inchesMoved = moveForwardRight(.85, 21, -90.0*alliance); //powers were .4, then .6, then .7
             }
