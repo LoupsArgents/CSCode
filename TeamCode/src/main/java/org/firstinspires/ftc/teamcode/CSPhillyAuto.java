@@ -181,36 +181,38 @@ public class CSPhillyAuto extends CSYorkDF {
             }else{ //is going through truss near wall
                 cycleThroughTruss(result, alliance);
             }
-            goStraight(.7, 2, -90.0 * alliance);
-            closeClaw();
-            liftIdealPos = liftInitial;
-            liftPos = -((liftEncoder.getCurrentPosition() / ticksPerRotation) - liftInitial);
-            while (Math.abs(liftIdealPos - liftPos) > liftTolerance && opModeIsActive()) {
-                liftWithinLoop();
-                RobotLog.aa("Error", String.valueOf(Math.abs(liftIdealPos - liftPos)));
-            }
-            armAlmostDown();
-            wrist.setPosition(wristAlmostDown);
-            sleep(1000);
-            armDown();
-            wrist.setPosition(wristDownPos);
-            String s;
-            if (alliance == 1) {
-                //this bit is figuring out where to park based on where you dropped the white pixel based on
-                //the variable result, which is where you dropped the yellow
-                if (!result.equals("Right")) {
-                    s = "Right";
-                } else {
-                    s = "Center";
+            if(!isWall) {
+                goStraight(.7, 2, -90.0 * alliance);
+                closeClaw();
+                liftIdealPos = liftInitial;
+                liftPos = -((liftEncoder.getCurrentPosition() / ticksPerRotation) - liftInitial);
+                while (Math.abs(liftIdealPos - liftPos) > liftTolerance && opModeIsActive()) {
+                    liftWithinLoop();
+                    RobotLog.aa("Error", String.valueOf(Math.abs(liftIdealPos - liftPos)));
                 }
-            } else {
-                if (!result.equals("Left")) {
-                    s = "Left";
+                armAlmostDown();
+                wrist.setPosition(wristAlmostDown);
+                sleep(1000);
+                armDown();
+                wrist.setPosition(wristDownPos);
+                String s;
+                if (alliance == 1) {
+                    //this bit is figuring out where to park based on where you dropped the white pixel based on
+                    //the variable result, which is where you dropped the yellow
+                    if (!result.equals("Right")) {
+                        s = "Right";
+                    } else {
+                        s = "Center";
+                    }
                 } else {
-                    s = "Center";
+                    if (!result.equals("Left")) {
+                        s = "Left";
+                    } else {
+                        s = "Center";
+                    }
                 }
+                park(alliance, s, parkingNearWall); //once I get this figured out
             }
-            park(alliance, s, parkingNearWall); //once I get this figured out
         }else{
             armAlmostDown();
             wrist.setPosition(wristAlmostDown);
@@ -962,7 +964,7 @@ public class CSPhillyAuto extends CSYorkDF {
             endStop.setPosition(endStop45Pos);
             RobotLog.aa("Endstop", "Set to the stack 4-5 position");
             wrist.setPosition(wristAboveStackPos);
-            sleep(1000);
+            sleep(500); //see if there's any way to reduce this without causing problems - to 750 or perhaps 500; used to be 1000
             superOpenClaw();
             double distFromIdeal;
             if(alliance == 1){
@@ -971,17 +973,9 @@ public class CSPhillyAuto extends CSYorkDF {
                 distFromIdeal = frontLeftUltraDistance() - 5.5;
             }
             RobotLog.aa("Dist", String.valueOf(distFromIdeal));
-            //sleep(30000);
             if(distFromIdeal > 0){
                 goStraightWithLimit(.5, distFromIdeal, .75, -90.0*alliance);
             }
-            /*if (alliance == 1) {
-                strafeLeftUntilPixel(.4, -90.0 * alliance);
-                //strafeRight(.3, .01, 5, -90.0*alliance);
-            } else if (alliance == -1) {
-                strafeRightUntilPixel(.4, -90.0 * alliance);
-                //strafeLeft(.3, .01, 5, -90.0*alliance);
-            }*/
             sleep(500);
             if(alliance == 1) {
                 distFromIdeal = 26.5 - backRightUltraDistance();
@@ -1006,7 +1000,7 @@ public class CSPhillyAuto extends CSYorkDF {
             stallArm();
             wait(400);
             goStraightForTime(.5, .25, -90.0 * alliance);
-            wait(400);
+            wait(400); //we could have less of a wait
             closeClaw();
             wait(400);
             arm1.setPosition(arm1DownPos - .1);
@@ -1074,22 +1068,27 @@ public class CSPhillyAuto extends CSYorkDF {
             distToWall = backLeftUltraDistance();
         }
         RobotLog.aa("DistToWall", String.valueOf(distToWall));
-        if(Math.abs(distToWall - 4) > .5){
+        double ideal = 4.5;
+        if(Math.abs(distToWall - ideal) > .5){
             if(alliance == 1){
-                if(distToWall < 4){
+                if(distToWall < ideal){
                     //too close - strafe left
-                    strafeLeft(.4, 4-distToWall, 5, -90.0*alliance);
-                }else if(distToWall > 4){
+                    RobotLog.aa("Strafing", (ideal-distToWall) + " away");
+                    strafeLeft(.4, ideal-distToWall, 5, -90.0*alliance);
+                }else if(distToWall > ideal){
                     //too far - strafe right
-                    strafeRight(.4, distToWall-4, 5, -90.0*alliance);
+                    RobotLog.aa("Strafing", (distToWall-ideal) + " closer");
+                    strafeRight(.4, distToWall-ideal, 5, -90.0*alliance);
                 }
             }else if(alliance == -1){
-                if(distToWall < 4){
+                if(distToWall < ideal){
                     //too close - strafe right
-                    strafeRight(.4, 4-distToWall, 5, -90.0*alliance);
-                }else if(distToWall > 4){
+                    RobotLog.aa("Strafing", (ideal-distToWall) + " away");
+                    strafeRight(.4, ideal-distToWall, 5, -90.0*alliance);
+                }else if(distToWall > ideal){
                     //too far - strafe left
-                    strafeLeft(.4, distToWall-4, 5, -90.0*alliance);
+                    RobotLog.aa("Strafing", (distToWall-ideal) + " closer");
+                    strafeLeft(.4, distToWall-ideal, 5, -90.0*alliance);
                 }
             }
             sleep(300);
