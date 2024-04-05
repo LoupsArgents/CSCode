@@ -1196,7 +1196,7 @@ public class CSTeleop extends LinearOpMode {
                     leadScrewsDownEnd = false;
                     leadScrewsManual = true;
                 }
-                if (gamepad2.x) {
+                if (gamepad2.x && lss2SetTo == lss2UpPos) {
                     leadScrewsManual = false;
                     useLeadScrews = true;
                 }
