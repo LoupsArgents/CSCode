@@ -355,9 +355,9 @@ public class CSPhillyAuto extends CSYorkDF {
             absoluteHeading(.2, -90.0*alliance);
             closeLowerClaw();
             if(alliance == 1){
-                strafeLeft(.7, 19, 5, -90.0*alliance); //power was .6, was 22in
+                strafeLeft(.7, 20.5, 5, -90.0*alliance); //was 19 inches, but nicked truss
             }else if(alliance == -1){
-                strafeRight(.7, 19, 5, -90.0*alliance);
+                strafeRight(.7, 20.5, 5, -90.0*alliance);
             }
             sleep(300); //was 500
             goBackward(.7, 50, -90.0*alliance); //power was .6
@@ -506,9 +506,9 @@ public class CSPhillyAuto extends CSYorkDF {
             absoluteHeading(.2, -90.0*alliance);
             sleep(300); //was 500
             if(alliance == 1){
-                strafeRight(.5, 6.5, 5, -90.0*alliance);
+                strafeRight(.5, 7, 5, -90.0*alliance); //should be a little farther - was 6.5
             }else if(alliance == -1){
-                strafeLeft(.5, 6.5, 5, -90.0*alliance);
+                strafeLeft(.5, 7, 5, -90.0*alliance);
             }
             sleep(300); //was 500
             goBackward(.6, 60, -90.0*alliance);
