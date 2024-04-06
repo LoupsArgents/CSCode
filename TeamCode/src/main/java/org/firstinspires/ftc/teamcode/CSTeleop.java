@@ -530,6 +530,10 @@ public class CSTeleop extends LinearOpMode {
                     armIdealPosition = arm1DownPos;
                     armPhase = 2;
                     if ((armSetTo == arm1DownPos) || (endStopSetTo == endStop23Pos || endStopSetTo == endStop34Pos || endStopSetTo == endStop45Pos)) {
+                        if (armSetTo != arm1DownPos) {
+                            arm1.setPosition(arm1DownPos);
+                            armSetTo = arm1DownPos;
+                        }
                         armPhase = 4;
                         wrist.setPosition(wristDownPos);
                         wristSetTo = wristDownPos;
@@ -903,6 +907,7 @@ public class CSTeleop extends LinearOpMode {
                 breakGlassMode = true;
                 canUseSlides = false;
                 arm1.setPosition(armAlmostDown);
+                armSetTo = armAlmostDown;
                 wrist.setPosition(wristAlmostDown);
                 cameraBar.setPosition(camOutOfWay);
                 camSetTo = camOutOfWay;
@@ -920,6 +925,7 @@ public class CSTeleop extends LinearOpMode {
                 lift1.setPower(-liftPower);
                 if (gamepad2.start) {
                     arm1.setPosition(arm1DownPos);
+                    armSetTo = arm1DownPos;
                     wrist.setPosition(wristDownPos);
                     liftInitial = liftEncoder.getCurrentPosition()/ticksPerRotation;
                     liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
@@ -1190,7 +1196,7 @@ public class CSTeleop extends LinearOpMode {
                     leadScrewsDownEnd = false;
                     leadScrewsManual = true;
                 }
-                if (gamepad2.x) {
+                if (gamepad2.x && lss2SetTo == lss2UpPos) {
                     leadScrewsManual = false;
                     useLeadScrews = true;
                 }
