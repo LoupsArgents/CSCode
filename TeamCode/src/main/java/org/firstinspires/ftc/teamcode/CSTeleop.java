@@ -162,7 +162,7 @@ public class CSTeleop extends LinearOpMode {
     boolean doAbsHeading = false;
     double idealAbsHeading = 0.0;
     double turningConst = 0.575; //was 0.575
-    double wristDownPos = 0.145; //was 0.135
+    double wristDownPos = 0.14; //was 0.135, then 0.145
     double wristAlmostDown = 0.15;//for flipping the arm up
     double wristStraightUp = 0.45;
     double wristTuckedIn = 0.735;
@@ -556,6 +556,10 @@ public class CSTeleop extends LinearOpMode {
                         armPhase = 4;
                         wrist.setPosition(wristDownPos);
                         wristSetTo = wristDownPos;
+                        if (armSetTo != arm1DownPos) {
+                            arm1.setPosition(arm1DownPos);
+                            armSetTo = arm1DownPos;
+                        }
                     }
                     endStop.setPosition(endStopOutOfWayPos);
                     endStopSetTo = endStopOutOfWayPos;
