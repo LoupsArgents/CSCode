@@ -670,7 +670,7 @@ public class CSPhillyAuto extends CSYorkDF {
             wristPosForCycle = wristStack23Pos;
         }
         goStraight(.75, 2, -90.0*alliance); //power was .4, then .55, then .65; increased distance from 5; was 7; was 5
-        openClaw();
+        closeClaw();// was openClaw(); and idk why
         armAlmostDown();
         wrist.setPosition(wristAlmostDown);
         liftIdealPos = liftInitial;
@@ -700,6 +700,7 @@ public class CSPhillyAuto extends CSYorkDF {
         wrist.setPosition(wristDownPos);
         processor.setMode(EverythingProcessor.ProcessorMode.PIXEL);
         goStraight(.8, 59-inchesMoved, -90.0*alliance); //power was .4, then .6, then .7; added 3 inches because other forward was less
+        openClaw();
         cameraBar.setPosition(camUsePos);
         wrist.setPosition(wristAlmostDown);
         arm1.setPosition(arm1DownPos - .05); //used to be defined in terms of the stack levels; we'll see how this works.
@@ -830,7 +831,7 @@ public class CSPhillyAuto extends CSYorkDF {
     }
     public void getToStackThroughTruss(String result, int alliance){
         goStraight(.75, 2, -90.0*alliance); //power was .4, then .55, then .65; increased distance from 5; was 7; was 5
-        openClaw();
+        closeClaw(); //used to be openClaw() for a reason I don't understand...
         armAlmostDown();
         wrist.setPosition(wristAlmostDown);
         liftIdealPos = liftInitial;
@@ -976,7 +977,8 @@ public class CSPhillyAuto extends CSYorkDF {
             closeClaw();
             goStraight(.7, 85, -90.0 * alliance); //was 85 inches
         }else{
-            goStraight(.7, 82, -90.0*alliance);
+            goStraight(.7, 82,  -90.0*alliance);
+            openClaw(); //new addition
         }
         if((alliance == 1 && !result.equals("Right")) || (alliance == -1 && !result.equals("Left"))){
             cameraBar.setPosition(camUsePos);
@@ -987,8 +989,8 @@ public class CSPhillyAuto extends CSYorkDF {
             armAboveStack();
             endStop.setPosition(endStop45Pos);
             RobotLog.aa("Endstop", "Set to the stack 4-5 position");
-            wrist.setPosition(wristAboveStackPos);
             sleep(500); //see if there's any way to reduce this without causing problems - to 750 or perhaps 500; used to be 1000
+            wrist.setPosition(wristAboveStackPos); //moved this to after sleep to fix new wrist problem
             superOpenClaw();
             double distFromIdeal;
             if(alliance == 1){
@@ -1035,8 +1037,8 @@ public class CSPhillyAuto extends CSYorkDF {
             //we can actually use the auto-pickup here without potentially messing up the purple pixel on the spike mark
             endStop.setPosition(endStop45Pos);
             stallArm();
-            wrist.setPosition(wristStack45Pos);
             wait(400);
+            wrist.setPosition(wristStack45Pos); //moved to after wait to fix new wrist problem
             if(alliance == 1){
                 strafeLeft(.6, 22, 5, -90.0*alliance);
             }else if(alliance == -1){
