@@ -240,7 +240,7 @@ public class CSTeleop extends LinearOpMode {
     boolean endgameCanChange = true;
     double droneInitial = 0.72; //the position we want the drone launcher servo to be at when it's not trying to launch the drone
     double droneFire = 0; //the position for the drone launcher servo that will launch the drone
-    double droneParallelToGround = 0.435;
+    double droneParallelToGround = 0.435; //was 0.435
     double lss2Launch = 0.37; //was 0.3925. .385 is about a 42 degree angle, .35 is too steep
     // the position we want for the left lead screw to be at when the drone is launching, down is 0.52, old was 0.55
     //old launch position was 0.4625
@@ -1195,7 +1195,7 @@ public class CSTeleop extends LinearOpMode {
                 //if (!gamepad2.guide) {
                 //    lsStateCanChange = true;
                 //}
-                if (Math.abs(gamepad2.left_stick_y) > 0.05 || Math.abs(gamepad2.right_stick_y) > 0.05) {
+                if ((Math.abs(gamepad2.left_stick_y) > 0.05 || Math.abs(gamepad2.right_stick_y) > 0.05) && lss2SetTo == lss2UpPos) {
                     useLeadScrews = false;
                     leadScrewsDownEnd = false;
                     leadScrewsManual = true;
