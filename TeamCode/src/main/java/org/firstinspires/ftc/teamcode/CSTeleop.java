@@ -241,7 +241,7 @@ public class CSTeleop extends LinearOpMode {
     double droneInitial = 0.72; //the position we want the drone launcher servo to be at when it's not trying to launch the drone
     double droneFire = 0; //the position for the drone launcher servo that will launch the drone
     double droneParallelToGround = 0.435;
-    double lss2Launch = 0.385; //was 0.3925
+    double lss2Launch = 0.37; //was 0.3925. .385 is about a 42 degree angle, .35 is too steep
     // the position we want for the left lead screw to be at when the drone is launching, down is 0.52, old was 0.55
     //old launch position was 0.4625
     //old bot up was 0.395, old bot down was 0.52
@@ -582,10 +582,10 @@ public class CSTeleop extends LinearOpMode {
                     arm1.setPosition(armStallAgainstStopPos); //was 0.935
                     armSetTo = armStallAgainstStopPos;
                     armStartedAt = armSetTo;
-                    wrist.setPosition(wristStack45Pos);
+                    //wrist.setPosition(wristStack45Pos);
                     wristStackIdeal = wristStack45Pos;
-                    wristSetTo = wristStack45Pos;
-                    //wristTimer.reset();
+                    //wristSetTo = wristStack45Pos;
+                    wristTimer.reset();
                     if (endStopSetTo != endStopOutOfWayPos) {
                         wrist.setPosition(wristStackIdeal);
                     }
@@ -604,9 +604,10 @@ public class CSTeleop extends LinearOpMode {
                     endStop.setPosition(endStop23Pos);
                     endStopSetTo = endStop23Pos;
                     //wrist.setPosition(0.125);
+                    wristTimer.reset();
                     wristStackIdeal = wristStack23Pos;
-                    wrist.setPosition(wristStack23Pos);
-                    wristSetTo = wristStack23Pos;
+                    //wrist.setPosition(wristStack23Pos);
+                    //wristSetTo = wristStack23Pos;
                 } else if (!gamepad2.dpad_left) {
                     stacksLevelCanChange = true;
                 }
@@ -621,19 +622,18 @@ public class CSTeleop extends LinearOpMode {
                     endStop.setPosition(endStop34Pos);
                     endStopSetTo = endStop34Pos;
                     //wrist.setPosition(0.12);
+                    wristTimer.reset();
                     wristStackIdeal = wristStack34Pos;
-                    wrist.setPosition(wristStack34Pos);
-                    wristSetTo = wristStack34Pos;
+                    //wrist.setPosition(wristStack34Pos);
+                    //wristSetTo = wristStack34Pos;
                 }
-
-
-                /*if (doStacks && wristTimer.milliseconds() > 250) {
-                    //telemetry.addData("519", "works");
+                if (doStacks && wristTimer.milliseconds() > 350) { //this if was commented out
+                    telemetry.addData("519", "works");
                     if (wristSetTo != wristStackIdeal) {
                         wrist.setPosition(wristStackIdeal);
                         wristSetTo = wristStackIdeal;
                     }
-                }*/
+                }
                 if (!doStacks && !armMotionProfiling && (camSetTo == camTuckedIn || camSetTo == camOutOfWay)) {
                     endStop.setPosition(endStopOutOfWayPos);
                     endStopSetTo = endStopOutOfWayPos;
