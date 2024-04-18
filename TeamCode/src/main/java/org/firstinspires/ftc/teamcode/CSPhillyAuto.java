@@ -384,7 +384,9 @@ public class CSPhillyAuto extends CSYorkDF {
             closeLowerClaw();
             cameraBar.setPosition(camUsePos);
             sleep(300); //was 500
-            goStraight(.6, 15, 0.0); //power was .5, was 17 in
+            //goStraight(.6, 15, 0.0); //power was .5, was 17 in
+            goStraight(.6, 17, 0.0); //CHANGE AT WORLDS TO AVOID THE HITTING TRUSS THING 4/17/24 test this a *TON* to make sure it works
+            //was 18 ^^^ but that put it too close to centerline
             sleep(300); //was 500
             absoluteHeading(.4, -90.0*alliance);
             absoluteHeading(.2, -90.0*alliance);
@@ -419,16 +421,17 @@ public class CSPhillyAuto extends CSYorkDF {
             closeLowerClaw();
             sleep(300); //was 500
             cameraBar.setPosition(camUsePos);
-            goStraight(.7, 23, 0.0); //power was .5, was 26 inches
+            //goStraight(.7, 23, 0.0); //power was .5, was 26 inches
+            goStraight(.7, 26, 0.0); //CHANGED AT WORLDS 4/17/24 to avoid hitting truss thing
             sleep(300); //was 500
             absoluteHeading(.4, -90.0*alliance);
             absoluteHeading(.2, -90.0*alliance);
             cameraBar.setPosition(camOutOfWay);
             sleep(300); //was 500
             if (alliance == 1) {
-                strafeLeft(.7, 2.5, 5, -90.0*alliance); //power was .5
+                strafeLeft(.7, 1.5, 5, -90.0*alliance); //power was .5 //WORLDS CHANGE took an inch off 4/17/24 to not be too close to centerline
             }else if(alliance == -1){
-                strafeRight(.7, 2.5, 5, -90.0*alliance);
+                strafeRight(.7, 1.5, 5, -90.0*alliance);
             }
             goBackward(.7, 45, -90.0*alliance); //power was .6
             wrist.setPosition(wristAlmostDown);
