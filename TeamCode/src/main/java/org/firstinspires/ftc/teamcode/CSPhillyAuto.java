@@ -15,6 +15,7 @@ public class CSPhillyAuto extends CSYorkDF {
     boolean deliverToBackstage = false;
     int pixelsOnStack = 5;
     int delay = 0;
+    boolean didFailsafe = false;
     public void runOpMode(){}
     public void doRun(String alliance, boolean isNear, boolean isWall){ //1 is blue, -1 is red
         if(isWall) parkingNearWall = true;
@@ -168,8 +169,10 @@ public class CSPhillyAuto extends CSYorkDF {
             sleep(500);
             String r = result + "Center";
             positionOnBackdrop(r, alliance, 1);
-            sleep(500);
-            positionOnBackdrop(r, alliance, 2);
+            if(!didFailsafe) {
+                sleep(500);
+                positionOnBackdrop(r, alliance, 2);
+            }
             sleep(500);
             clawUp.setPosition(clawUpSlightlyOpen); //used to be clawUpLessOpen; switched to the one they use in teleop
             long start = System.nanoTime();
@@ -226,6 +229,7 @@ public class CSPhillyAuto extends CSYorkDF {
                 park(alliance, s, parkingNearWall); //once I get this figured out
             }
         }else{
+            goStraight(.5, 2, -90.0 * alliance); //worlds change
             armAlmostDown();
             wrist.setPosition(wristAlmostDown);
             sleep(1000);
@@ -290,8 +294,10 @@ public class CSPhillyAuto extends CSYorkDF {
         //absoluteHeading(.2, -90.0*alliance);
         sleep(500);
         positionOnBackdrop(result, alliance, 1);
-        sleep(500);
-        positionOnBackdrop(result, alliance, 2);
+        if(!didFailsafe) {
+            sleep(500);
+            positionOnBackdrop(result, alliance, 2);
+        }
         sleep(500);
         //openUpperClaw();
         clawUp.setPosition(clawUpSlightlyOpen);
@@ -546,7 +552,6 @@ public class CSPhillyAuto extends CSYorkDF {
         double[] dists = getAprilTagDist(res);
         RobotLog.aa("IdealPos", result);
         RobotLog.aa("Dists", Arrays.toString(dists));
-        boolean didUltraFailsafe = false;
         if (dists[0] == 0.0 && dists[1] == 0.0) {
             if (attempt == 2) {
                 RobotLog.aa("Status", "April tag not working -- ramming board");
@@ -577,7 +582,8 @@ public class CSPhillyAuto extends CSYorkDF {
                     wrist.setPosition(wristDownPos);
                     sleep(30000);*/
                     //^^^ Old super-bail code that basically just makes it die in front of board; commented out for something better
-                    didUltraFailsafe = true;
+                    wait(500);
+                    didFailsafe = true;
                     double distToWall = 0.0;
                     //if blue, use right sensor; if red, use left sensor
                     double leastReasonable = 12;
@@ -637,9 +643,9 @@ public class CSPhillyAuto extends CSYorkDF {
                     } else {
                         //how far from wall do you want to be for near-wall tag, middle tag, away-from-wall tag?
                         RobotLog.aa("Status", "Attempting delivery with ultrasonic");
-                        double nearWallTagDist = 22;
-                        double middleTagDist = 28;
-                        double awayFromWallTagDist = 34; //Placeholders -- replace later once we have better numbers
+                        double nearWallTagDist = 19.5;
+                        double middleTagDist = 25.5;
+                        double awayFromWallTagDist = 31.5; //These are the better numbers; took a half-inch off because it was centered lol
                         double idealDist = 0.0;
                         if ((alliance == 1 && res.equals("Left")) || (alliance == -1 && res.equals("Right"))) {
                             idealDist = nearWallTagDist; //blue left is near wall
@@ -670,6 +676,7 @@ public class CSPhillyAuto extends CSYorkDF {
                             }
                         }
                         ramBoard(alliance);
+                        didFailsafe = true;
                         cycle = false;
                     }
                 }
@@ -688,7 +695,7 @@ public class CSPhillyAuto extends CSYorkDF {
                 sleep(30000);*/
             }
         }
-        if(!didUltraFailsafe){
+        if(!didFailsafe){
             if (result.equals("Left")) {
                 //we want to be left of the april tag
                 if (dists[0] + 1 < 0) { // used to be -1.5, then +2
@@ -894,16 +901,20 @@ public class CSPhillyAuto extends CSYorkDF {
                     s = "CenterCenter";
                 }
                 positionOnBackdrop(s, alliance, 1);
-                wait(500);
-                positionOnBackdrop(s, alliance, 2);
+                if(!didFailsafe) {
+                    wait(500);
+                    positionOnBackdrop(s, alliance, 2);
+                }
             } else if (alliance == -1) {
                 String s = "LeftCenter";
                 if (result.equals("Left")) {
                     s = "CenterCenter";
                 }
                 positionOnBackdrop(s, alliance, 1);
-                wait(500);
-                positionOnBackdrop(s, alliance, 2);
+                if(!didFailsafe) {
+                    wait(500);
+                    positionOnBackdrop(s, alliance, 2);
+                }
             }
         /*liftIdealPos = .07;
         while(Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()){
@@ -1265,8 +1276,10 @@ public class CSPhillyAuto extends CSYorkDF {
             }
             liftIdealPos = liftFirstWhitePixelPos;
             positionOnBackdrop(s, alliance, 1);
-            wait(500);
-            positionOnBackdrop(s, alliance, 2);
+            if(!didFailsafe) {
+                wait(500);
+                positionOnBackdrop(s, alliance, 2);
+            }
             openLowerClaw();
             RobotLog.aa("Status", "Opened first claw");
             wait(500);
