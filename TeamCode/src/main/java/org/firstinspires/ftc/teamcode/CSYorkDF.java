@@ -58,6 +58,7 @@ public class CSYorkDF extends LinearOpMode {
     AnalogInput backLeftUltrasonic;
     RevColorSensorV3 clawLeftSensor;
     RevColorSensorV3 clawRightSensor;
+    RevColorSensorV3 backdropDetector;
     EverythingProcessor processor;
     AprilTagProcessor ATProcessor;
     int strafeInitialTicks;
@@ -821,6 +822,7 @@ public class CSYorkDF extends LinearOpMode {
         backLeftUltrasonic = hardwareMap.get(AnalogInput.class, "backLeftUltra");
         clawLeftSensor = hardwareMap.get(RevColorSensorV3.class, "clawLeft");
         clawRightSensor = hardwareMap.get(RevColorSensorV3.class, "clawRight");
+        backdropDetector = hardwareMap.get(RevColorSensorV3.class, "backdropDetector");
         processor = new EverythingProcessor();
         ATProcessor = AprilTagProcessor.easyCreateWithDefaults();
         CameraName webcam = ClassFactory.getInstance().getCameraManager().nameForSwitchableCamera(frontCamera, backCamera);

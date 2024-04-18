@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.util.RobotLog;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.VisionPortal;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
@@ -529,37 +531,40 @@ public class CSPhillyAuto extends CSYorkDF {
             }
         }
     }
-    public void positionOnBackdrop(String result, int alliance, int attempt){ //attempt 1 is initial pass, attempt 2 is second pass
+    public void positionOnBackdrop(String result, int alliance, int attempt) { //attempt 1 is initial pass, attempt 2 is second pass
         ZonedDateTime dt = ZonedDateTime.now();
         String time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
         portal.saveNextFrameRaw("PhillyAutoNearBoardFirst " + time);
         String res = result;
-        if(result.equals("LeftCenter")){
+        if (result.equals("LeftCenter")) {
             res = "Left";
-        }else if(result.equals("CenterCenter")){
+        } else if (result.equals("CenterCenter")) {
             res = "Center";
-        }else if(result.equals("RightCenter")){
+        } else if (result.equals("RightCenter")) {
             res = "Right";
         }
         double[] dists = getAprilTagDist(res);
         RobotLog.aa("IdealPos", result);
         RobotLog.aa("Dists", Arrays.toString(dists));
-        if(dists[0] == 0.0 && dists[1] == 0.0){
-            if(attempt == 2) {
+        boolean didUltraFailsafe = false;
+        if (dists[0] == 0.0 && dists[1] == 0.0) {
+            if (attempt == 2) {
                 RobotLog.aa("Status", "April tag not working -- ramming board");
                 goBackward(.3, 5.75, -90.0 * alliance);
                 return;
-            }else{
+            } else {
                 RobotLog.aa("Status", "Didn't see April tag on first positioning attempt -- moving and trying again");
-                goBackward(.3, 2, -90.0*alliance);
+                //goBackward(.3, 2, -90.0*alliance);
+                goStraight(.3, 2, -90.0 * alliance); //4/17/24 Worlds change from ^^^ to this to try to mitigate the robot-shadow-on-april-tag thing
                 sleep(500); //CHANGE THIS BACK TO 500!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 dt = ZonedDateTime.now();
                 time = dt.getMonthValue() + "-" + dt.getDayOfMonth() + "-" + dt.getYear() + " " + dt.getHour() + "." + dt.getMinute() + "." + dt.getSecond();
                 portal.saveNextFrameRaw("PhillyAutoNearBoardTryAgain " + time);
                 dists = getAprilTagDist(res);
                 RobotLog.aa("TryingAgainDists", Arrays.toString(dists));
-                if(dists[0] == 0.0 && dists[1] == 0.0){
-                    liftIdealPos = liftInitial;
+                if (dists[0] == 0.0 && dists[1] == 0.0) {
+                    //CHANGES GO HERE THIS IS THE IMPORTANT BIT (aka the bit that triggers if the april tag read fails twice)
+                    /*liftIdealPos = liftInitial;
                     goStraight(.4, 3);
                     liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
                     while(Math.abs(liftIdealPos - liftPos) > liftTolerance && opModeIsActive()){
@@ -570,7 +575,103 @@ public class CSPhillyAuto extends CSYorkDF {
                     sleep(1000);
                     armDown();
                     wrist.setPosition(wristDownPos);
-                    sleep(30000);
+                    sleep(30000);*/
+                    //^^^ Old super-bail code that basically just makes it die in front of board; commented out for something better
+                    didUltraFailsafe = true;
+                    double distToWall = 0.0;
+                    //if blue, use right sensor; if red, use left sensor
+                    double leastReasonable = 12;
+                    double mostReasonable = 48;
+                    if (alliance == 1) {
+                        distToWall = backRightUltraDistance();
+                        RobotLog.aa("InitialDistToWall", String.valueOf(distToWall));
+                        if (distToWall < leastReasonable || distToWall > mostReasonable) {
+                            wait(100);
+                            distToWall = backRightUltraDistance();
+                            RobotLog.aa("TryAgainDistToWall", String.valueOf(distToWall));
+                        }
+                    } else if (alliance == -1) {
+                        distToWall = backLeftUltraDistance();
+                        RobotLog.aa("InitialDistToWall", String.valueOf(distToWall));
+                        if (distToWall < leastReasonable || distToWall > mostReasonable) {
+                            wait(100);
+                            distToWall = backLeftUltraDistance();
+                            RobotLog.aa("TryAgainDistToWall", String.valueOf(distToWall));
+                        }
+                    }
+                    if (distToWall < leastReasonable || distToWall > mostReasonable) {
+                        //ye olde guess-and-park and hope you don't accidentally strafe over the centerline :)
+                        //ADD THE THINGS HERE
+                        //add it! do it! this needs to be coded!
+                        RobotLog.aa("Ultrasonic", "failed, so we are totally guessing about where to park");
+                        if(parkingNearWall){ //yay! we just run into the wall.
+                            if(alliance == 1){
+                                strafeRight(.6, 12, 5, -90.0*alliance);
+                                strafeRight(.4, 36, 5, -90.0*alliance);
+                            }else if(alliance == -1){
+                                strafeLeft(.6, 12, 5, -90.0*alliance);
+                                strafeLeft(.4, 36, 5, -90.0*alliance);
+                            }
+                        }else{ //uh yeah. about that. this will be interesting. (let's hope this doesn't happen.)
+                            //smallest so far: 21 in
+                            if(alliance == 1){
+                                strafeLeft(.4, 21, 5, -90.0*alliance);
+                            }else if(alliance == -1){
+                                strafeRight(.4, 21, 5, -90.0*alliance);
+                            }
+                        }
+                        closeClaw();
+                        liftIdealPos = liftInitial;
+                        liftPos = -((liftEncoder.getCurrentPosition() / ticksPerRotation) - liftInitial);
+                        while (Math.abs(liftIdealPos - liftPos) > liftTolerance && opModeIsActive()) {
+                            liftWithinLoop();
+                            RobotLog.aa("Error", String.valueOf(Math.abs(liftIdealPos - liftPos)));
+                        }
+                        armAlmostDown();
+                        wrist.setPosition(wristAlmostDown);
+                        sleep(1000);
+                        armDown();
+                        wrist.setPosition(wristDownPos);
+                        //^^^ put all the stuff into a good teleop starting position
+                        sleep(30000);
+                    } else {
+                        //how far from wall do you want to be for near-wall tag, middle tag, away-from-wall tag?
+                        RobotLog.aa("Status", "Attempting delivery with ultrasonic");
+                        double nearWallTagDist = 22;
+                        double middleTagDist = 28;
+                        double awayFromWallTagDist = 34; //Placeholders -- replace later once we have better numbers
+                        double idealDist = 0.0;
+                        if ((alliance == 1 && res.equals("Left")) || (alliance == -1 && res.equals("Right"))) {
+                            idealDist = nearWallTagDist; //blue left is near wall
+                        } else if (res.equals("Center")) {
+                            idealDist = middleTagDist;
+                        } else if ((alliance == 1 && res.equals("Right")) || (alliance == -1 && res.equals("Left"))) {
+                            idealDist = awayFromWallTagDist;
+                        }else {
+                            idealDist = middleTagDist; //should never ever happen
+                        }
+                        if (distToWall - idealDist > 0) { //we need to be closer to the wall than we are
+                            RobotLog.aa("Strafing", (distToWall - idealDist) + " inches towards the wall");
+                            if (alliance == 1) {
+                                //closer to the wall means strafe right
+                                strafeRight(.35, distToWall - idealDist, 5, -90.0 * alliance);
+                            } else if (alliance == -1) {
+                                //closer to the wall means strafe left
+                                strafeLeft(.35, distToWall - idealDist, 5, -90.0 * alliance);
+                            }
+                        } else if (distToWall - idealDist < 0) { //we need to be further from the wall than we are
+                            RobotLog.aa("Strafing", (idealDist - distToWall) + " inches away from the wall");
+                            if (alliance == 1) {
+                                //further from the wall means strafe left
+                                strafeLeft(.35, idealDist - distToWall, 5, -90.0 * alliance);
+                            } else if (alliance == -1) {
+                                //further from the wall means strafe right
+                                strafeRight(.35, idealDist - distToWall, 5, -90.0 * alliance);
+                            }
+                        }
+                        ramBoard(alliance);
+                        cycle = false;
+                    }
                 }
                 /*RobotLog.aa("Status", "April tag failed; waiting a long time");
                 liftIdealPos = liftInitial;
@@ -587,67 +688,69 @@ public class CSPhillyAuto extends CSYorkDF {
                 sleep(30000);*/
             }
         }
-        if(result.equals("Left")){
-            //we want to be left of the april tag
-            if(dists[0] + 1 < 0){ // used to be -1.5, then +2
-                RobotLog.aa("Strafing", (-1*(dists[0] + 1)) + " inches robot-right, board-left");
-                strafeRight(.35, -1 * (dists[0] + 1), 5, -90.0*alliance); //powers were .35
-            }else if(dists[0] + 1 > 0){
-                RobotLog.aa("Strafing", (dists[0] + 1) + " inches robot-left, board-right");
-                strafeLeft(.35, dists[0] + 1, 5, -90.0*alliance);
+        if(!didUltraFailsafe){
+            if (result.equals("Left")) {
+                //we want to be left of the april tag
+                if (dists[0] + 1 < 0) { // used to be -1.5, then +2
+                    RobotLog.aa("Strafing", (-1 * (dists[0] + 1)) + " inches robot-right, board-left");
+                    strafeRight(.35, -1 * (dists[0] + 1), 5, -90.0 * alliance); //powers were .35
+                } else if (dists[0] + 1 > 0) {
+                    RobotLog.aa("Strafing", (dists[0] + 1) + " inches robot-left, board-right");
+                    strafeLeft(.35, dists[0] + 1, 5, -90.0 * alliance);
+                }
+            } else if (result.equals("Center")) {
+                //we want to be 1 inch left of the april tag
+                if (dists[0] - 1 < 0) {
+                    RobotLog.aa("Strafing", (-1 * (dists[0] - 1)) + " inches robot-right, board-left");
+                    strafeRight(.35, -1 * (dists[0] - 1), 5, -90.0 * alliance);
+                } else if (dists[0] - 1 > 0) {
+                    RobotLog.aa("Strafing", (dists[0] - 1) + " inches robot-left, board-right");
+                    strafeLeft(.35, dists[0] - 1, 5, -90.0 * alliance);
+                }
+            } else if (result.equals("Right")) {
+                //we want to be 2-3 inches right of the april tag
+                //thing added used to be 1.5; that was too much
+                //used to be -2
+                if (dists[0] - 1 < 0) { //used to be +1.25
+                    RobotLog.aa("Strafing", (-1 * (dists[0] - 1)) + " inches robot-right, board-left");
+                    strafeRight(.35, -1 * (dists[0] - 1), 5, -90.0 * alliance);
+                } else if (dists[0] - 1 > 0) {
+                    RobotLog.aa("Strafing", (dists[0] - 1) + " inches robot-left, board-right");
+                    strafeLeft(.35, dists[0] - 1, 5, -90.0 * alliance);
+                }
+            } else if (result.equals("LeftCenter")) {
+                if (dists[0] < 0) {
+                    strafeRight(.35, -1 * (dists[0]), 5, -90.0 * alliance); //powers were .35
+                } else if (dists[0] > 0) {
+                    strafeLeft(.35, dists[0], 5, -90.0 * alliance);
+                }
+            } else if (result.equals("CenterCenter")) {
+                if (dists[0] < 0) {
+                    strafeRight(.35, -1 * (dists[0]), 5, -90.0 * alliance);
+                } else if (dists[0] > 0) {
+                    strafeLeft(.35, dists[0], 5, -90.0 * alliance);
+                }
+            } else if (result.equals("RightCenter")) {
+                if (dists[0] < 0) {
+                    RobotLog.aa("Strafing", (-1 * (dists[0])) + " inches robot-right, board-left");
+                    strafeRight(.35, -1 * (dists[0]), 5, -90.0 * alliance);
+                } else if (dists[0] - 1 > 0) {
+                    RobotLog.aa("Strafing", (dists[0]) + " inches robot-left, board-right");
+                    strafeLeft(.35, dists[0], 5, -90.0 * alliance);
+                }
             }
-        }else if(result.equals("Center")){
-            //we want to be 1 inch left of the april tag
-            if(dists[0] - 1 < 0){
-                RobotLog.aa("Strafing", (-1*(dists[0] - 1)) + " inches robot-right, board-left");
-                strafeRight(.35, -1 * (dists[0]-1), 5, -90.0*alliance);
-            }else if(dists[0] - 1 > 0){
-                RobotLog.aa("Strafing", (dists[0] - 1) + " inches robot-left, board-right");
-                strafeLeft(.35, dists[0]-1, 5, -90.0*alliance);
+            double inchesAway; //used to be 6.25
+            if (attempt == 1) inchesAway = 12;
+            else inchesAway = 5.5; //used to be 6
+            if (dists[1] - inchesAway > 0) {
+                sleep(100);
+                RobotLog.aa("GoingBackward", (dists[1] - inchesAway) + " inches");
+                goBackward(.3, dists[1] - inchesAway, -90.0 * alliance); //powers were .3
+            } else if (dists[1] - inchesAway < 0) {
+                sleep(100);
+                RobotLog.aa("GoingForward", ((dists[1] - inchesAway) * -1) + " inches");
+                goStraight(.3, -1 * (dists[1] - inchesAway), -90.0 * alliance);
             }
-        }else if(result.equals("Right")){
-            //we want to be 2-3 inches right of the april tag
-            //thing added used to be 1.5; that was too much
-            //used to be -2
-            if(dists[0] - 1 < 0){ //used to be +1.25
-                RobotLog.aa("Strafing", (-1*(dists[0] - 1)) + " inches robot-right, board-left");
-                strafeRight(.35, -1 * (dists[0] - 1), 5, -90.0*alliance);
-            }else if(dists[0] - 1 > 0){
-                RobotLog.aa("Strafing", (dists[0] - 1) + " inches robot-left, board-right");
-                strafeLeft(.35, dists[0] - 1, 5, -90.0*alliance);
-            }
-        }else if(result.equals("LeftCenter")){
-            if(dists[0] < 0){
-                strafeRight(.35, -1 * (dists[0]), 5, -90.0*alliance); //powers were .35
-            }else if(dists[0] > 0){
-                strafeLeft(.35, dists[0], 5, -90.0*alliance);
-            }
-        }else if(result.equals("CenterCenter")){
-            if(dists[0] < 0){
-                strafeRight(.35, -1 * (dists[0]), 5, -90.0*alliance);
-            }else if(dists[0] > 0){
-                strafeLeft(.35, dists[0], 5, -90.0*alliance);
-            }
-        }else if(result.equals("RightCenter")){
-            if(dists[0] < 0){
-                RobotLog.aa("Strafing", (-1*(dists[0])) + " inches robot-right, board-left");
-                strafeRight(.35, -1 * (dists[0]), 5, -90.0*alliance);
-            }else if(dists[0] - 1 > 0){
-                RobotLog.aa("Strafing", (dists[0]) + " inches robot-left, board-right");
-                strafeLeft(.35, dists[0], 5, -90.0*alliance);
-            }
-        }
-        double inchesAway; //used to be 6.25
-        if(attempt == 1) inchesAway = 12;
-        else inchesAway = 5.5; //used to be 6
-        if(dists[1] - inchesAway > 0){
-            sleep(100);
-            RobotLog.aa("GoingBackward", (dists[1]-inchesAway) + " inches");
-            goBackward(.3, dists[1]-inchesAway, -90.0*alliance); //powers were .3
-        }else if(dists[1] - inchesAway < 0){
-            sleep(100);
-            RobotLog.aa("GoingForward", ((dists[1]-inchesAway) * -1) + " inches");
-            goStraight(.3, -1 * (dists[1]-inchesAway), -90.0*alliance);
         }
     }
     public void cycle(String result, int alliance){
@@ -1247,5 +1350,74 @@ public class CSPhillyAuto extends CSYorkDF {
             }
         }
         sleep(1000);
+    }
+    public void ramBoard(int alliance){
+        double currentDist = backdropDetector.getDistance(DistanceUnit.CM);
+        double idealDist = 4.6;
+        //if this thing is reading less than 4.6 on the initial read we have Big Problems probably -- just do a short little time-based ram
+        if(currentDist < idealDist){
+            timeBasedRam(2000, alliance);
+        }else{
+            //ram until a) elapsed time is > some threshold OR b) currentDist < idealDist, whichever happens first
+            double timeLimitMillis = 2000;
+            double power = .3;
+            double multiplier;
+            motorFR.setPower(-power);
+            motorFL.setPower(-power);
+            motorBR.setPower(-power);
+            motorBL.setPower(-power);
+            double targetheading = -90.0*alliance;
+            long startTime = System.nanoTime();
+            long nowTime = System.nanoTime();
+            while(backdropDetector.getDistance(DistanceUnit.CM) > idealDist && (nowTime-startTime)/Math.pow(10, 6) < timeLimitMillis && opModeIsActive()){
+                liftWithinLoop();
+                double heading = newGetHeading();
+                if(heading-targetheading < 0){ //turn to the left
+                    multiplier = -.1*(heading-targetheading)+1;
+                    motorFL.setPower(-power*multiplier);
+                    motorBL.setPower(-power*multiplier);
+                    motorFR.setPower(-power);
+                    motorBR.setPower(-power);
+                }else if(heading-targetheading >= 0){ //turn to the right
+                    multiplier = .1*(heading-targetheading)+1;
+                    motorFR.setPower(-power*multiplier);
+                    motorBR.setPower(-power*multiplier);
+                    motorFL.setPower(-power);
+                    motorBL.setPower(-power);
+                }
+                nowTime = System.nanoTime();
+            }
+            stopMotors();
+        }
+    }
+    public void timeBasedRam(int millis, int alliance){
+        double power = .3;
+        double multiplier;
+        motorFR.setPower(-power);
+        motorFL.setPower(-power);
+        motorBR.setPower(-power);
+        motorBL.setPower(-power);
+        double targetheading = -90.0*alliance;
+        long startTime = System.nanoTime();
+        long nowTime = System.nanoTime();
+        while((nowTime-startTime)/Math.pow(10, 6) < millis && opModeIsActive()){
+            liftWithinLoop();
+            double heading = newGetHeading();
+            if(heading-targetheading < 0){ //turn to the left
+                multiplier = -.1*(heading-targetheading)+1;
+                motorFL.setPower(-power*multiplier);
+                motorBL.setPower(-power*multiplier);
+                motorFR.setPower(-power);
+                motorBR.setPower(-power);
+            }else if(heading-targetheading >= 0){ //turn to the right
+                multiplier = .1*(heading-targetheading)+1;
+                motorFR.setPower(-power*multiplier);
+                motorBR.setPower(-power*multiplier);
+                motorFL.setPower(-power);
+                motorBL.setPower(-power);
+            }
+            nowTime = System.nanoTime();
+        }
+        stopMotors();
     }
 }
