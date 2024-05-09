@@ -1090,17 +1090,16 @@ public class CSPhillyAuto extends CSYorkDF {
             }
         }
         arm1.setPosition(arm1DownPos + .05);
-        if((alliance == 1 && result.equals("Right")) || (alliance == -1 && result.equals("Left"))) {
+        if(/*(alliance == 1 && result.equals("Right")) || (alliance == -1 && result.equals("Left"))*/true) {
             closeClaw();
             goStraight(.7, 85, -90.0 * alliance); //was 85 inches
         }else{
             goStraight(.7, 82,  -90.0*alliance);
             openClaw(); //new addition
         }
-        if((alliance == 1 && !result.equals("Right")) || (alliance == -1 && !result.equals("Left"))){
+        if(/*(alliance == 1 && !result.equals("Right")) || (alliance == -1 && !result.equals("Left"))*/false){
             cameraBar.setPosition(camUsePos);
-        }
-        if((alliance == 1 && result.equals("Right") || (alliance == -1 && result.equals("Left")))) {
+        }else if(/*(alliance == 1 && result.equals("Right") || (alliance == -1 && result.equals("Left")))*/true) {
             //use ultrasonic distance from wall to find stack because the color sensors needed to be moved back
             //26.5 inches from the wall by the ultrasonic should be good
             armAboveStack();

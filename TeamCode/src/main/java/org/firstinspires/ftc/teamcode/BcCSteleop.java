@@ -11,67 +11,37 @@ import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.ServoImpl;
-import com.qualcomm.hardware.lynx.commands.core.LynxGetADCCommand;
-import com.qualcomm.hardware.lynx.commands.core.LynxGetADCResponse;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+
 import com.qualcomm.hardware.lynx.LynxModule;
-import com.qualcomm.robotcore.robot.Robot;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.RobotLog;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import com.qualcomm.hardware.bosch.BNO055IMU;
+
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.Blinker;
-import com.qualcomm.robotcore.hardware.HardwareDevice;
-import com.qualcomm.robotcore.hardware.Gyroscope;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.hardware.bosch.BNO055IMU;
 //next import line is completely made up
-import com.qualcomm.hardware.lynx.LynxNackException;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
-import com.qualcomm.robotcore.hardware.OrientationSensor;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import com.qualcomm.robotcore.hardware.Gyroscope;
-import com.qualcomm.robotcore.hardware.IntegratingGyroscope;
-import org.firstinspires.ftc.robotcore.external.navigation.Axis;
-import org.firstinspires.ftc.robotcore.external.navigation.Position;
-import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.opencv.core.Point;
 
-import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
-
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import com.qualcomm.hardware.lynx.LynxModule;
+
 import com.qualcomm.robotcore.hardware.ServoImplEx; // for Axon
-import com.qualcomm.robotcore.hardware.PwmControl; // for Axon
 
 
 @TeleOp
-public class CSTeleop extends LinearOpMode {
+public class BcCSteleop extends LinearOpMode {
     boolean doAutoPickup = false;
     double multiplierFR = 1.0;
     double multiplierBL = 1.0;
@@ -496,7 +466,7 @@ public class CSTeleop extends LinearOpMode {
                 camInUsePos = false;
             }
             //arm manual code
-            /*if (gamepad2.dpad_right) { //don't mess up stacks code
+            /*if (gamepad1.dpad_right) { //don't mess up stacks code
                 cameraBar.setPosition(camTuckedIn);
                 camSetTo = camTuckedIn;
                 camInUsePos = false;//
@@ -515,7 +485,7 @@ public class CSTeleop extends LinearOpMode {
                 } else if (armJustDown && armSetTo == arm1ScoringPos) {
                     armJustDown = false;
                 }
-                if (gamepad2.dpad_up && armSetTo != arm1ScoringPos && (camSetTo == camTuckedIn || camSetTo == camOutOfWay)) {
+                if (gamepad1.left_stick_button && armSetTo != arm1ScoringPos && (camSetTo == camTuckedIn || camSetTo == camOutOfWay)) {
                     //RobotLog.aa("ArmFlipped", ""); BC added for testing
                     //activateBackCamera(); Brendan commented this out because it might be the cause of a 376ms loop
                     armIdealPosition = arm1ScoringPos;
@@ -523,7 +493,7 @@ public class CSTeleop extends LinearOpMode {
                     armTimer.reset();
                     doStacks = false;
                 }
-                if (gamepad2.dpad_down && liftPos < 0.01 && (camSetTo == camTuckedIn || camSetTo == camOutOfWay) && (armSetTo == arm1ScoringPos)) {
+                if (gamepad1.right_stick_button && liftPos < 0.01 && (camSetTo == camTuckedIn || camSetTo == camOutOfWay) && (armSetTo == arm1ScoringPos)) {
                     pixelRow = -1;
                     doStacks = false;
                     //activateFrontCamera(); BC - seems unnecessary if we don't ever deactivate it
@@ -547,7 +517,7 @@ public class CSTeleop extends LinearOpMode {
                         clawDown.setPosition(clawDownclose);
                         clawDownSetTo = clawDownclose;
                     }
-                } else if (gamepad2.dpad_down && (camSetTo == camTuckedIn || camSetTo == camOutOfWay || (endStopSetTo == endStop23Pos || endStopSetTo == endStop34Pos || endStopSetTo == endStop45Pos))) { //put everything all the way down
+                } else if (gamepad1.right_stick_button && (camSetTo == camTuckedIn || camSetTo == camOutOfWay || (endStopSetTo == endStop23Pos || endStopSetTo == endStop34Pos || endStopSetTo == endStop45Pos))) { //put everything all the way down
                     doStacks = false;
                     //activateFrontCamera(); BC - same as above
                     armIdealPosition = arm1DownPos;
@@ -577,7 +547,7 @@ public class CSTeleop extends LinearOpMode {
                 //pixels 2 and 3 arm is 0.955, wrist is 0.13
                 //pixels 1 and 2 are normal arm/claw levels (they're on the ground)
                 //higher values for arm position = lower down
-                if (gamepad2.dpad_right && armSetTo != arm1ScoringPos && endStopSetTo != endStop45Pos) {
+                if (gamepad1.dpad_right && armSetTo != arm1ScoringPos && endStopSetTo != endStop45Pos) {
                     stacksLevel = 3;//0 is pixels 1 and 2, 1 is pixels 2 and 3, 2 is pixels 3 and 4, 3 is pixels 4 and 5
                     arm1.setPosition(armStallAgainstStopPos); //was 0.935
                     armSetTo = armStallAgainstStopPos;
@@ -594,7 +564,7 @@ public class CSTeleop extends LinearOpMode {
                     //wrist.setPosition(0.12);
                     doStacks = true;
                 }
-                if (gamepad2.dpad_left && stacksLevelCanChange && armSetTo != arm1ScoringPos) {
+                if (gamepad1.dpad_left && stacksLevelCanChange && armSetTo != arm1ScoringPos) {
                     stacksLevelCanChange = false;
                     doStacks = true;
                     stacksLevel = 1;
@@ -608,7 +578,7 @@ public class CSTeleop extends LinearOpMode {
                     wristStackIdeal = wristStack23Pos;
                     //wrist.setPosition(wristStack23Pos);
                     //wristSetTo = wristStack23Pos;
-                } else if (!gamepad2.dpad_left) {
+                } else if (!gamepad1.dpad_left) {
                     stacksLevelCanChange = true;
                 }
                 if (gamepad2.right_stick_button && armSetTo != arm1ScoringPos) {
@@ -874,15 +844,15 @@ public class CSTeleop extends LinearOpMode {
                 camInUsePos = false;
             }
 
-            if (gamepad2.y && !canDoEndgame && !isJoysticking && canChangeLiftLevel && armSetTo == arm1ScoringPos) {
+            if (gamepad1.y && !canDoEndgame && !isJoysticking && canChangeLiftLevel && armSetTo == arm1ScoringPos) {
                 canChangeLiftLevel = false;
                 pixelRow++;
                 liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange + secondPixelChange;
                 //liftIdealPos = 0.2; //BC for testing times
-            } else if (!gamepad2.y && !gamepad2.a && !gamepad2.x && !gamepad2.b) {
+            } else if (!gamepad1.y && !gamepad1.a && !gamepad1.x && !gamepad1.b) {
                 canChangeLiftLevel = true;
             }
-            if (gamepad2.a && !canDoEndgame && !isJoysticking && canChangeLiftLevel && armSetTo == arm1ScoringPos) {
+            if (gamepad1.a && !canDoEndgame && !isJoysticking && canChangeLiftLevel && armSetTo == arm1ScoringPos) {
                 canChangeLiftLevel = false;
                 pixelRow--;
                 if (pixelRow < 0) {
@@ -890,24 +860,24 @@ public class CSTeleop extends LinearOpMode {
                 } else {
                     liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange + secondPixelChange;
                 }
-            } else if (!gamepad2.y && !gamepad2.a && !gamepad2.x && !gamepad2.b) {
+            } else if (!gamepad1.y && !gamepad1.a && !gamepad1.x && !gamepad1.b) {
                 canChangeLiftLevel = true;
             }
-            if (gamepad2.x && !canDoEndgame && !isJoysticking && canChangeLiftLevel && armSetTo == arm1ScoringPos) {
+            if (gamepad1.x && !canDoEndgame && !isJoysticking && canChangeLiftLevel && armSetTo == arm1ScoringPos) {
                 canChangeLiftLevel = false;
                 pixelRow = 3;
                 liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange + secondPixelChange;
-            } else if (!gamepad2.y && !gamepad2.a && !gamepad2.x && !gamepad2.b) {
+            } else if (!gamepad1.y && !gamepad1.a && !gamepad1.x && !gamepad1.b) {
                 canChangeLiftLevel = true;
             }
-            if (gamepad2.b && !canDoEndgame && !isJoysticking && canChangeLiftLevel && armSetTo == arm1ScoringPos) {
+            if (gamepad1.b && !canDoEndgame && !isJoysticking && canChangeLiftLevel && armSetTo == arm1ScoringPos) {
                 canChangeLiftLevel = false;
                 pixelRow = 6;
                 liftIdealPos = baseBoardHeightAmt + pixelRow * pixelRowChange + secondPixelChange;
-            } else if (!gamepad2.y && !gamepad2.a && !gamepad2.x && !gamepad2.b) {
+            } else if (!gamepad1.y && !gamepad1.a && !gamepad1.x && !gamepad1.b) {
                 canChangeLiftLevel = true;
             }
-            if (gamepad2.back) {
+            if (gamepad1.back) {
                 breakGlassMode = true;
                 canUseSlides = false;
                 arm1.setPosition(armAlmostDown);
@@ -1014,24 +984,6 @@ public class CSTeleop extends LinearOpMode {
             //auto pickup code
 
             //auto score code
-
-            //absolute heading buttons (x/y/a/b)
-            if (gamepad1.x) { //270 degrees = 3pi/2 radians
-                //idealAbsHeading = Math.PI * 1.5;
-                idealAbsHeading = Math.PI/2;
-                doAbsHeading = true;
-            } else if (gamepad1.y) { //0 degrees = 0 radians
-                idealAbsHeading = 0.0;
-                doAbsHeading = true;
-            } else if (gamepad1.a) { //180 degrees = pi radians
-                idealAbsHeading = Math.PI;
-                doAbsHeading = true;
-            } else if (gamepad1.b) { //90 degrees = pi/2 radians
-                idealAbsHeading = Math.PI*1.5;
-                doAbsHeading = true;
-            } else {
-                doAbsHeading = false;
-            }
 
             //mecanum drive code
             if (canDriveManually) {
@@ -1170,11 +1122,11 @@ public class CSTeleop extends LinearOpMode {
                     }
                 }
                 //lead screw code
-                if (gamepad2.y && (armSetTo != arm1ScoringPos)) {
+                if (gamepad1.y && (armSetTo != arm1ScoringPos)) {
                     lss1.setPosition(lss1UpPos);
                     lss2SetTo = lss2UpPos;
                     lss2.setPosition(lss2UpPos);
-                } else if (gamepad2.a && (lsm1pos < 0.2 && lsm2pos < 0.2)) {
+                } else if (gamepad1.a && (lsm1pos < 0.2 && lsm2pos < 0.2)) {
                     cameraBar.setPosition(camTuckedIn);
                     camSetTo = camTuckedIn;
                     camInUsePos = false;
@@ -1200,11 +1152,11 @@ public class CSTeleop extends LinearOpMode {
                     leadScrewsDownEnd = false;
                     leadScrewsManual = true;
                 }
-                if (gamepad2.x && lss2SetTo == lss2UpPos) {
+                if (gamepad1.x && lss2SetTo == lss2UpPos) {
                     leadScrewsManual = false;
                     useLeadScrews = true;
                 }
-                if (gamepad2.b) {
+                if (gamepad1.b) {
                     leadScrewsManual = false;
                     useLeadScrews = false;
                     leadScrewsDownEnd = true;
