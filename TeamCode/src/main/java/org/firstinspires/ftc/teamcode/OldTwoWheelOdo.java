@@ -28,7 +28,7 @@ THIS SOFTWARE IS PROVIDED BY FIRST AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR I
 * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
 * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.*/
-public class TwoWheelOdometry extends Odometry {
+public class OldTwoWheelOdo extends Odometry {
 
     private double prevForwardEncoder, prevHorizontalEncoder;
     private Rotation2d previousAngle;
@@ -38,15 +38,15 @@ public class TwoWheelOdometry extends Odometry {
     DoubleSupplier m_forward, m_horizontal;
     IMU imu;
 
-    public TwoWheelOdometry(DoubleSupplier forwardEncoder,
-                             DoubleSupplier horizontalEncoder, IMU imu, double centerWheelOffset) {
+    public OldTwoWheelOdo(DoubleSupplier forwardEncoder,
+                          DoubleSupplier horizontalEncoder, IMU imu, double centerWheelOffset) {
         this(centerWheelOffset); //creates an instance via the third constructor
         m_forward = forwardEncoder;
         m_horizontal = horizontalEncoder;
         this.imu = imu;
     }
 
-    public TwoWheelOdometry(Pose2d initialPose, double centerWheelOffset) {
+    public OldTwoWheelOdo(Pose2d initialPose, double centerWheelOffset) {
         super(initialPose); //creates an instance of class Odometry
         //OK so their class odometry *assumes* the existence of trackWidth
         //but is it actually used for anything, or can I just set it to 0 or 18 or whatever without consequence
@@ -56,7 +56,7 @@ public class TwoWheelOdometry extends Odometry {
         this.centerWheelOffset = centerWheelOffset;
     }
 
-    public TwoWheelOdometry(double centerWheelOffset) {
+    public OldTwoWheelOdo(double centerWheelOffset) {
         this(new Pose2d(), centerWheelOffset); //creates an instance via the second constructor
     }
 

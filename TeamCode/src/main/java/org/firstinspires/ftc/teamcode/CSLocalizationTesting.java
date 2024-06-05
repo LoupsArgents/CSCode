@@ -1,18 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.arcrobotics.ftclib.geometry.Pose2d;
-import com.arcrobotics.ftclib.geometry.Rotation2d;
-import com.arcrobotics.ftclib.geometry.Translation2d;
-import com.arcrobotics.ftclib.kinematics.wpilibkinematics.MecanumDriveKinematics;
-import com.arcrobotics.ftclib.kinematics.wpilibkinematics.MecanumDriveOdometry;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Blinker;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -314,7 +307,7 @@ public class CSLocalizationTesting extends LinearOpMode {
         }
         Encoder forwardAsEncoder = forwardOdo.encoder.setDistancePerPulse(0.00134223318);
         Encoder strafeAsEncoder = strafeOdo.encoder.setDistancePerPulse(0.00134223318);
-        TwoWheelOdometry twoWheelOdo = new TwoWheelOdometry(forwardAsEncoder::getPosition, strafeAsEncoder::getPosition, imu, -16.8275);
+        OldTwoWheelOdo twoWheelOdo = new OldTwoWheelOdo(forwardAsEncoder::getPosition, strafeAsEncoder::getPosition, imu, -16.8275);
         telemetry.addData("Status", "Initialized");
         telemetry.update();
     }
