@@ -15,6 +15,8 @@ public class AxonEncoderTesting extends LinearOpMode {
     * Servo profiling needs to be coded-- might need more variables passed in to support that.
     * */
     public ServoWithProfiling a;
+    public ServoImplEx axon;
+    public AnalogInput axonAna;
     /*
     * //AnalogInput armAna = hardwareMap.get(AnalogInput.class, "armAna");
         //armCurrentPosition = armAna.getVoltage() / 3.3 * 360;
@@ -23,7 +25,9 @@ public class AxonEncoderTesting extends LinearOpMode {
 
     public void runOpMode() {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-        a = new ServoWithProfiling("axon", "axonAna", -322.2, -0.00310365, 339.1, 1.05245, 500, 0.75);
+        axon = hardwareMap.get(ServoImplEx.class, "axon");
+        axonAna = hardwareMap.get(AnalogInput.class, "axonAna");
+        a = new ServoWithProfiling(axon, axonAna, -322.2, -0.00310365, 339.1, 1.05245, 1000, 0.5);
         a.setPosition(0);
         a.updateCurrentPos();
         telemetry.addData("status", "initialized");
@@ -31,25 +35,34 @@ public class AxonEncoderTesting extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
+            ServoWithProfiling.updateAllPos();
             telemetry.addData("axonCurrentPosition", a.getCurrentPos());
             telemetry.addData("axonInitial", a.getInitialPos());
+            telemetry.addData("axonStartPos", a.getStartPosEnc());
+            telemetry.addData("axonEndPos", a.getEndPosEnc());
+            telemetry.addData("servoEndPos", a.encoderToServoPos(a.getEndPosEnc()));
+            telemetry.addData("Timer (ms)", a.getMS());
+            telemetry.addData("isMoving", a.getIsMoving());
             telemetry.update();
-            if (gamepad1.a) {
-                a.setStartPosEnc(a.getCurrentPos());
-                a.setEndPosEnc(a.servoToEncoderPos(0));
-                a.setIsMoving(true);
-            } else if (gamepad1.b) {
-                a.setStartPosEnc(a.getCurrentPos());
-                a.setEndPosEnc(a.servoToEncoderPos(1/3));
-                a.setIsMoving(true);
-            } else if (gamepad1.y) {
-                a.setStartPosEnc(a.getCurrentPos());
-                a.setEndPosEnc(a.servoToEncoderPos(2/3));
-                a.setIsMoving(true);
-            } else if (gamepad1.x) {
-                a.setStartPosEnc(a.getCurrentPos());
-                a.setEndPosEnc(a.servoToEncoderPos(1));
-                a.setIsMoving(true);
+            if (gamepad1.guide || !a.getIsMoving()) {
+                if (gamepad1.a) {
+                    a.setStartPosEnc(a.getCurrentPos());
+                    a.setEndPosServo(0.0);
+                    a.setIsMoving(true);
+                } else if (gamepad1.b) {
+                    telemetry.addData("this runs", "");
+                    a.setStartPosEnc(a.getCurrentPos());
+                    a.setEndPosServo(1.0/3);
+                    a.setIsMoving(true);
+                } else if (gamepad1.y) {
+                    a.setStartPosEnc(a.getCurrentPos());
+                    a.setEndPosServo(2.0/3);
+                    a.setIsMoving(true);
+                } else if (gamepad1.x) {
+                    a.setStartPosEnc(a.getCurrentPos());
+                    a.setEndPosServo(1.0);
+                    a.setIsMoving(true);
+                }
             }
             if (a.getIsMoving()) {
                 a.profile();
