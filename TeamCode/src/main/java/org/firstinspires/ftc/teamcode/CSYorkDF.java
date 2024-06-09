@@ -751,7 +751,7 @@ public class CSYorkDF extends LinearOpMode {
         motorBR.setPower(0);
         motorBL.setPower(0);
     }
-    public double newInchesTraveled(int startTicks, int endTicks){
+    public static double newInchesTraveled(int startTicks, int endTicks){
         //okay this time we are going to do it in a REASONABLE WAY.
         //see, it's that easy!
         return (double)(endTicks - startTicks)/1892.0;
