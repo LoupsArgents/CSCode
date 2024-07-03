@@ -41,6 +41,7 @@ public class CSYorkDF extends LinearOpMode {
     DcMotorEx motorBL;
     DcMotorEx forwardOdo;
     DcMotorEx strafeOdo;
+    SparkFunOTOS opticalOdo;
     DcMotorEx liftEncoder;
     DcMotorEx lift1;
     DcMotorEx lift2;
@@ -658,8 +659,79 @@ public class CSYorkDF extends LinearOpMode {
         int forwardEndTicks = forwardOdo.getCurrentPosition();
         return newInchesTraveled(forwardStartTicks, forwardEndTicks);
     }
+    public boolean placeAndHeading(double x, double y, double idealHeading, double powerMult, double inTol, double degTol) {
+        processedHeading = newGetHeading();
+        double rxConst = 3; //was 6
+        double moveConst = 1; //maybe needs editing
+        double currentX = opticalOdo.getPosition().x;
+        double currentY = opticalOdo.getPosition().y;
+        telemetry.addData("currentX, currentY", currentX + ", " + currentY);
+        double xDifference = currentX - x;
+        double yDifference = currentY - y;
+        RobotLog.aa("xDiff_yDiff", xDifference + ", " + yDifference);
+        double l = Math.sqrt(xDifference*xDifference + yDifference*yDifference); // diagonal error
+        telemetry.addData("Diagonal error", l);
+        double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        //x = fake joystick left left/right (strafe)
+        double joyX = -1 * xDifference / l;
+        //telemetry.addData("joyX", joyX);
+        //y = fake joystick left up/down (move)
+        double joyY = -1 * yDifference / l;
+        //telemetry.addData("joyY", joyY);
+        if (l < inTol) {
+            joyX = 0;
+            joyY = 0;
+        }
+        if (l < 5) {
+            moveConst = l/5;
+            joyX *= moveConst;
+            joyY *= moveConst;
+        }
+        //rx = fake joystick right left/right aka turning
+        double rx = 0;
+        double rotError = Math.abs(processedHeading % 360 - idealHeading);
+        if (l < inTol && rotError < degTol) {
+            //if we actually don't need to do anything
+            motorFR.setPower(0);
+            motorFL.setPower(0);
+            motorBR.setPower(0);
+            motorBL.setPower(0);
+            return true;
+        }
+        double sign = rotError/(processedHeading % 360 - idealHeading);
+        if (rotError > 45) {rxConst = 90;}
+        if (rotError < degTol) {
+            rx = 0;
+        } else if (sign == -1) {
+            //turning left
+            rx = -1 * (rxConst * 180) * rotError;
+        } else if (sign == 1) {
+            //turning right
+            rx = (rxConst/180) * rotError;
+        }
+        if (rx < -1) {rx = -1;}
+        if (rx > 1) {rx = 1;}
+        //telemetry.addData("rX", rx);
 
+        double rotX = joyX * Math.cos(-botHeading) - joyY * Math.sin(-botHeading);
+        double rotY = joyX * Math.sin(-botHeading) + joyY * Math.cos(-botHeading);
 
+        double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
+        double frontLeftPower = (rotY + rotX + rx) / denominator;
+        double backLeftPower = (rotY - rotX + rx) / denominator;
+        double frontRightPower = (rotY - rotX - rx) / denominator;
+        double backRightPower = (rotY + rotX - rx) / denominator;
+        motorFL.setPower(powerMult * frontLeftPower);
+        motorBL.setPower(powerMult * backLeftPower);
+        motorFR.setPower(powerMult * frontRightPower);
+        motorBR.setPower(powerMult * backRightPower);
+        RobotLog.aa("FL_BL_FR_BR", (powerMult*frontLeftPower)+ ", " + (powerMult*backLeftPower) + ", " + (powerMult*frontRightPower) + ", " + (powerMult+backRightPower));
+        telemetry.update();
+        return false;
+    }
+    public void moveTo(double power, double x, double y, double heading){
+        while(opModeIsActive() && !placeAndHeading(opticalOdo.getPosition().x + x, opticalOdo.getPosition().y + y, heading, power, .25, .5)){}
+    }
     public void gyroTurn(double power, double degrees){ //right is negative
         if(opModeIsActive()){
             double gyroinitial = newGetHeading();
@@ -782,6 +854,7 @@ public class CSYorkDF extends LinearOpMode {
         forwardOdo = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
         motorFL = hardwareMap.get(DcMotorEx.class, "motorFLandStrafeOdo");
         strafeOdo = hardwareMap.get(DcMotorEx.class, "motorFLandStrafeOdo");
+        opticalOdo = hardwareMap.get(SparkFunOTOS.class, "optical");
         motorBR = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
         liftEncoder = hardwareMap.get(DcMotorEx.class, "motorBRandLiftEncoder");
         motorBL = hardwareMap.get(DcMotorEx.class, "motorBLandForwardOdo");
@@ -798,6 +871,15 @@ public class CSYorkDF extends LinearOpMode {
         motorBL.setDirection(DcMotorEx.Direction.REVERSE);
         strafeInitialTicks = strafeOdo.getCurrentPosition();
         forwardInitialTicks = forwardOdo.getCurrentPosition();
+        //configure the optical odo
+        opticalOdo.setLinearUnit(SparkFunOTOS.LinearUnit.INCHES);
+        opticalOdo.setAngularUnit(SparkFunOTOS.AngularUnit.DEGREES);
+        SparkFunOTOS.Pose2D offset = new SparkFunOTOS.Pose2D(0, -0.66, 180);
+        opticalOdo.setOffset(offset);
+        opticalOdo.setLinearScalar(0.986333);
+        opticalOdo.setAngularScalar(0.995088);
+        opticalOdo.calibrateImu();
+        opticalOdo.resetTracking();
         clawUp = hardwareMap.get(Servo.class, "claw0");
         clawDown = hardwareMap.get(Servo.class, "claw2");
         arm1 = hardwareMap.get(ServoImplEx.class, "arm3"); //this is the one that DOES have an encoder
