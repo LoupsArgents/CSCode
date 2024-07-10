@@ -661,8 +661,8 @@ public class CSYorkDF extends LinearOpMode {
     }
     public boolean placeAndHeading(double x, double y, double idealHeading, double powerMult, double inTol, double degTol) {
         processedHeading = newGetHeading();
-        double rxConst = 3; //was 6
-        double moveConst = 1; //maybe needs editing
+        double rxConst = 12; //was 15, then 13
+        double moveConst = 1.5; //maybe needs editing; was 1, then 10
         double currentX = opticalOdo.getPosition().x;
         double currentY = opticalOdo.getPosition().y;
         telemetry.addData("currentX, currentY", currentX + ", " + currentY);
@@ -683,13 +683,17 @@ public class CSYorkDF extends LinearOpMode {
             joyY = 0;
         }
         if (l < 5) {
-            moveConst = l/5;
+            moveConst = 1.5 * l/5; //was l/5
             joyX *= moveConst;
             joyY *= moveConst;
         }
         //rx = fake joystick right left/right aka turning
         double rx = 0;
         double rotError = Math.abs(processedHeading % 360 - idealHeading);
+        if(rotError < 5){ //attempting to account for the rotational jerk
+            rxConst = 12 * rotError/5; //should be 12 at 5 degrees, so... rotError*12/5
+        }
+        telemetry.addData("HeadingError", rotError);
         if (l < inTol && rotError < degTol) {
             //if we actually don't need to do anything
             motorFR.setPower(0);
@@ -704,7 +708,7 @@ public class CSYorkDF extends LinearOpMode {
             rx = 0;
         } else if (sign == -1) {
             //turning left
-            rx = -1 * (rxConst * 180) * rotError;
+            rx = -1 * (rxConst/180) * rotError; //used to be rxConst * 180
         } else if (sign == 1) {
             //turning right
             rx = (rxConst/180) * rotError;
@@ -721,16 +725,32 @@ public class CSYorkDF extends LinearOpMode {
         double backLeftPower = (rotY - rotX + rx) / denominator;
         double frontRightPower = (rotY - rotX - rx) / denominator;
         double backRightPower = (rotY + rotX - rx) / denominator;
+        if(frontLeftPower < .2 && frontRightPower < .2 && backLeftPower < .2 && backRightPower < .2){
+            //if all powers are too small... we'll see how this goes though
+            double largest = Math.max(Math.max(frontLeftPower, frontRightPower), Math.max(backLeftPower, backRightPower));
+            //scale largest up to .3?
+            double ratio = .3/largest;
+            frontLeftPower *= ratio;
+            frontRightPower *= ratio;
+            backLeftPower *= ratio;
+            backRightPower *= ratio;
+        }
         motorFL.setPower(powerMult * frontLeftPower);
         motorBL.setPower(powerMult * backLeftPower);
         motorFR.setPower(powerMult * frontRightPower);
         motorBR.setPower(powerMult * backRightPower);
+        telemetry.addData("FRPower", powerMult*frontRightPower);
+        telemetry.addData("FLPower", powerMult*frontLeftPower);
+        telemetry.addData("BRPower", powerMult*backRightPower);
+        telemetry.addData("BLPower", powerMult*backLeftPower);
         RobotLog.aa("FL_BL_FR_BR", (powerMult*frontLeftPower)+ ", " + (powerMult*backLeftPower) + ", " + (powerMult*frontRightPower) + ", " + (powerMult+backRightPower));
         telemetry.update();
         return false;
     }
     public void moveTo(double power, double x, double y, double heading){
-        while(opModeIsActive() && !placeAndHeading(opticalOdo.getPosition().x + x, opticalOdo.getPosition().y + y, heading, power, .25, .5)){}
+        double startX = opticalOdo.getPosition().x;
+        double startY = opticalOdo.getPosition().y;
+        while(opModeIsActive() && !placeAndHeading(startX + x, startY + y, heading, power, .25, .5)){}
     }
     public void gyroTurn(double power, double degrees){ //right is negative
         if(opModeIsActive()){
