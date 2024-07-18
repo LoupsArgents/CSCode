@@ -10,10 +10,10 @@ import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp
-public class AxonEncoderTesting extends LinearOpMode {
+public class ArmCSProfiling extends LinearOpMode {
     public ServoWithProfiling a;
-    public ServoImplEx axon;
-    public AnalogInput axonAna;
+    public ServoImplEx arm;
+    public AnalogInput armAna;
     /*
     * //AnalogInput armAna = hardwareMap.get(AnalogInput.class, "armAna");
         //armCurrentPosition = armAna.getVoltage() / 3.3 * 360;
@@ -22,11 +22,11 @@ public class AxonEncoderTesting extends LinearOpMode {
 
     public void runOpMode() {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-        axon = hardwareMap.get(ServoImplEx.class, "axon");
-        axonAna = hardwareMap.get(AnalogInput.class, "axonAna");
-        a = new ServoWithProfiling(axon, axonAna, -322.2, -0.00310365, 339.1, 1.05245, 1000, 0.5);
-        a.setPosition(0);
-        a.updateCurrentPos();
+        arm = hardwareMap.get(ServoImplEx.class, "arm3");
+        armAna = hardwareMap.get(AnalogInput.class, "armAna");
+        a = new ServoWithProfiling(arm, armAna, -322.2, -0.00310365, 339.1, 1.05245, 2000, 0.5);
+        //a.setPosition(0);
+        //a.updateCurrentPos();
         telemetry.addData("status", "initialized");
         telemetry.update();
         waitForStart();
@@ -41,7 +41,7 @@ public class AxonEncoderTesting extends LinearOpMode {
             telemetry.addData("Timer (ms)", a.getMS());
             telemetry.addData("isMoving", a.getIsMoving());
             telemetry.update();
-            if (gamepad1.guide || !a.getIsMoving()) {
+            /*if (gamepad1.guide || !a.getIsMoving()) {
                 if (gamepad1.a) {
                     a.setStartPosEnc(a.getCurrentPos());
                     a.setEndPosServo(0.0);
@@ -63,30 +63,7 @@ public class AxonEncoderTesting extends LinearOpMode {
             }
             if (a.getIsMoving()) {
                 a.profile();
-            }
+            }*/
         }
     }
-    /*
-    public static boolean motionProfile(ServoImplEx servo, double msForProfile, double percentStartProfiling, double startPos, double currentPos, double endPos) {
-        //start, current, and end are all encoder values
-        //return true if still moving, false if done
-        if (startPos < endPos) {
-            if (currentPos > startPos + (endPos - startPos) * percentStartProfiling) {
-                //we want to be profiling
-
-            } else {
-                servo.setPosition(aEncoderToServoPos(endPos));
-                return true; //we haven't even started profiling yet
-            }
-        } else { //startPos > endPos
-            if (currentPos < startPos - (startPos - endPos) * percentStartProfiling) {
-                //we want to be profiling
-
-            } else {
-                servo.setPosition(aEncoderToServoPos(endPos));
-                return true; //we haven't even started profiling yet
-            }
-        }
-        return false;
-    }*/
 }

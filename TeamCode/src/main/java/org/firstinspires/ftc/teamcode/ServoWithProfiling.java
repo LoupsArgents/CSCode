@@ -33,10 +33,10 @@ public class ServoWithProfiling {
     public ServoWithProfiling(ServoImplEx se, AnalogInput a, double m11, double m22, double b11, double b22, double ms, double per) {
         s = se;
         ana = a;
-        m1 = m11;
-        m2 = m22;
-        b1 = b11;
-        b2 = b22;
+        m1 = m11;//m1 is the slope of the line to convert servo position to encoder position
+        m2 = m22;//m2 is the slope of the line to convert encoder position to servo position
+        b1 = b11;//y-intercept of the servo -> encoder pos line
+        b2 = b22;//y-int of the encoder -> servo pos line
         msForProfile = ms;
         currentPos = ana.getVoltage() / 3.3 * 360;
         initialPos = currentPos;
