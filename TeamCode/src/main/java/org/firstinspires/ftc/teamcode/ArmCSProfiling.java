@@ -25,8 +25,8 @@ public class ArmCSProfiling extends LinearOpMode {
         arm = hardwareMap.get(ServoImplEx.class, "arm3");
         armAna = hardwareMap.get(AnalogInput.class, "armAna");
         a = new ServoWithProfiling(arm, armAna, -322.2, -0.00310365, 339.1, 1.05245, 2000, 0.5);
-        //a.setPosition(0);
-        //a.updateCurrentPos();
+        arm.setPosition(0.82);
+        a.updateCurrentPos();
         telemetry.addData("status", "initialized");
         telemetry.update();
         waitForStart();
@@ -41,6 +41,15 @@ public class ArmCSProfiling extends LinearOpMode {
             telemetry.addData("Timer (ms)", a.getMS());
             telemetry.addData("isMoving", a.getIsMoving());
             telemetry.update();
+            if (gamepad1.a) {
+                a.setPosition(0.82);
+            } else if (gamepad1.b) {
+                a.setPosition(0.65);
+            } else if (gamepad1.y) {
+                a.setPosition(0.2);
+            } else if (gamepad1.x) {
+                a.setPosition(0.07);
+            }
             /*if (gamepad1.guide || !a.getIsMoving()) {
                 if (gamepad1.a) {
                     a.setStartPosEnc(a.getCurrentPos());
