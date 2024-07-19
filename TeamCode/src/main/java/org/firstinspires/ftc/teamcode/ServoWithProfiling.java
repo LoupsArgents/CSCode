@@ -10,6 +10,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import java.util.ArrayList;
 
+//startpos > endpos profiling is struggling
+
 public class ServoWithProfiling {
     private static ArrayList<ServoWithProfiling> arr = new ArrayList<>();
     private ServoImplEx s;
@@ -112,7 +114,7 @@ public class ServoWithProfiling {
 
     public void profile() { //also updates isMoving
         isMoving = true;
-        if (Math.abs(currentPos - endPosEnc) < 1) {
+        if (Math.abs(currentPos - endPosEnc) < 5) {
             isMoving = false;
             s.setPosition(endPosServo);
             setTo = endPosServo;
@@ -130,9 +132,11 @@ public class ServoWithProfiling {
                 double idealServoPos = encoderToServoPos(idealEncoderPos);
                 s.setPosition(idealServoPos);
                 setTo = idealServoPos;
-                if (t.milliseconds() > msForProfile || Math.abs(currentPos - endPosEnc) < 1) {
-                    s.setPosition(encoderToServoPos(endPosEnc));
-                    setTo = encoderToServoPos(endPosEnc);
+                if (t.milliseconds() > msForProfile || Math.abs(currentPos - endPosEnc) < 5) {
+                    //s.setPosition(encoderToServoPos(endPosEnc));
+                    //setTo = encoderToServoPos(endPosEnc);
+                    s.setPosition(endPosServo);
+                    setTo = endPosServo;
                     isMoving = false;
                 }
             } else {
@@ -141,7 +145,7 @@ public class ServoWithProfiling {
                 isMoving = true; //we haven't even started profiling yet, so we still need to be moving
                 t.reset();
             }
-        } else { //startPos > endPos
+        } else { //startPos > endPos -- this is the one that's having problems
             double switchToProfiling = startPosEnc - (startPosEnc - endPosEnc) * percentStartProfiling;
             if (hasStartedProfiling || currentPos < switchToProfiling) {
                 hasStartedProfiling = true;
@@ -153,14 +157,14 @@ public class ServoWithProfiling {
                 double idealServoPos = encoderToServoPos(idealEncoderPos);
                 s.setPosition(idealServoPos);
                 setTo = idealServoPos;
-                if (t.milliseconds() > msForProfile || Math.abs(currentPos - endPosEnc) < 1) {
-                    s.setPosition(encoderToServoPos(endPosEnc));
-                    setTo = encoderToServoPos(endPosEnc);
+                if (t.milliseconds() > msForProfile || Math.abs(currentPos - endPosEnc) < 5) {
+                    s.setPosition(endPosServo);
+                    setTo = endPosServo;
                     isMoving = false;
                 }
             } else {
-                s.setPosition(encoderToServoPos(endPosEnc));
-                setTo = encoderToServoPos(endPosEnc);
+                s.setPosition(endPosServo);
+                setTo = endPosServo;
                 isMoving = true; //we haven't even started profiling yet, so we still need to be moving
                 t.reset();
             }

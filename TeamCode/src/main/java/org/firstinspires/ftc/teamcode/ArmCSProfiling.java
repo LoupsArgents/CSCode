@@ -24,7 +24,9 @@ public class ArmCSProfiling extends LinearOpMode {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         arm = hardwareMap.get(ServoImplEx.class, "arm3");
         armAna = hardwareMap.get(AnalogInput.class, "armAna");
-        a = new ServoWithProfiling(arm, armAna, -322.2, -0.00310365, 339.1, 1.05245, 2000, 0.5);
+        //m1 is -237.164 and b1 is 194.166
+        //m2 is -0.0041124 and b2 is 0.809228
+        a = new ServoWithProfiling(arm, armAna, -237.164, -0.0041124, 194.166, 0.809228, 3000, 0.4);
         arm.setPosition(0.82);
         a.updateCurrentPos();
         telemetry.addData("status", "initialized");
@@ -41,38 +43,29 @@ public class ArmCSProfiling extends LinearOpMode {
             telemetry.addData("Timer (ms)", a.getMS());
             telemetry.addData("isMoving", a.getIsMoving());
             telemetry.update();
-            if (gamepad1.a) {
-                a.setPosition(0.82);
-            } else if (gamepad1.b) {
-                a.setPosition(0.65);
-            } else if (gamepad1.y) {
-                a.setPosition(0.2);
-            } else if (gamepad1.x) {
-                a.setPosition(0.07);
-            }
-            /*if (gamepad1.guide || !a.getIsMoving()) {
+            if (gamepad1.guide || !a.getIsMoving()) {
                 if (gamepad1.a) {
                     a.setStartPosEnc(a.getCurrentPos());
-                    a.setEndPosServo(0.0);
+                    a.setEndPosServo(0.82);
                     a.setIsMoving(true);
                 } else if (gamepad1.b) {
                     telemetry.addData("this runs", "");
                     a.setStartPosEnc(a.getCurrentPos());
-                    a.setEndPosServo(1.0/3);
+                    a.setEndPosServo(0.65);
                     a.setIsMoving(true);
                 } else if (gamepad1.y) {
                     a.setStartPosEnc(a.getCurrentPos());
-                    a.setEndPosServo(2.0/3);
+                    a.setEndPosServo(0.2);
                     a.setIsMoving(true);
                 } else if (gamepad1.x) {
                     a.setStartPosEnc(a.getCurrentPos());
-                    a.setEndPosServo(1.0);
+                    a.setEndPosServo(0.07);
                     a.setIsMoving(true);
                 }
             }
             if (a.getIsMoving()) {
                 a.profile();
-            }*/
+            }
         }
     }
 }
