@@ -662,7 +662,7 @@ public class CSYorkDF extends LinearOpMode {
     public boolean placeAndHeading(double x, double y, double idealHeading, double powerMult, double inTol, double degTol) {
         processedHeading = newGetHeading();
         double rxConst = 12; //was 15, then 13
-        double moveConst = 1.5; //maybe needs editing; was 1, then 10
+        double moveConst = 1.5; //maybe needs editing; was 1, then 1.5
         double currentX = opticalOdo.getPosition().x;
         double currentY = opticalOdo.getPosition().y;
         telemetry.addData("currentX, currentY", currentX + ", " + currentY);
@@ -703,7 +703,7 @@ public class CSYorkDF extends LinearOpMode {
             return true;
         }
         double sign = rotError/(processedHeading % 360 - idealHeading);
-        if (rotError > 45) {rxConst = 90;}
+        if (rotError > 45) {rxConst = 70;} //used to be rxConst = 90
         if (rotError < degTol) {
             rx = 0;
         } else if (sign == -1) {
@@ -716,7 +716,53 @@ public class CSYorkDF extends LinearOpMode {
         if (rx < -1) {rx = -1;}
         if (rx > 1) {rx = 1;}
         //telemetry.addData("rX", rx);
-
+        /*if(joyX < -1) joyX = -1;
+        if(joyX > 1) joyX = 1;
+        if(joyY < -1) joyY = -1;
+        if(joyY > 1) joyY = 1;*/ //old joystick capping code
+        //code for capping joyX, joyY to real, possible joystick values
+        if(joyX == 0 || joyY == 0){
+            if(joyX == 0 && joyY != 0){
+                if(joyY > 1) joyY = 1;
+                if(joyY < -1) joyY = -1;
+            }else if (joyX != 0 && joyY == 0){
+                if(joyX < -1) joyX = -1;
+                if(joyX > 1) joyX = 1;
+            }
+        }else if(Math.sqrt(Math.pow(joyX, 2) + Math.pow(joyY, 2)) > 1){ //the madness begins
+            int quadrant = 1;
+            if(joyX < 0){
+                if(joyY > 0){
+                    quadrant = 2;
+                }else{
+                    quadrant = 3;
+                }
+            }else if(joyY < 0){
+                quadrant = 4;
+            }
+            //sqrt(newX^2 + newY^2) = 1
+            //angle between (newX, newY) and center is arctan(joyY/joyX)
+            double angle = Math.atan(joyY/joyX);
+            if(angle < 0 && quadrant == 2){
+                angle += Math.PI;
+                joyX = Math.cos(angle);
+                joyY = Math.sin(angle);
+            }else if(angle < 0 && quadrant == 4){
+                joyX = Math.cos(angle);
+                joyY = Math.sin(angle);
+            }else if(angle > 0 && quadrant == 1){
+                //this is the easiest one
+                joyX = Math.cos(angle);
+                joyY = Math.sin(angle);
+            }else if(angle > 0 && quadrant == 3){
+                angle += Math.PI;
+                joyX = Math.cos(angle);
+                joyY = Math.sin(angle);
+            }
+        }
+        telemetry.addData("joyX", joyX);
+        telemetry.addData("joyY", joyY);
+        telemetry.addData("rx", rx);
         double rotX = joyX * Math.cos(-botHeading) - joyY * Math.sin(-botHeading);
         double rotY = joyX * Math.sin(-botHeading) + joyY * Math.cos(-botHeading);
 
@@ -725,9 +771,9 @@ public class CSYorkDF extends LinearOpMode {
         double backLeftPower = (rotY - rotX + rx) / denominator;
         double frontRightPower = (rotY - rotX - rx) / denominator;
         double backRightPower = (rotY + rotX - rx) / denominator;
-        if(frontLeftPower < .2 && frontRightPower < .2 && backLeftPower < .2 && backRightPower < .2){
+        if(Math.abs(frontLeftPower) < .2 && Math.abs(frontRightPower) < .2 && Math.abs(backLeftPower) < .2 && Math.abs(backRightPower) < .2){
             //if all powers are too small... we'll see how this goes though
-            double largest = Math.max(Math.max(frontLeftPower, frontRightPower), Math.max(backLeftPower, backRightPower));
+            double largest = Math.max(Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower)), Math.max(Math.abs(backLeftPower), Math.abs(backRightPower)));
             //scale largest up to .3?
             double ratio = .3/largest;
             frontLeftPower *= ratio;
@@ -750,7 +796,14 @@ public class CSYorkDF extends LinearOpMode {
     public void moveTo(double power, double x, double y, double heading){
         double startX = opticalOdo.getPosition().x;
         double startY = opticalOdo.getPosition().y;
-        while(opModeIsActive() && !placeAndHeading(startX + x, startY + y, heading, power, .25, .5)){}
+        long prevTime = System.currentTimeMillis();
+        while(opModeIsActive()){
+            if(placeAndHeading(startX + x, startY + y, heading, power, .25, .5)) return;
+            long nowTime = System.currentTimeMillis();
+            telemetry.addData("LoopTime", nowTime-prevTime);
+            RobotLog.aa("LoopTime", String.valueOf(nowTime-prevTime));
+            prevTime = nowTime;
+        }
     }
     public void gyroTurn(double power, double degrees){ //right is negative
         if(opModeIsActive()){
