@@ -123,6 +123,9 @@ public class CSYorkDF extends LinearOpMode {
     double camOutOfWay = 0.36; //pointing straight out
     double camUsePos = 0.6475;
     double camTuckedIn = 0.9575;
+    double mostRecentStartX;
+    double mostRecentStartY;
+    double mostRecentStartHeading;
     double liftPos;
     double liftIdealPos;
     double liftInitial;
@@ -659,10 +662,10 @@ public class CSYorkDF extends LinearOpMode {
         int forwardEndTicks = forwardOdo.getCurrentPosition();
         return newInchesTraveled(forwardStartTicks, forwardEndTicks);
     }
-    public boolean placeAndHeading(double x, double y, double idealHeading, double powerMult, double inTol, double degTol) {
+    public boolean placeAndHeading(double x, double y, double idealHeading, double powerMult, double inTol, double degTol, boolean stop) {
         processedHeading = newGetHeading();
-        double rxConst = 12; //was 15, then 13
-        double moveConst = 1.5; //maybe needs editing; was 1, then 1.5
+        double rxConst = 13; //was 15, then 13, then 12
+        double moveConst = 2; //maybe needs editing; was 1, then 1.5
         double currentX = opticalOdo.getPosition().x;
         double currentY = opticalOdo.getPosition().y;
         telemetry.addData("currentX, currentY", currentX + ", " + currentY);
@@ -682,24 +685,22 @@ public class CSYorkDF extends LinearOpMode {
             joyX = 0;
             joyY = 0;
         }
+
         if (l < 5) {
-            moveConst = 1.5 * l/5; //was l/5
-            joyX *= moveConst;
-            joyY *= moveConst;
+            moveConst = 2 * l/5; //was l/5
         }
+        joyX *= moveConst;
+        joyY *= moveConst; //used to be inside the if; testing what happens if it's outside
         //rx = fake joystick right left/right aka turning
         double rx = 0;
         double rotError = Math.abs(processedHeading % 360 - idealHeading);
         if(rotError < 5){ //attempting to account for the rotational jerk
-            rxConst = 12 * rotError/5; //should be 12 at 5 degrees, so... rotError*12/5
+            rxConst = 13 * rotError/5; //should be 12 at 5 degrees, so... rotError*12/5
         }
         telemetry.addData("HeadingError", rotError);
         if (l < inTol && rotError < degTol) {
             //if we actually don't need to do anything
-            motorFR.setPower(0);
-            motorFL.setPower(0);
-            motorBR.setPower(0);
-            motorBL.setPower(0);
+            if(stop) stopMotors();
             return true;
         }
         double sign = rotError/(processedHeading % 360 - idealHeading);
@@ -765,7 +766,6 @@ public class CSYorkDF extends LinearOpMode {
         telemetry.addData("rx", rx);
         double rotX = joyX * Math.cos(-botHeading) - joyY * Math.sin(-botHeading);
         double rotY = joyX * Math.sin(-botHeading) + joyY * Math.cos(-botHeading);
-
         double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
         double frontLeftPower = (rotY + rotX + rx) / denominator;
         double backLeftPower = (rotY - rotX + rx) / denominator;
@@ -793,12 +793,15 @@ public class CSYorkDF extends LinearOpMode {
         telemetry.update();
         return false;
     }
-    public void moveTo(double power, double x, double y, double heading){
+    public void moveTo(double power, Position pos, boolean stop){
         double startX = opticalOdo.getPosition().x;
         double startY = opticalOdo.getPosition().y;
+        mostRecentStartX = startX;
+        mostRecentStartY = startY;
+        mostRecentStartHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
         long prevTime = System.currentTimeMillis();
         while(opModeIsActive()){
-            if(placeAndHeading(startX + x, startY + y, heading, power, .25, .5)) return;
+            if(placeAndHeading(startX + pos.getX(), startY + pos.getY(), pos.getHeading(), power, .5, 1, stop)) return;
             long nowTime = System.currentTimeMillis();
             telemetry.addData("LoopTime", nowTime-prevTime);
             RobotLog.aa("LoopTime", String.valueOf(nowTime-prevTime));
