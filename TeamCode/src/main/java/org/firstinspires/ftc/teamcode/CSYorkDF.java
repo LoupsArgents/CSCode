@@ -123,9 +123,6 @@ public class CSYorkDF extends LinearOpMode {
     double camOutOfWay = 0.36; //pointing straight out
     double camUsePos = 0.6475;
     double camTuckedIn = 0.9575;
-    double mostRecentStartX;
-    double mostRecentStartY;
-    double mostRecentStartHeading;
     double liftPos;
     double liftIdealPos;
     double liftInitial;
@@ -668,9 +665,12 @@ public class CSYorkDF extends LinearOpMode {
         double moveConst = 2; //maybe needs editing; was 1, then 1.5
         double currentX = opticalOdo.getPosition().x;
         double currentY = opticalOdo.getPosition().y;
+        double forceVectorCorrection = 0.42; //was 0.445
         telemetry.addData("currentX, currentY", currentX + ", " + currentY);
         double xDifference = currentX - x;
         double yDifference = currentY - y;
+        telemetry.addData("xError", xDifference);
+        telemetry.addData("yError", yDifference);
         RobotLog.aa("xDiff_yDiff", xDifference + ", " + yDifference);
         double l = Math.sqrt(xDifference*xDifference + yDifference*yDifference); // diagonal error
         telemetry.addData("Diagonal error", l);
@@ -716,11 +716,7 @@ public class CSYorkDF extends LinearOpMode {
         }
         if (rx < -1) {rx = -1;}
         if (rx > 1) {rx = 1;}
-        //telemetry.addData("rX", rx);
-        /*if(joyX < -1) joyX = -1;
-        if(joyX > 1) joyX = 1;
-        if(joyY < -1) joyY = -1;
-        if(joyY > 1) joyY = 1;*/ //old joystick capping code
+        joyY *= forceVectorCorrection; //correcting for the fact that gobilda mecanum force vectors are 66 degrees not 45
         //code for capping joyX, joyY to real, possible joystick values
         if(joyX == 0 || joyY == 0){
             if(joyX == 0 && joyY != 0){
@@ -796,12 +792,9 @@ public class CSYorkDF extends LinearOpMode {
     public void moveTo(double power, Position pos, boolean stop){
         double startX = opticalOdo.getPosition().x;
         double startY = opticalOdo.getPosition().y;
-        mostRecentStartX = startX;
-        mostRecentStartY = startY;
-        mostRecentStartHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
         long prevTime = System.currentTimeMillis();
         while(opModeIsActive()){
-            if(placeAndHeading(startX + pos.getX(), startY + pos.getY(), pos.getHeading(), power, .5, 1, stop)) return;
+            if(placeAndHeading(pos.getX(), pos.getY(), pos.getHeading(), power, .5, 1, stop)) return;
             long nowTime = System.currentTimeMillis();
             telemetry.addData("LoopTime", nowTime-prevTime);
             RobotLog.aa("LoopTime", String.valueOf(nowTime-prevTime));

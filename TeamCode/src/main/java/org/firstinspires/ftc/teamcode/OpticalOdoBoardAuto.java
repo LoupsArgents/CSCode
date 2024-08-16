@@ -12,11 +12,9 @@ public class OpticalOdoBoardAuto extends CSYorkDF {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         waitForStart();
         moveTo(.5, new Position(10, 20, 90.0), false); //was heading 90
-        moveTo(.5, new Position(5, 10, 150.0), false); //was heading 150
-        moveTo(.5, new Position(-15, -30, 0.0), true);
-        telemetry.addData("Status", "GOT HERE");
-        RobotLog.aa("Status", "DONE!! WE GOT THERE");
-        telemetry.update();
+        moveTo(.5, new Position(15, 30, 150.0), false); //was heading 150
+        moveTo(.5, new Position(0, 0, 0.0), true);
+        //moveTo(.5, new Position(12, 24, 0.0), true);
         while(opModeIsActive()){
             SparkFunOTOS.Pose2D pos = opticalOdo.getPosition();
             telemetry.addData("CurrentX", pos.x);
