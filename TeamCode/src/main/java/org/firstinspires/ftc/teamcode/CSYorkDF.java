@@ -123,9 +123,6 @@ public class CSYorkDF extends LinearOpMode {
     double camOutOfWay = 0.36; //pointing straight out
     double camUsePos = 0.6475;
     double camTuckedIn = 0.9575;
-    double mostRecentStartX;
-    double mostRecentStartY;
-    double mostRecentStartHeading;
     double liftPos;
     double liftIdealPos;
     double liftInitial;
@@ -668,9 +665,12 @@ public class CSYorkDF extends LinearOpMode {
         double moveConst = 2; //maybe needs editing; was 1, then 1.5
         double currentX = opticalOdo.getPosition().x;
         double currentY = opticalOdo.getPosition().y;
+        double forceVectorCorrection = 0.42; //was 0.445
         telemetry.addData("currentX, currentY", currentX + ", " + currentY);
         double xDifference = currentX - x;
         double yDifference = currentY - y;
+        telemetry.addData("xError", xDifference);
+        telemetry.addData("yError", yDifference);
         RobotLog.aa("xDiff_yDiff", xDifference + ", " + yDifference);
         double l = Math.sqrt(xDifference*xDifference + yDifference*yDifference); // diagonal error
         telemetry.addData("Diagonal error", l);
@@ -685,7 +685,6 @@ public class CSYorkDF extends LinearOpMode {
             joyX = 0;
             joyY = 0;
         }
-
         if (l < 5) {
             moveConst = 2 * l/5; //was l/5
         }
@@ -714,14 +713,50 @@ public class CSYorkDF extends LinearOpMode {
             //turning right
             rx = (rxConst/180) * rotError;
         }
+        //cap rx if too large
         if (rx < -1) {rx = -1;}
         if (rx > 1) {rx = 1;}
-        //telemetry.addData("rX", rx);
-        /*if(joyX < -1) joyX = -1;
-        if(joyX > 1) joyX = 1;
-        if(joyY < -1) joyY = -1;
-        if(joyY > 1) joyY = 1;*/ //old joystick capping code
-        //code for capping joyX, joyY to real, possible joystick values
+        //scale up rx if too small
+        if(Math.abs(rx) < .2 && Math.abs(rotError) > degTol){
+            if(rx > 0) rx = .2;
+            else if(rx < 0) rx = -.2;
+        }
+        joyY *= forceVectorCorrection; //correcting for the fact that gobilda mecanum force vectors are 66 degrees not 45
+        //code for capping joyX, joyY to real, possible joystick values that cause movement
+        //if values are too small and there's still error
+        if(Math.abs(l) > inTol && Math.abs(joyX) < .3 && Math.abs(joyY) < .3){ //these values for joystick-too-small are *completely* arbitrary
+            int quadrant = 1;
+            if(joyX < 0){
+                if(joyY > 0){
+                    quadrant = 2;
+                }else{
+                    quadrant = 3;
+                }
+            }else if(joyY < 0){
+                quadrant = 4;
+            }
+            //sqrt(newX^2 + newY^2) = 1
+            //angle between (newX, newY) and center is arctan(joyY/joyX)
+            double angle = Math.atan(joyY/joyX);
+            double innerCircleRadius = .5;
+            if(angle < 0 && quadrant == 2){
+                angle += Math.PI;
+                joyX = Math.cos(angle) * innerCircleRadius;
+                joyY = Math.sin(angle) * innerCircleRadius;
+            }else if(angle < 0 && quadrant == 4){
+                joyX = Math.cos(angle) * innerCircleRadius;
+                joyY = Math.sin(angle) * innerCircleRadius;
+            }else if(angle > 0 && quadrant == 1){
+                //this is the easiest one
+                joyX = Math.cos(angle) * innerCircleRadius;
+                joyY = Math.sin(angle) * innerCircleRadius;
+            }else if(angle > 0 && quadrant == 3){
+                angle += Math.PI;
+                joyX = Math.cos(angle * innerCircleRadius);
+                joyY = Math.sin(angle * innerCircleRadius);
+            }
+        }
+        //if values are too large
         if(joyX == 0 || joyY == 0){
             if(joyX == 0 && joyY != 0){
                 if(joyY > 1) joyY = 1;
@@ -771,7 +806,7 @@ public class CSYorkDF extends LinearOpMode {
         double backLeftPower = (rotY - rotX + rx) / denominator;
         double frontRightPower = (rotY - rotX - rx) / denominator;
         double backRightPower = (rotY + rotX - rx) / denominator;
-        if(Math.abs(frontLeftPower) < .2 && Math.abs(frontRightPower) < .2 && Math.abs(backLeftPower) < .2 && Math.abs(backRightPower) < .2){
+        /*if(Math.abs(frontLeftPower) < .3 && Math.abs(frontRightPower) < .3 && Math.abs(backLeftPower) < .3 && Math.abs(backRightPower) < .3){
             //if all powers are too small... we'll see how this goes though
             double largest = Math.max(Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower)), Math.max(Math.abs(backLeftPower), Math.abs(backRightPower)));
             //scale largest up to .3?
@@ -780,7 +815,7 @@ public class CSYorkDF extends LinearOpMode {
             frontRightPower *= ratio;
             backLeftPower *= ratio;
             backRightPower *= ratio;
-        }
+        }*/
         motorFL.setPower(powerMult * frontLeftPower);
         motorBL.setPower(powerMult * backLeftPower);
         motorFR.setPower(powerMult * frontRightPower);
@@ -796,12 +831,9 @@ public class CSYorkDF extends LinearOpMode {
     public void moveTo(double power, Position pos, boolean stop){
         double startX = opticalOdo.getPosition().x;
         double startY = opticalOdo.getPosition().y;
-        mostRecentStartX = startX;
-        mostRecentStartY = startY;
-        mostRecentStartHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
         long prevTime = System.currentTimeMillis();
         while(opModeIsActive()){
-            if(placeAndHeading(startX + pos.getX(), startY + pos.getY(), pos.getHeading(), power, .5, 1, stop)) return;
+            if(placeAndHeading(pos.getX(), pos.getY(), pos.getHeading(), power, .5, 1, stop)) return;
             long nowTime = System.currentTimeMillis();
             telemetry.addData("LoopTime", nowTime-prevTime);
             RobotLog.aa("LoopTime", String.valueOf(nowTime-prevTime));

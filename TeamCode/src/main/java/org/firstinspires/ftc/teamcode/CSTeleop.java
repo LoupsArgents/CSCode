@@ -429,7 +429,7 @@ public class CSTeleop extends LinearOpMode {
             telemetry.addData("liftStallPower", liftStallPower);
             telemetry.addData("liftHappyPlace", liftHappyPlace);
             telemetry.addData("gamepad1.left_stick_x", gamepad1.left_stick_x);
-            telemetry.addData("gamepad1.left_stick_y", gamepad1.left_stick_x);
+            telemetry.addData("gamepad1.left_stick_y", gamepad1.left_stick_y);
             telemetry.addData("gamepad1.right_stick_x", gamepad1.right_stick_x);
             //telemetry.addData("oldHeadingWay", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
             currentTime = timer.milliseconds();
