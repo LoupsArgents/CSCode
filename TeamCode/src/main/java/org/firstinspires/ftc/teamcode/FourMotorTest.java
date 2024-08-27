@@ -69,9 +69,9 @@ public class FourMotorTest extends LinearOpMode {
         control_Hub = hardwareMap.get(Blinker.class, "Control Hub");
         power = 1;
         motorFR = hardwareMap.get(DcMotorEx.class, "motor3");
-        motorFL = hardwareMap.get(DcMotorEx.class, "motor2");
+        motorFL = hardwareMap.get(DcMotorEx.class, "motor2"); // a bit faster
         motorBR = hardwareMap.get(DcMotorEx.class, "motor1");
-        motorBL = hardwareMap.get(DcMotorEx.class, "motor0");
+        motorBL = hardwareMap.get(DcMotorEx.class, "motor0"); // a bit faster
         motorFR.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         motorFL.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         motorBR.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
