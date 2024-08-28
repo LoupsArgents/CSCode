@@ -722,6 +722,7 @@ public class CSYorkDF extends LinearOpMode {
             else if(rx < 0) rx = -.2;
         }
         joyY *= forceVectorCorrection; //correcting for the fact that gobilda mecanum force vectors are 66 degrees not 45
+        //force vector correction does NOT work on non-0 headings
         //code for capping joyX, joyY to real, possible joystick values that cause movement
         //if values are too small and there's still error
         if(Math.abs(l) > inTol && Math.abs(joyX) < .3 && Math.abs(joyY) < .3){ //these values for joystick-too-small are *completely* arbitrary
