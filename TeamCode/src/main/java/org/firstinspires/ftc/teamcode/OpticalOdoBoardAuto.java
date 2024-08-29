@@ -796,6 +796,7 @@ public class OpticalOdoBoardAuto extends CSYorkDF {
             endStopPosForCycle = endStop23Pos;
             wristPosForCycle = wristStack23Pos;
         }
+        goStraight(.75, 2, -90.0*alliance); //power was .4, then .55, then .65; increased distance from 5; was 7; was 5
         closeClaw();// was openClaw(); and idk why
         armAlmostDown();
         wrist.setPosition(wristAlmostDown);
@@ -832,105 +833,60 @@ public class OpticalOdoBoardAuto extends CSYorkDF {
         pixelsOnStack -= 2;
     }
     public void getBackToBoard(String result, int alliance){
-        goBackward(.8, 65.5, -90.0*alliance); //power was .6, then .7; distance was 70 but became too close for apriltags; was 54.5 then 55.5 then changed deceleration
+        moveTo(.5, new Position(-16.71*alliance, 50.6, -90.0*alliance), false);
         wrist.setPosition(wristAlmostDown);
         armAlmostUp();
-        goBackward(.7, 15, -90.0*alliance); //was 18
-        if(deliverToBackstage){
-            armUp();
-            wrist.setPosition(wristScoringPos);
-            goBackward(.6, 15, -90.0*alliance);
-            sleep(1000);
-            openClaw();
-            sleep(500);
-            armAlmostDown();
-            wrist.setPosition(wristAlmostDown);
-            sleep(1000);
-            armDown();
-            wrist.setPosition(wristDownPos);
-            sleep(30000);
-        }else{
-            liftIdealPos = liftFirstWhitePixelPos;
-            sleep(300); //was 500
-            String res = "Right";
-            if (alliance == -1) {
-                res = "Left";
-                if (result.equals("Left")) {
-                    res = "Center";
-                }
-            } else {
-                if (result.equals("Right")) {
-                    res = "Center";
-                }
+        moveTo(.6, new Position(-32*alliance, 25.5, -90.0*alliance), true);
+        liftIdealPos = liftFirstWhitePixelPos;
+        sleep(300); //was 500
+        wrist.setPosition(wristScoringPos);
+        armUp();
+        wait(500);
+        if (alliance == 1) {
+            String s = "RightCenter";
+            if (result.equals("Right")) {
+                s = "CenterCenter";
             }
-            if ((res.equals("Left") && alliance == 1) || (res.equals("Right") && alliance == -1)) {
-                if (alliance == 1) {
-                    strafeRight(.7, 23, 5, -90.0 * alliance); //powers were .6, then .7; dists were 20 then 15
-                } else if (alliance == -1) {
-                    strafeLeft(.7, 23, 5, -90.0 * alliance);
-                }
-            } else if (res.equals("Center")) {
-                if (alliance == 1) {
-                    strafeRight(.7, 23, 5, -90.0 * alliance); //powers were .6, then .7; dists were 20 then 15
-                } else if (alliance == -1) {
-                    strafeLeft(.7, 23, 5, -90.0 * alliance);
-                }
-            } else {
-                if (alliance == 1) {
-                    strafeRight(.7, 15, 5, -90.0 * alliance); //powers were .6, then .7; dists were 20 then 15
-                } else if (alliance == -1) {
-                    strafeLeft(.7, 15, 5, -90.0 * alliance);
-                }
+            positionOnBackdrop(s, alliance, 1);
+            if(!didFailsafe) {
+                wait(500);
+                positionOnBackdrop(s, alliance, 2);
             }
-            wrist.setPosition(wristScoringPos);
-            armUp();
-            wait(500);
-            if (alliance == 1) {
-                String s = "RightCenter";
-                if (result.equals("Right")) {
-                    s = "CenterCenter";
-                }
-                positionOnBackdrop(s, alliance, 1);
-                if(!didFailsafe) {
-                    wait(500);
-                    positionOnBackdrop(s, alliance, 2);
-                }
-            } else if (alliance == -1) {
-                String s = "LeftCenter";
-                if (result.equals("Left")) {
-                    s = "CenterCenter";
-                }
-                positionOnBackdrop(s, alliance, 1);
-                if(!didFailsafe) {
-                    wait(500);
-                    positionOnBackdrop(s, alliance, 2);
-                }
+        } else if (alliance == -1) {
+            String s = "LeftCenter";
+            if (result.equals("Left")) {
+                s = "CenterCenter";
             }
-        /*liftIdealPos = .07;
-        while(Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()){
-            liftWithinLoop();
-        }*/
-            openLowerClaw();
-            RobotLog.aa("Status", "Opened first claw");
-            wait(500);
-            //sleep(200);
-            liftIdealPos = liftSecondWhitePixelPos;
-            RobotLog.aa("Status", "Set lift position");
-            goStraight(.35, .5, -90.0 * alliance);
-            wait(500);
-            goBackward(.35, .25, -90.0 * alliance);
-            RobotLog.aa("Status", "Moved and starting lift");
-        /*liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
-        while(Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()){
-            liftWithinLoop();
-        }*/
-            wait(500);
-            RobotLog.aa("Status", "Lift moved up");
-            openUpperClaw();
-            RobotLog.aa("Status", "Claw opened");
-            cameraBar.setPosition(camOutOfWay);
-            wait(500);
+            positionOnBackdrop(s, alliance, 1);
+            if(!didFailsafe) {
+                wait(500);
+                positionOnBackdrop(s, alliance, 2);
+            }
         }
+    /*liftIdealPos = .07;
+    while(Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()){
+        liftWithinLoop();
+    }*/
+        openLowerClaw();
+        RobotLog.aa("Status", "Opened first claw");
+        wait(500);
+        //sleep(200);
+        liftIdealPos = liftSecondWhitePixelPos;
+        RobotLog.aa("Status", "Set lift position");
+        goStraight(.35, .5, -90.0 * alliance);
+        wait(500);
+        goBackward(.35, .25, -90.0 * alliance);
+        RobotLog.aa("Status", "Moved and starting lift");
+    /*liftPos = -((liftEncoder.getCurrentPosition()/ticksPerRotation)-liftInitial);
+    while(Math.abs(liftIdealPos - liftPos) > .005 && opModeIsActive()){
+        liftWithinLoop();
+    }*/
+        wait(500);
+        RobotLog.aa("Status", "Lift moved up");
+        openUpperClaw();
+        RobotLog.aa("Status", "Claw opened");
+        cameraBar.setPosition(camOutOfWay);
+        wait(500);
     }
     public void cycleThroughTruss(String result, int alliance){
         getToStackThroughTruss(result, alliance);

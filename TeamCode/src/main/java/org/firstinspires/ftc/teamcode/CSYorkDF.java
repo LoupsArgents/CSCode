@@ -721,11 +721,12 @@ public class CSYorkDF extends LinearOpMode {
             if(rx > 0) rx = .2;
             else if(rx < 0) rx = -.2;
         }
-        joyY *= forceVectorCorrection; //correcting for the fact that gobilda mecanum force vectors are 66 degrees not 45
+        //joyY *= forceVectorCorrection; //correcting for the fact that gobilda mecanum force vectors are 66 degrees not 45
         //force vector correction does NOT work on non-0 headings
         //code for capping joyX, joyY to real, possible joystick values that cause movement
         //if values are too small and there's still error
-        if(Math.abs(l) > inTol && Math.abs(joyX) < .3 && Math.abs(joyY) < .3){ //these values for joystick-too-small are *completely* arbitrary
+        double joyTol = .3;
+        if(Math.abs(l) > inTol && Math.abs(joyX) < joyTol && Math.abs(joyY) < joyTol){ //these values for joystick-too-small are *completely* arbitrary
             int quadrant = 1;
             if(joyX < 0){
                 if(joyY > 0){
@@ -802,6 +803,36 @@ public class CSYorkDF extends LinearOpMode {
         telemetry.addData("rx", rx);
         double rotX = joyX * Math.cos(-botHeading) - joyY * Math.sin(-botHeading);
         double rotY = joyX * Math.sin(-botHeading) + joyY * Math.cos(-botHeading);
+        double innerCircleRadius = Math.sqrt(Math.pow(rotX, 2) + Math.pow(rotY, 2));
+        rotY *= forceVectorCorrection;
+        //Below: Scale current thing to the magnitude of the pre-correction thing
+        int quadrant = 1;
+        if(rotX < 0){
+            if(rotY > 0){
+                quadrant = 2;
+            }else{
+                quadrant = 3;
+            }
+        }else if(rotY < 0){
+            quadrant = 4;
+        }
+        double angle = Math.atan(rotY/rotX);
+        if(angle < 0 && quadrant == 2){
+            angle += Math.PI;
+            rotX = Math.cos(angle) * innerCircleRadius;
+            rotY = Math.sin(angle) * innerCircleRadius;
+        }else if(angle < 0 && quadrant == 4){
+            rotX = Math.cos(angle) * innerCircleRadius;
+            rotY = Math.sin(angle) * innerCircleRadius;
+        }else if(angle > 0 && quadrant == 1){
+            //this is the easiest one
+            rotX = Math.cos(angle) * innerCircleRadius;
+            rotY = Math.sin(angle) * innerCircleRadius;
+        }else if(angle > 0 && quadrant == 3){
+            angle += Math.PI;
+            rotX = Math.cos(angle * innerCircleRadius);
+            rotY = Math.sin(angle * innerCircleRadius);
+        }
         double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
         double frontLeftPower = (rotY + rotX + rx) / denominator;
         double backLeftPower = (rotY - rotX + rx) / denominator;
