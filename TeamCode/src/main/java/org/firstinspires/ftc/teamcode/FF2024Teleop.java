@@ -80,6 +80,9 @@ public class FF2024Teleop extends LinearOpMode {
     DcMotorEx motorBR;
     DcMotorEx liftEncoder;
     DcMotorEx motorBL;
+    DcMotorEx intake;
+    boolean intakeOn = false;
+    boolean canChangeIntake = true;
     double botHeading;
 
     public void runOpMode() {
@@ -95,6 +98,7 @@ public class FF2024Teleop extends LinearOpMode {
         motorBR = hardwareMap.get(DcMotorEx.class, "motorBR");
         liftEncoder = hardwareMap.get(DcMotorEx.class, "motorFLandLiftEnc");
         motorBL = hardwareMap.get(DcMotorEx.class, "motorBL");
+        intake = hardwareMap.get(DcMotorEx.class,"intake");
 
         motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -143,6 +147,23 @@ public class FF2024Teleop extends LinearOpMode {
             motorBL.setPower(backLeftPower);
             motorFR.setPower(frontRightPower);
             motorBR.setPower(backRightPower);
+            if (gamepad1.start) {
+                imu.initialize(new IMU.Parameters(orientationOnRobot));
+                imu.resetYaw();
+                //previousHeading = 0;
+                //processedHeading = 0;
+            }
+            if (gamepad1.left_stick_button && intakeOn && canChangeIntake) {
+                intake.setPower(0);
+                intakeOn = false;
+                canChangeIntake = false;
+            } else if (gamepad1.left_stick_button && !intakeOn && canChangeIntake) {
+                intake.setPower(-0.9);
+                intakeOn = true;
+                canChangeIntake = false;
+            } else if (!gamepad1.left_stick_button) {
+                canChangeIntake = true;
+            }
         }
     }
 }
