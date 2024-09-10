@@ -740,7 +740,7 @@ public class CSYorkDF extends LinearOpMode {
             //sqrt(newX^2 + newY^2) = 1
             //angle between (newX, newY) and center is arctan(joyY/joyX)
             double angle = Math.atan(joyY/joyX);
-            double innerCircleRadius = .5;
+            double innerCircleRadius = .3; //was .5, then .4
             if(angle < 0 && quadrant == 2){
                 angle += Math.PI;
                 joyX = Math.cos(angle) * innerCircleRadius;
@@ -838,16 +838,6 @@ public class CSYorkDF extends LinearOpMode {
         double backLeftPower = (rotY - rotX + rx) / denominator;
         double frontRightPower = (rotY - rotX - rx) / denominator;
         double backRightPower = (rotY + rotX - rx) / denominator;
-        /*if(Math.abs(frontLeftPower) < .3 && Math.abs(frontRightPower) < .3 && Math.abs(backLeftPower) < .3 && Math.abs(backRightPower) < .3){
-            //if all powers are too small... we'll see how this goes though
-            double largest = Math.max(Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower)), Math.max(Math.abs(backLeftPower), Math.abs(backRightPower)));
-            //scale largest up to .3?
-            double ratio = .3/largest;
-            frontLeftPower *= ratio;
-            frontRightPower *= ratio;
-            backLeftPower *= ratio;
-            backRightPower *= ratio;
-        }*/
         motorFL.setPower(powerMult * frontLeftPower);
         motorBL.setPower(powerMult * backLeftPower);
         motorFR.setPower(powerMult * frontRightPower);
