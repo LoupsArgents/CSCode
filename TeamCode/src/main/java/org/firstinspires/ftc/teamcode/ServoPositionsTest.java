@@ -76,8 +76,8 @@ public class ServoPositionsTest extends LinearOpMode {
     boolean change1 = true;
     boolean change2 = true;
     public void runOpMode() {
-        String servo1Name = "rightLeadScrewServo";
-        String servo2Name = "droneRelease";
+        String servo1Name = "arm";
+        String servo2Name = "wrist";
         servo1 = hardwareMap.get(Servo.class, servo1Name);
         servo2 = hardwareMap.get(Servo.class, servo2Name);
         //Servo endStop = hardwareMap.get(Servo.class, "endStop");
