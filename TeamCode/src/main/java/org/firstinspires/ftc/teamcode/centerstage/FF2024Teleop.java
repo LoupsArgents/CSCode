@@ -81,7 +81,7 @@ public class FF2024Teleop extends LinearOpMode {
     DcMotorEx liftEncoder;
     DcMotorEx motorBL;
     DcMotorEx intake;
-    boolean intakeOn = false;
+    int intakeStatus = 0; // 0 is off, 1 is take in, 2 is spit out
     boolean canChangeIntake = true;
     double botHeading;
 
@@ -122,6 +122,8 @@ public class FF2024Teleop extends LinearOpMode {
             double imuRadians = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             botHeading = imuRadians;
             telemetry.addData("botHeading", botHeading);
+            telemetry.addData("intakeStatus", intakeStatus);
+            telemetry.addData("canChangeIntake", canChangeIntake);
             telemetry.update();
 
             //mecanum
@@ -153,15 +155,22 @@ public class FF2024Teleop extends LinearOpMode {
                 //previousHeading = 0;
                 //processedHeading = 0;
             }
-            if (gamepad1.left_stick_button && intakeOn && canChangeIntake) {
+            if ((gamepad1.left_stick_button || gamepad1.right_stick_button) && (intakeStatus == 1 || intakeStatus == 2) && canChangeIntake) {
                 intake.setPower(0);
-                intakeOn = false;
+                intakeStatus = 0; // 0 is off, 1 is take in, 2 is spit out
                 canChangeIntake = false;
-            } else if (gamepad1.left_stick_button && !intakeOn && canChangeIntake) {
+            } //else
+            if (gamepad1.left_stick_button && intakeStatus == 0 && canChangeIntake) {
                 intake.setPower(-0.9);
-                intakeOn = true;
+                intakeStatus = 1;
                 canChangeIntake = false;
-            } else if (!gamepad1.left_stick_button) {
+            }
+            if (gamepad1.right_stick_button && intakeStatus == 0 && canChangeIntake) {
+                intake.setPower(0.9);
+                intakeStatus = 2;
+                canChangeIntake = false;
+            }
+            if (!gamepad1.left_stick_button && !gamepad1.right_stick_button) {
                 canChangeIntake = true;
             }
         }
