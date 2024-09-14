@@ -50,6 +50,7 @@ import com.qualcomm.robotcore.hardware.PwmControl; // for Axon
 //change
 
 @TeleOp
+@Disabled
 public class testClass extends LinearOpMode {
     private DcMotorEx testMotor;
     //stuff

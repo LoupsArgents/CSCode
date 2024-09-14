@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp
+@Disabled
 
 public class OldFreightFrenzyCode extends LinearOpMode {
     private Blinker control_Hub;

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.centerstage;
+package org.firstinspires.ftc.teamcode;
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 
@@ -119,6 +119,11 @@ public class TeleopTemplate extends LinearOpMode {
             botHeading = imuRadians;
             telemetry.addData("botHeading", botHeading);
             telemetry.update();
+
+            if (gamepad1.start) {
+                imu.initialize(new IMU.Parameters(orientationOnRobot));
+                imu.resetYaw();
+            }
 
             //mecanum
             botHeading = imuRadians;

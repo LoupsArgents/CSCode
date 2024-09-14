@@ -20,7 +20,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @TeleOp
-//@Disabled
+@Disabled
 public class DeadWheelFunctions extends LinearOpMode {
 
     public static final double TRACKWIDTH = 28.6; //probably needs to get tuned

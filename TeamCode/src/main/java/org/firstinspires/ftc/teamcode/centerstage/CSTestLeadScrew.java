@@ -65,6 +65,7 @@ import com.qualcomm.robotcore.hardware.PwmControl; // for Axon
 
 
 @TeleOp
+@Disabled
 public class CSTestLeadScrew extends LinearOpMode {
     DcMotorEx ls1;
     DcMotorEx ls2;

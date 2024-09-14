@@ -53,6 +53,7 @@ import com.qualcomm.robotcore.hardware.PwmControl; // for Axon
 
 
 @TeleOp
+@Disabled
 public class BreakBeamTest extends LinearOpMode {
     /*public AnalogInput transmitter;
     public AnalogInput receiver;

@@ -47,6 +47,7 @@ import com.qualcomm.robotcore.hardware.PwmControl; // for Axon
 
 
 @TeleOp
+@Disabled
 public class FreightFrenzyInfoSession extends LinearOpMode {
     DcMotorEx motorFR;
     DcMotorEx motorFL;

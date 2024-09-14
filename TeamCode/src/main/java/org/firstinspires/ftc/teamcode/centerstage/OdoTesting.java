@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode.centerstage;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.RobotLog;
 
 @TeleOp
+@Disabled
 public class OdoTesting extends PPBotCSDF {
     public void runOpMode(){
         initializeHardware();

@@ -20,7 +20,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @TeleOp
-//@Disabled
+@Disabled
 public class CSOdoFunctions extends LinearOpMode {
 
     public static final double TRACKWIDTH = 29.9; //30.04 is too high, 25 is too low, 28 is too low, 29 is too low, 29.52 is slightly too low, 29.7 is slightly too low (0.01 error on a 90 degree turn), 29.8 is slightly low

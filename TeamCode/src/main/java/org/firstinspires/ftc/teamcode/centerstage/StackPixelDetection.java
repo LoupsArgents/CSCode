@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.centerstage;
 
 import android.graphics.Canvas;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Random;
 
 @TeleOp
+@Disabled
 public class StackPixelDetection extends OldPPBotBasicDF {
     public void runOpMode(){
         VisionPortal portal;

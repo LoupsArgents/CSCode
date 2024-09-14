@@ -28,7 +28,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  * The external encoders we are using are REV through-bore.
  */
 @TeleOp
-//@Disabled
+@Disabled
 public class DeadWheelsSample extends LinearOpMode {
 
     // The lateral distance between the left and right odometers

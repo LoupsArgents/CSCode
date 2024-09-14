@@ -57,6 +57,7 @@ import com.qualcomm.robotcore.hardware.PwmControl; // for Axon
 
 @Config
 @TeleOp
+@Disabled
 public class ATestSlides extends LinearOpMode {
     DcMotorEx lift1;
     DcMotorEx lift2;

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.centerstage;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.IMU;
 
@@ -21,6 +22,7 @@ import com.qualcomm.robotcore.hardware.ServoImplEx; // for Axon
 
 
 @TeleOp
+@Disabled
 public class ScrimmageCSTeleop extends LinearOpMode {
     double multiplierFR = 1.0;
     double multiplierBL = 1.0;

@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.centerstage;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.util.RobotLog;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 
 @Config
 @TeleOp
+@Disabled
 public class Ultrasonic extends LinearOpMode {
     public AnalogInput ultra;
     double distance;

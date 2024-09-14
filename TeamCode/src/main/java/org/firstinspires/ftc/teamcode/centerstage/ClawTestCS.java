@@ -38,6 +38,7 @@ import java.util.List;
 import com.qualcomm.hardware.lynx.LynxModule;
 
 @TeleOp
+@Disabled
 public class ClawTestCS extends LinearOpMode {
     private Blinker control_Hub;
     private Blinker expansion_Hub_2;

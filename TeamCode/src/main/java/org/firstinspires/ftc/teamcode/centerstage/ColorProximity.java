@@ -64,6 +64,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 @Config
 @TeleOp
+@Disabled
 public class ColorProximity extends LinearOpMode {
     //public RevColorSensorV3 color;
     DistanceSensor color1;

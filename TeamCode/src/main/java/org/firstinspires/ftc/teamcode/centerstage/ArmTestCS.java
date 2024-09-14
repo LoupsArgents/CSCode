@@ -65,6 +65,7 @@ import com.qualcomm.robotcore.hardware.PwmControl; // for Axon
 
 
 @TeleOp
+@Disabled
 public class ArmTestCS extends LinearOpMode {
     CRServo CR1;
     CRServo CR2;

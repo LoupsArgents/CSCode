@@ -10,6 +10,7 @@ import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -41,6 +42,7 @@ import com.qualcomm.robotcore.hardware.ServoImplEx; // for Axon
 
 
 @TeleOp
+@Disabled
 public class BcCSteleop extends LinearOpMode {
     boolean doAutoPickup = false;
     double multiplierFR = 1.0;
