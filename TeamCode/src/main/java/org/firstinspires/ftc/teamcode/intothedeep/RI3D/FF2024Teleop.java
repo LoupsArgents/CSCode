@@ -82,6 +82,7 @@ public class FF2024Teleop extends LinearOpMode {
     DcMotorEx motorBL;
     DcMotorEx intake;
     RevColorSensorV3 sensorColor;
+    CRServo intakeLeft;
     int intakeStatus = 0; // 0 is off, 1 is take in, 2 is spit out
     boolean canChangeIntake = true;
     double botHeading;
@@ -105,6 +106,7 @@ public class FF2024Teleop extends LinearOpMode {
         motorBL = hardwareMap.get(DcMotorEx.class, "motorBL");
         intake = hardwareMap.get(DcMotorEx.class,"intake");
         sensorColor = hardwareMap.get(RevColorSensorV3.class,"color");
+        intakeLeft = hardwareMap.get(CRServo.class,"intakeLeftServo");
 
         motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -171,20 +173,24 @@ public class FF2024Teleop extends LinearOpMode {
                 //processedHeading = 0;
             }
             if ((gamepad1.left_stick_button || gamepad1.right_stick_button) && (intakeStatus == 1 || intakeStatus == 2) && canChangeIntake) {
+                intakeLeft.setPower(0.0);
                 intake.setPower(0);
                 intakeStatus = 0; // 0 is off, 1 is take in, 2 is spit out
                 canChangeIntake = false;
             } //else
             if ((r > 100 || g > 100 || b > 100) && (intakeStatus == 1) && canChangeIntake) {
+                intakeLeft.setPower(0.0);
                 intake.setPower(0);
                 intakeStatus = 0;
                 canChangeIntake = false;
             } else if (intakeStatus == 2 && (r < 100 && g < 100 && b < 100)) {
+                intakeLeft.setPower(0.0);
                 intake.setPower(0);
                 intakeStatus = 0;
                 canChangeIntake = false;
             }
             if (gamepad1.left_stick_button && intakeStatus == 0 && canChangeIntake) {
+                intakeLeft.setPower(0.9);
                 intake.setPower(-0.9);
                 intakeStatus = 1;
                 canChangeIntake = false;
