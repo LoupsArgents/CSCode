@@ -132,6 +132,8 @@ public class CSYorkDF extends LinearOpMode {
     boolean liftHappyPlace = true;
     double ticksPerRotation;
     Point pixelPos;
+    double inchTolerance;
+    double degreeTolerance;
     public void runOpMode(){
         initializeHardware();
         openClaw();
@@ -912,7 +914,7 @@ public class CSYorkDF extends LinearOpMode {
         long prevTime = System.currentTimeMillis();
         long startTime = System.currentTimeMillis();
         while(opModeIsActive()){
-            if(placeAndHeading(startX, startY, pos.getX(), pos.getY(), pos.getHeading(), power, 1, 1, stop, isQuadrant)) return;
+            if(placeAndHeading(startX, startY, pos.getX(), pos.getY(), pos.getHeading(), power, inchTolerance, degreeTolerance, stop, isQuadrant)) return;
             //inTol used to be .5; testing to see if this stops the overcorrection problem
             long nowTime = System.currentTimeMillis();
             if(nowTime - startTime > timeLimit*1000){
@@ -1040,6 +1042,8 @@ public class CSYorkDF extends LinearOpMode {
             now = System.nanoTime();
         }
     }
+    public void setInchTolerance(double i){inchTolerance = i;}
+    public void setDegreeTolerance(double d){degreeTolerance = d;}
     public void initializeHardware(){
         control_Hub = hardwareMap.get(Blinker.class, "Control Hub");
         motorFR = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
@@ -1100,6 +1104,8 @@ public class CSYorkDF extends LinearOpMode {
         processor = new EverythingProcessor();
         ATProcessor = AprilTagProcessor.easyCreateWithDefaults();
         CameraName webcam = ClassFactory.getInstance().getCameraManager().nameForSwitchableCamera(frontCamera, backCamera);
+        degreeTolerance = 1;
+        inchTolerance = 1;
         portal = new VisionPortal.Builder()
                 .setCamera(webcam)
                 .setCameraResolution(new Size(640, 360))
