@@ -36,14 +36,16 @@ public class RI3DTeleopID extends LinearOpMode {
     //arm
     double armDownPos = 0.945;
     double armStartingPos = 0.25;
+    double armBucketPos = 0.4;
     double armCurrentPos;
     //claw
     double clawOpenPos = 0.745;
     double clawClosePos = 0.625;
     double clawCurrentPos;
     //wrist
-    double wristDownPos = 0.01;
-    double wristStartingPos = 0.42;
+    double wristDownPos = 0.5;
+    double wristStartingPos = 0.915;
+    double wristBucketPos = 0.345;
     double wristCurrentPos;
 
     //imu variables
@@ -63,12 +65,12 @@ public class RI3DTeleopID extends LinearOpMode {
     double ticksPerRotation;
     double liftIdealPos = 0.0;
     double liftHighBasket = 0.0;
-    double liftLowBasket = 0.31;
-    double liftHighChamber = 0.0;
-    double liftLowChamber = 0.0;
-    double liftTolerance = 0.03;
-    double kpLift = 15;
-    double liftStallConst = 1.4; //was 1.3
+    double liftLowBasket = 0.205;
+    double liftHighChamber = 0.285;//0.283 was too low, 0.295 was way too high
+    double liftLowChamber = 0.13;//0.128 was too low
+    double liftTolerance = 0.05;
+    double kpLift = 10;
+    double liftStallConst = 1.35; //was 1.3
     double liftMaxHeight = 0.31;
     double liftPower;
 
@@ -148,16 +150,43 @@ public class RI3DTeleopID extends LinearOpMode {
             }
 
             //arm code - we'll figure it out later
+            if (gamepad2.dpad_up) {
+                wrist.setPosition(wristBucketPos);
+                wristCurrentPos = wristBucketPos;
+                arm.setPosition(armBucketPos);
+                armCurrentPos = armBucketPos;
+            } else if (gamepad2.dpad_down) {
+                wrist.setPosition(wristDownPos);
+                wristCurrentPos = wristDownPos;
+                arm.setPosition(armDownPos);
+                armCurrentPos = armDownPos;
+            }
 
             //slides code
             if (gamepad2.y) { //higher basket
                 liftIdealPos = liftHighBasket;
+                wrist.setPosition(wristBucketPos);
+                wristCurrentPos = wristBucketPos;
+                arm.setPosition(armBucketPos);
+                armCurrentPos = armBucketPos;
             } else if (gamepad2.b) { //lower basket
                 liftIdealPos = liftLowBasket;
+                wrist.setPosition(wristBucketPos);
+                wristCurrentPos = wristBucketPos;
+                arm.setPosition(armBucketPos);
+                armCurrentPos = armBucketPos;
             } else if (gamepad2.x) { //higher chamber
                 liftIdealPos = liftHighChamber;
+                wrist.setPosition(wristDownPos);
+                wristCurrentPos = wristDownPos;
+                arm.setPosition(armDownPos);
+                armCurrentPos = armDownPos;
             } else if (gamepad2.a) { //lower chamber
                 liftIdealPos = liftLowChamber;
+                wrist.setPosition(wristDownPos);
+                wristCurrentPos = wristDownPos;
+                arm.setPosition(armDownPos);
+                armCurrentPos = armDownPos;
             }
             double liftStallPower = liftStallConst*liftPos;
             liftPower = -gamepad2.left_stick_y;
