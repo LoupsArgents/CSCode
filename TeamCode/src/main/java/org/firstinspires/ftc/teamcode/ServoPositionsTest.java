@@ -76,17 +76,17 @@ public class ServoPositionsTest extends LinearOpMode {
     boolean change1 = true;
     boolean change2 = true;
     public void runOpMode() {
-        String servo1Name = "claw";
+        String servo1Name = "arm";
         String servo2Name = "wrist";
         servo1 = hardwareMap.get(Servo.class, servo1Name);
         servo2 = hardwareMap.get(Servo.class, servo2Name);
         s1p1 = .5;
-        s1p2 =.5;
+        s1p2 = .5;
         s1current = .5;
         s2p1 = .5;
         s2p2 = .5;
         s2current = .5;
-        servo1.setPosition(s1current);
+        //servo1.setPosition(s1current);
         servo2.setPosition(s2current);
         waitForStart();
         while (opModeIsActive()) {
@@ -107,7 +107,7 @@ public class ServoPositionsTest extends LinearOpMode {
             if (s1current < 0) {s1current = 0;}
             if (s2current > 1) {s2current = 1;}
             if (s2current < 0) {s2current = 0;}
-            servo1.setPosition(s1current);
+            //servo1.setPosition(s1current);
             servo2.setPosition(s2current);
             if (change1) {
                 if (gamepad1.left_trigger > 0.05) {
