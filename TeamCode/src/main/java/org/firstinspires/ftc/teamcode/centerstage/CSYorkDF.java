@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.centerstage;
 
+import static android.util.Half.NaN;
+
 import android.util.Size;
 
 import com.qualcomm.hardware.rev.RevColorSensorV3;
@@ -130,6 +132,8 @@ public class CSYorkDF extends LinearOpMode {
     boolean liftHappyPlace = true;
     double ticksPerRotation;
     Point pixelPos;
+    double inchTolerance;
+    double degreeTolerance;
     public void runOpMode(){
         initializeHardware();
         openClaw();
@@ -660,7 +664,7 @@ public class CSYorkDF extends LinearOpMode {
         int forwardEndTicks = forwardOdo.getCurrentPosition();
         return newInchesTraveled(forwardStartTicks, forwardEndTicks);
     }
-    public boolean placeAndHeading(double x, double y, double idealHeading, double powerMult, double inTol, double degTol, boolean stop) {
+    public boolean placeAndHeading(double startX, double startY, double x, double y, double idealHeading, double powerMult, double inTol, double degTol, boolean stop, boolean isQuadrant) {
         processedHeading = newGetHeading();
         double rxConst = 13; //was 15, then 13, then 12
         double moveConst = 2; //maybe needs editing; was 1, then 1.5
@@ -698,10 +702,52 @@ public class CSYorkDF extends LinearOpMode {
             rxConst = 13 * rotError/5; //should be 12 at 5 degrees, so... rotError*12/5
         }
         telemetry.addData("HeadingError", rotError);
-        if (l < inTol && rotError < degTol) {
+        if (stop && l < inTol && rotError < degTol) { //stop condition for when this is the endpoint of a move
             //if we actually don't need to do anything
-            if(stop) stopMotors();
+            stopMotors();
             return true;
+        }
+        if(!stop){ //stop condition for when this is not the endpoint of a move
+            boolean good = false;
+            if(isQuadrant){ //we want to be past the point in both directions of the move
+                //find direction of comparison for x and y
+                boolean isGoingForward = y >= startY;
+                boolean isGoingRight = x >= startX;
+                if(isGoingForward){
+                    if(isGoingRight){
+                        good = currentY > y && currentX > x;
+                    }else{
+                        good = currentY > y && currentX < x;
+                    }
+                }else{
+                    if(isGoingRight){
+                        good = currentY < y && currentX > x;
+                    }else{
+                        good = currentY < y && currentX < x;
+                    }
+                }
+            }else{ //we want to be past the point in the larger direction of move?
+                boolean isX = Math.abs(startX-x) > Math.abs(startY-y);
+                //now we know the larger direction
+                boolean isPositive;
+                if(isX) isPositive = x>startX;
+                else isPositive = y>startY;
+                if(isX){
+                    if(isPositive){
+                        good = currentX > x;
+                    }else{
+                        good = currentX < x;
+                    }
+                }else{
+                    if(isPositive){
+                        good = currentY > y;
+                    }else{
+                        good = currentY < y;
+                    }
+                }
+            }
+            if(l < inTol) good = true;
+            if(good) return true;
         }
         double sign = rotError/(processedHeading % 360 - idealHeading);
         if (rotError > 45) {rxConst = 70;} //used to be rxConst = 90
@@ -852,12 +898,29 @@ public class CSYorkDF extends LinearOpMode {
         return false;
     }
     public void moveTo(double power, Position pos, boolean stop){
+       moveTo(power, pos, stop, true, 5.0);
+    }
+    public void moveTo(double power, Position pos, boolean stop, double timeLimit) {
+        moveTo(power, pos, stop, true, timeLimit);
+    }
+    public void moveTo(double power, Position pos, boolean stop, boolean isQuadrant){
+        moveTo(power, pos, stop, isQuadrant, 5.0);
+    }
+    public void moveTo(double power, Position pos, boolean stop, boolean isQuadrant, double timeLimit){
+        //should there be a default timeout? 5 seconds or something like that.
+        //timeLimit in seconds
         double startX = opticalOdo.getPosition().x;
         double startY = opticalOdo.getPosition().y;
         long prevTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
         while(opModeIsActive()){
-            if(placeAndHeading(pos.getX(), pos.getY(), pos.getHeading(), power, .5, 1, stop)) return;
+            if(placeAndHeading(startX, startY, pos.getX(), pos.getY(), pos.getHeading(), power, inchTolerance, degreeTolerance, stop, isQuadrant)) return;
+            //inTol used to be .5; testing to see if this stops the overcorrection problem
             long nowTime = System.currentTimeMillis();
+            if(nowTime - startTime > timeLimit*1000){
+                if(stop) stopMotors();
+                break;
+            }
             telemetry.addData("LoopTime", nowTime-prevTime);
             RobotLog.aa("LoopTime", String.valueOf(nowTime-prevTime));
             prevTime = nowTime;
@@ -979,6 +1042,8 @@ public class CSYorkDF extends LinearOpMode {
             now = System.nanoTime();
         }
     }
+    public void setInchTolerance(double i){inchTolerance = i;}
+    public void setDegreeTolerance(double d){degreeTolerance = d;}
     public void initializeHardware(){
         control_Hub = hardwareMap.get(Blinker.class, "Control Hub");
         motorFR = hardwareMap.get(DcMotorEx.class, "motorFRandForwardEncoder");
@@ -1039,6 +1104,8 @@ public class CSYorkDF extends LinearOpMode {
         processor = new EverythingProcessor();
         ATProcessor = AprilTagProcessor.easyCreateWithDefaults();
         CameraName webcam = ClassFactory.getInstance().getCameraManager().nameForSwitchableCamera(frontCamera, backCamera);
+        degreeTolerance = 1;
+        inchTolerance = 1;
         portal = new VisionPortal.Builder()
                 .setCamera(webcam)
                 .setCameraResolution(new Size(640, 360))
