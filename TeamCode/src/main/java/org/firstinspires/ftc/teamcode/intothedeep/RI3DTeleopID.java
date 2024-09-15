@@ -1,31 +1,24 @@
 package org.firstinspires.ftc.teamcode.intothedeep;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 //next import line is completely made up
-import org.firstinspires.ftc.teamcode.centerstage.EverythingProcessor;
-import org.firstinspires.ftc.vision.VisionPortal;
-import org.opencv.core.Point;
 
 import com.qualcomm.robotcore.hardware.ServoImplEx; // for Axon
 
 
 @TeleOp
 //still needs arm, slides, wrist, etc. code, as well as servo positions. Lift motors need to be set to hardwareMap.get().
-public class RI3DTeleop extends LinearOpMode {
+public class RI3DTeleopID extends LinearOpMode {
     DcMotorEx motorFR;
     DcMotorEx motorFL;
     DcMotorEx motorBR;

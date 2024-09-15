@@ -81,9 +81,14 @@ public class FF2024Teleop extends LinearOpMode {
     DcMotorEx liftEncoder;
     DcMotorEx motorBL;
     DcMotorEx intake;
+    RevColorSensorV3 sensorColor;
     int intakeStatus = 0; // 0 is off, 1 is take in, 2 is spit out
     boolean canChangeIntake = true;
     double botHeading;
+    double r;
+    double g;
+    double b;
+    double a;
 
     public void runOpMode() {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
@@ -99,6 +104,7 @@ public class FF2024Teleop extends LinearOpMode {
         liftEncoder = hardwareMap.get(DcMotorEx.class, "motorFLandLiftEnc");
         motorBL = hardwareMap.get(DcMotorEx.class, "motorBL");
         intake = hardwareMap.get(DcMotorEx.class,"intake");
+        sensorColor = hardwareMap.get(RevColorSensorV3.class,"color");
 
         motorFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -124,6 +130,15 @@ public class FF2024Teleop extends LinearOpMode {
             telemetry.addData("botHeading", botHeading);
             telemetry.addData("intakeStatus", intakeStatus);
             telemetry.addData("canChangeIntake", canChangeIntake);
+            r = sensorColor.red();
+            g = sensorColor.green();
+            b = sensorColor.blue();
+            a = sensorColor.alpha();
+
+            telemetry.addData("r", r);
+            telemetry.addData("g",g);
+            telemetry.addData("b",b);
+            telemetry.addData("a",a);
             telemetry.update();
 
             //mecanum
@@ -160,13 +175,22 @@ public class FF2024Teleop extends LinearOpMode {
                 intakeStatus = 0; // 0 is off, 1 is take in, 2 is spit out
                 canChangeIntake = false;
             } //else
+            if ((r > 100 || g > 100 || b > 100) && (intakeStatus == 1) && canChangeIntake) {
+                intake.setPower(0);
+                intakeStatus = 0;
+                canChangeIntake = false;
+            } else if (intakeStatus == 2 && (r < 100 && g < 100 && b < 100)) {
+                intake.setPower(0);
+                intakeStatus = 0;
+                canChangeIntake = false;
+            }
             if (gamepad1.left_stick_button && intakeStatus == 0 && canChangeIntake) {
                 intake.setPower(-0.9);
                 intakeStatus = 1;
                 canChangeIntake = false;
             }
             if (gamepad1.right_stick_button && intakeStatus == 0 && canChangeIntake) {
-                intake.setPower(0.9);
+                intake.setPower(0.5); // turned spit out power down from 0.9
                 intakeStatus = 2;
                 canChangeIntake = false;
             }
