@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.intothedeep;
 
 import android.graphics.Canvas;
-import android.util.Size;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -19,8 +18,10 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
@@ -36,10 +37,12 @@ public class SampleProcessor extends LinearOpMode implements VisionProcessor {
     MatOfPoint largestContour;
     int vertices = 0;
     Color color = Color.YELLOW;
+    int samplesFound = 0;
     @Override
     public void runOpMode() throws InterruptedException {
         CameraName webcam = hardwareMap.get(CameraName.class, "Webcam 1");
         SampleProcessor sp = new SampleProcessor();
+        sp.setColor(Color.BLUE);
         VisionPortal portal = VisionPortal.easyCreateWithDefaults(webcam, sp);
         portal.resumeStreaming();
         while(portal.getCameraState() != VisionPortal.CameraState.STREAMING){
@@ -50,6 +53,7 @@ public class SampleProcessor extends LinearOpMode implements VisionProcessor {
         telemetry.update();
         waitForStart();
         while(opModeIsActive()){
+            telemetry.addData("Samples in contour", sp.getSamplesFound());
             telemetry.addData("Vertices", sp.getNumVertices());
             telemetry.update();
         }
@@ -135,6 +139,24 @@ public class SampleProcessor extends LinearOpMode implements VisionProcessor {
             Point[] arr = approxMOP.toArray();
             vertices = arr.length;
             Imgproc.drawContours(testMat, temp, -1, new Scalar(70, 200, 200), 5);
+            //What is the algorithm for determining the number of samples contained in a contour?
+            //If vertices > 6: 2 (or more) samples
+            //Else if contour.minAreaRect() approximates a rectangle of aspect ratio 14:3 or 7:6: 2 (or more) samples
+            //Else: 1 sample
+            RotatedRect rotatedRect = Imgproc.minAreaRect(approximation);
+            Size size = rotatedRect.size;
+            double height = size.height;
+            double width = size.width;
+            double hwRatio = height/width;
+            double whRatio = width/height;
+            double ratio = Math.max(hwRatio, whRatio);
+            boolean is14to13 = (Math.abs(ratio-(14.0/3.0)) < .5);
+            boolean is7to6 = (Math.abs(ratio-(7.0/6.0)) < .5);
+            if(vertices > 6) samplesFound = 2;
+            else if(is14to13 || is7to6) samplesFound = 2;
+            else samplesFound = 1;
+        }else{
+            samplesFound = 0;
         }
         testMat.copyTo(frame);
         return frame;
@@ -146,4 +168,5 @@ public class SampleProcessor extends LinearOpMode implements VisionProcessor {
     public int getNumVertices(){return vertices;}
     public void setColor(Color c){color = c;}
     public Color getColor(){return color;}
+    public int getSamplesFound(){return samplesFound;}
 }
