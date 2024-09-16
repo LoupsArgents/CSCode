@@ -66,10 +66,10 @@ public class RI3DTeleopID extends LinearOpMode {
     double liftIdealPos = 0.0;
     double liftHighBasket = 0.0;
     double liftLowBasket = 0.205;
-    double liftHighChamber = 0.285;//0.283 was too low, 0.295 was way too high
-    double liftLowChamber = 0.13;//0.128 was too low
+    double liftHighChamber = 0.30;//0.283 was too low, 0.295 was way too high
+    double liftLowChamber = 0.155;//0.128 was too low
     double liftTolerance = 0.02;
-    double kpLift = 5;
+    double kpLift = 10;
     double liftStallConst = 1.35; //was 1.3
     double liftMaxHeight = 0.31;
     double liftPower;
@@ -189,7 +189,7 @@ public class RI3DTeleopID extends LinearOpMode {
                 arm.setPosition(armDownPos);
                 armCurrentPos = armDownPos;
             }
-            liftStallPower = liftStallConst*liftPos;
+            liftStallPower = stallPower();//liftStallConst*liftPos;
             liftPower = -gamepad2.left_stick_y;
             double liftError = Math.abs(liftIdealPos - liftPos);
             if (Math.abs(liftPower) > 0.05 && ((liftPower < 0 && liftPos > 0.0) || (liftPower > 0 && liftPos < liftMaxHeight))) { //we are using the joysticks
@@ -310,6 +310,11 @@ public class RI3DTeleopID extends LinearOpMode {
             motorFR.setPower(frontRightPower);
             motorBR.setPower(backRightPower);
         }
+    }
+    public double stallPower() {
+        if (liftPos < 0.015) {return 0;}
+
+        return Math.min(1.21154*liftPos + 0.11, 0.35);
     }
     public double newHeading(double reading, double change) {
         double val = reading - change;
