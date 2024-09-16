@@ -68,11 +68,12 @@ public class RI3DTeleopID extends LinearOpMode {
     double liftLowBasket = 0.205;
     double liftHighChamber = 0.285;//0.283 was too low, 0.295 was way too high
     double liftLowChamber = 0.13;//0.128 was too low
-    double liftTolerance = 0.05;
-    double kpLift = 10;
+    double liftTolerance = 0.02;
+    double kpLift = 5;
     double liftStallConst = 1.35; //was 1.3
     double liftMaxHeight = 0.31;
     double liftPower;
+    double liftStallPower;
 
     public void runOpMode() {
         imu = hardwareMap.get(IMU.class, "imu");
@@ -188,22 +189,26 @@ public class RI3DTeleopID extends LinearOpMode {
                 arm.setPosition(armDownPos);
                 armCurrentPos = armDownPos;
             }
-            double liftStallPower = liftStallConst*liftPos;
+            liftStallPower = liftStallConst*liftPos;
             liftPower = -gamepad2.left_stick_y;
             double liftError = Math.abs(liftIdealPos - liftPos);
             if (Math.abs(liftPower) > 0.05 && ((liftPower < 0 && liftPos > 0.0) || (liftPower > 0 && liftPos < liftMaxHeight))) { //we are using the joysticks
                 lift1.setPower(liftStallPower + liftPower);
                 lift2.setPower(liftStallPower + liftPower);
                 liftIdealPos = liftPos;
+                telemetry.addData("liftStallPower + liftPower", liftStallPower + liftPower);
             } else if (Math.abs(liftIdealPos - liftPos) < liftTolerance) { //it's in a good spot
                 lift1.setPower(liftStallPower);
                 lift2.setPower(liftStallPower);
+                telemetry.addData("liftStallPower", liftStallPower);
             } else if (liftIdealPos > liftPos) { //it's below where it should be
                 lift1.setPower(liftStallPower + liftError * kpLift);
                 lift2.setPower(liftStallPower + liftError * kpLift);
+                telemetry.addData("liftStallPower + liftError * kpLift", liftStallPower + liftError * kpLift);
             } else if (liftIdealPos < liftPos) { //it's above where it should be
                 lift1.setPower(liftStallPower - liftError * kpLift);
                 lift2.setPower(liftStallPower - liftError * kpLift);
+                telemetry.addData("liftStallPower - liftError * kpLift", liftStallPower - liftError * kpLift);
             }
 
             //mecanum

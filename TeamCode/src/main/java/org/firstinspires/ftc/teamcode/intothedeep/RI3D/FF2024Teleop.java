@@ -86,6 +86,7 @@ public class FF2024Teleop extends LinearOpMode {
     int intakeStatus = 0; // 0 is off, 1 is take in, 2 is spit out
     boolean canChangeIntake = true;
     double botHeading;
+    double intakeCurrent;
     double r;
     double g;
     double b;
@@ -114,6 +115,7 @@ public class FF2024Teleop extends LinearOpMode {
         motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorFL.setDirection(DcMotorEx.Direction.REVERSE);
         motorBL.setDirection(DcMotorEx.Direction.REVERSE);
+        intake.setDirection(DcMotorEx.Direction.REVERSE);
 
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
 
@@ -129,9 +131,11 @@ public class FF2024Teleop extends LinearOpMode {
         while (opModeIsActive()) {
             double imuRadians = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             botHeading = imuRadians;
+            intakeCurrent = intake.getCurrent(CurrentUnit.AMPS);
             telemetry.addData("botHeading", botHeading);
             telemetry.addData("intakeStatus", intakeStatus);
             telemetry.addData("canChangeIntake", canChangeIntake);
+            telemetry.addData("intake motor current",intakeCurrent);
             r = sensorColor.red();
             g = sensorColor.green();
             b = sensorColor.blue();
@@ -191,12 +195,12 @@ public class FF2024Teleop extends LinearOpMode {
             }
             if (gamepad1.left_stick_button && intakeStatus == 0 && canChangeIntake) {
                 intakeLeft.setPower(0.9);
-                intake.setPower(-0.9);
+                intake.setPower(0.75);
                 intakeStatus = 1;
                 canChangeIntake = false;
             }
             if (gamepad1.right_stick_button && intakeStatus == 0 && canChangeIntake) {
-                intake.setPower(0.5); // turned spit out power down from 0.9
+                intake.setPower(-0.5); // turned spit out power down from 0.9
                 intakeStatus = 2;
                 canChangeIntake = false;
             }
