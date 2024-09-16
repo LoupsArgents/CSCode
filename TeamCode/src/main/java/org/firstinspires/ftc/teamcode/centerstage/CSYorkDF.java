@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.centerstage;
 
-import static android.util.Half.NaN;
-
 import android.util.Size;
 
 import com.qualcomm.hardware.rev.RevColorSensorV3;
@@ -22,6 +20,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.Position;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.VisionPortal.CameraState;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;

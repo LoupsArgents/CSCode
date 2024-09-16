@@ -1,7 +1,8 @@
 package org.firstinspires.ftc.teamcode.centerstage;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
+import org.firstinspires.ftc.teamcode.Position;
 
 @TeleOp
 public class OpticalOdoTesting extends CSYorkDF {
