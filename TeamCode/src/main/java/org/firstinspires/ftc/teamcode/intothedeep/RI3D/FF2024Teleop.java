@@ -87,6 +87,7 @@ public class FF2024Teleop extends LinearOpMode {
     boolean canChangeIntake = true;
     double botHeading;
     double intakeCurrent;
+    long stallStartTime = -1;
     double r;
     double g;
     double b;
@@ -187,22 +188,39 @@ public class FF2024Teleop extends LinearOpMode {
                 intake.setPower(0);
                 intakeStatus = 0;
                 canChangeIntake = false;
-            } else if (intakeStatus == 2 && (r < 100 && g < 100 && b < 100)) {
+            } /*
+            else if (intakeStatus == 2 && (r < 100 && g < 100 && b < 100)) {
                 intakeLeft.setPower(0.0);
                 intake.setPower(0);
                 intakeStatus = 0;
                 canChangeIntake = false;
             }
-            if (gamepad1.left_stick_button && intakeStatus == 0 && canChangeIntake) {
+            */
+            if (canChangeIntake && gamepad1.left_stick_button && intakeStatus == 0) {
                 intakeLeft.setPower(0.9);
                 intake.setPower(0.75);
                 intakeStatus = 1;
                 canChangeIntake = false;
             }
-            if (gamepad1.right_stick_button && intakeStatus == 0 && canChangeIntake) {
+            if (canChangeIntake && (gamepad1.right_stick_button && intakeStatus == 0)) {
                 intake.setPower(-0.5); // turned spit out power down from 0.9
                 intakeStatus = 2;
                 canChangeIntake = false;
+                if (intakeCurrent > 6.5) {
+                    if (stallStartTime == -1) {
+                        stallStartTime = System.currentTimeMillis();
+                    } else {
+                        // find how long it's been stalling for
+                        if (System.currentTimeMillis() - stallStartTime > 750) {
+                            intake.setPower(-0.5);
+                            intakeStatus = 2;
+                            canChangeIntake = false;
+                        }
+
+                    }
+                } else {
+                    stallStartTime = -1;
+                }
             }
             if (!gamepad1.left_stick_button && !gamepad1.right_stick_button) {
                 canChangeIntake = true;
