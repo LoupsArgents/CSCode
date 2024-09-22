@@ -32,7 +32,8 @@ public class SampleProcessor extends LinearOpMode implements VisionProcessor {
     enum Color {
         RED,
         BLUE,
-        YELLOW;
+        YELLOW,
+        BLACK;
     }
     MatOfPoint largestContour;
     int vertices = 0;
@@ -42,7 +43,7 @@ public class SampleProcessor extends LinearOpMode implements VisionProcessor {
     public void runOpMode() throws InterruptedException {
         CameraName webcam = hardwareMap.get(CameraName.class, "Webcam 1");
         SampleProcessor sp = new SampleProcessor();
-        sp.setColor(Color.BLUE);
+        sp.setColor(Color.BLACK);
         VisionPortal portal = VisionPortal.easyCreateWithDefaults(webcam, sp);
         portal.resumeStreaming();
         while(portal.getCameraState() != VisionPortal.CameraState.STREAMING){
@@ -72,6 +73,8 @@ public class SampleProcessor extends LinearOpMode implements VisionProcessor {
         Scalar blueHighHSV = new Scalar(130, 255, 255);
         Scalar yellowLowHSV = new Scalar(14, 100, 80);
         Scalar yellowHighHSV = new Scalar(28, 255, 255);
+        Scalar blackLowHSV = new Scalar(0, 0, 0);
+        Scalar blackHighHSV = new Scalar(180, 255, 50);
         Mat mat = new Mat();
         Imgproc.cvtColor(frame, mat, Imgproc.COLOR_RGB2HSV);
         if(mat.empty()) return frame;
@@ -86,9 +89,12 @@ public class SampleProcessor extends LinearOpMode implements VisionProcessor {
         }else if(color == Color.RED){
             lowHSV = redFirstLowHSV;
             highHSV = redFirstHighHSV;
-        }else{
+        }else if(color == Color.YELLOW){
             lowHSV = yellowLowHSV;
             highHSV = yellowHighHSV;
+        }else{
+            lowHSV = blackLowHSV;
+            highHSV = blackHighHSV;
         }
         if(color != Color.RED) {
             Core.inRange(mat, lowHSV, highHSV, thresh);
