@@ -34,18 +34,18 @@ public class RI3DTeleopID extends LinearOpMode {
 
     //servo positions:
     //arm
-    double armDownPos = 0.945;
-    double armStartingPos = 0.25;
-    double armBucketPos = 0.4;
+    double armDownPos = 0.765; //0.945 for original straight line claw, .915 for something else
+    double armStartingPos = 0.25; //0.25 for original straight line claw
+    double armBucketPos = 0.4; //0.4 for original straight line claw, 0.4 for something else
     double armCurrentPos;
     //claw
-    double clawOpenPos = 0.745;
-    double clawClosePos = 0.625;
+    double clawOpenPos = 0.76; //0.745 for others
+    double clawClosePos = 0.96; //0.625 for others
     double clawCurrentPos;
     //wrist
-    double wristDownPos = 0.5;
-    double wristStartingPos = 0.915;
-    double wristBucketPos = 0.345;
+    double wristDownPos = 0.4; //0.5 for original straight line claw, .485 for something else
+    double wristStartingPos = 0.915; //0.915 for original straight line claw, .915 for something else
+    double wristBucketPos = 0.345; //0.345  for original straight line claw, .345 for something
     double wristCurrentPos;
 
     //imu variables

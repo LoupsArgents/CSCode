@@ -75,17 +75,17 @@ public class ServoPositionsTest extends LinearOpMode {
     double s2current;
     boolean change1 = true;
     boolean change2 = true;
-    public void runOpMode() {
+    public void runOpMode() { //for rack and pinion claw: 1 is a safe position (all the way apart-- holding object).
         String servo1Name = "arm";
-        String servo2Name = "wrist";
+        String servo2Name = "claw";
         servo1 = hardwareMap.get(Servo.class, servo1Name);
         servo2 = hardwareMap.get(Servo.class, servo2Name);
         s1p1 = .5;
         s1p2 = .5;
-        s1current = .5;
+        s1current = 0.765;
         s2p1 = .5;
         s2p2 = .5;
-        s2current = .5;
+        s2current = 1;
         servo1.setPosition(s1current);
         servo2.setPosition(s2current);
         waitForStart();
