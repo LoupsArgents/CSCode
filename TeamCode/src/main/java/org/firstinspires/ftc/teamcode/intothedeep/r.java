@@ -16,7 +16,7 @@ public class r {
         //initialize all of the motors/servos/etc. here
         scheduleTimer.reset();
     }
-    public static void doCommands() {
+    public static void doCommands() { //should get called every loop
         for (int i = commands.size() - 1; i >= 0; i--) {
             if (commands.get(i).getAbsTimeStart() >= scheduleTimer.milliseconds()) {
                 commands.get(i).adjust();
@@ -34,7 +34,10 @@ public class r {
         addCommand(new ServoCommand(ss, ip, msTime));
     }
     public static void addCommand(DcMotorEx mm, double ip, double msTime, double kp, double initial, double tpr, double stall, double tol) {
-        addCommand (new MotorCommand(mm, ip, msTime, kp, initial, tpr, stall, tol));
+        addCommand(new MotorPosCommand(mm, ip, msTime, kp, initial, tpr, stall, tol));
+    }
+    public static void addCommand(DcMotorEx mm, double msTime, double power) {
+        addCommand(new MotorPowCommand(mm, msTime, power));
     }
 
 }

@@ -12,9 +12,12 @@ public class Command {
     private double ms; //ms after start of all of these commands
     private double absTimeStart;
     private boolean isDone = false;
-    public Command (double ip, double msTime) {
-        this.idealPos = ip;
+    public Command (double msTime) {
         this.ms = msTime;
+    }
+    public Command (double ip, double msTime) {
+        this(msTime);
+        this.idealPos = ip;
     }
     public void adjust() {}
     public double getIdealPos() {return this.idealPos;}
@@ -36,14 +39,14 @@ class ServoCommand extends Command {
         super.setIsDone(true);
     }
 }
-class MotorCommand extends Command {
+class MotorPosCommand extends Command {
     DcMotorEx m;
     double kp;
     double initial;
     double ticksPerRotation;
     double stallPower;
     double tolerance;
-    public MotorCommand(DcMotorEx mm, double ip, double msTime, double kp, double initial, double tpr, double stall, double tol) {
+    public MotorPosCommand(DcMotorEx mm, double ip, double msTime, double kp, double initial, double tpr, double stall, double tol) {
         super(ip, msTime);
         this.m = mm;
         this.kp = kp;
@@ -60,5 +63,18 @@ class MotorCommand extends Command {
             super.setIsDone(true);
             m.setPower(stallPower);
         }
+    }
+}
+class MotorPowCommand extends Command {
+    DcMotorEx m;
+    double power;
+    public MotorPowCommand(DcMotorEx mm, double msTime, double p) {
+        super(msTime);
+        this.m = mm;
+        this.power = p;
+    }
+    public void adjust() {
+        m.setPower(power);
+        super.setIsDone(true);
     }
 }
